@@ -1,0 +1,14 @@
+[Unit]
+Description=Bluetooth NAP Service for your-pax
+After=bluetooth.service
+Requires=bluetooth.service
+
+[Service]
+# Note: Path is auto-detected at install time — install_your-pax.sh replaces with \$YOUR_PAX_PATH
+ExecStart=/usr/bin/python3 __YOUR_PAX_DIR__/actions/bluetooth_nap.py
+Restart=always
+RestartSec=3
+User=root
+
+[Install]
+WantedBy=multi-user.target

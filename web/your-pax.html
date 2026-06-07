@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>your-pax Cyberviking - your-pax</title>
+    <link rel="icon" href="web/images/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="web/css/styles.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="web/images/apple-touch-icon.png">
+    <script defer>
+        var delay = 5000;
+        var intervalId;
+
+        function fetchWebDelay() {
+            fetch('/get_web_delay')
+                .then(response => response.json())
+                .then(data => {
+                    delay = data.web_delay;
+                    startLiveview();
+                })
+                .catch(error => {
+                    console.error('Error fetching web delay:', error);
+                    startLiveview();
+                });
+        }
+
+        function updateImage() {
+            var image = document.getElementById("screenImage_Home");
+            var newImage = new Image();
+            newImage.onload = function() {
+                image.src = newImage.src;
+            };
+            newImage.onerror = function() {
+                console.warn("New image could not be loaded, keeping the previous image.");
+            };
+            newImage.src = "screen.png?t=" + new Date().getTime();
+        }
+
+        function startLiveview() {
+            updateImage();
+            intervalId = setInterval(updateImage, delay);
+        }
+
+        function stopLiveview() {
+            clearInterval(intervalId);
+        }
+
+        function resizeImage(event) {
+            var image = document.getElementById("screenImage_Home");
+            var height = parseFloat(window.getComputedStyle(image).height);
+            if (event.deltaY < 0) {
+                height *= 1.1;
+            } else {
+                height /= 1.1;
+            }
+            image.style.height = height + 'px';
+            image.style.width = 'auto';
+        }
+
+        function toggleMenu() {
+            var toolbar = document.querySelector('.toolbar');
+            var imageContainer = document.querySelector('.image-container');
+            if (toolbar.style.display === 'flex') {
+                toolbar.style.display = 'none';
+                imageContainer.style.width = '100%';
+            } else {
+                toolbar.style.display = 'flex';
+                imageContainer.style.width = 'calc(100%)';
+            }
+            adjustImageHeight();
+        }
+
+        function adjustImageHeight() {
+            var windowHeight = window.innerHeight;
+            var image = document.getElementById("screenImage_Home");
+            image.style.height = windowHeight + 'px';
+            image.style.width = 'auto';
+        }
+
+        window.addEventListener('load', () => {
+            fetchWebDelay();
+            adjustImageHeight();
+        });
+        window.addEventListener('beforeunload', stopLiveview);
+        window.addEventListener('wheel', resizeImage);
+        window.addEventListener('resize', adjustImageHeight);
+
+    </script>
+</head>
+<body>
+<div class="nav-mini">
+<a href="/index.html" title="Playground">P</a>
+<a href="/config.html" title="Config">Cfg</a>
+<a href="/network.html" title="Network">Net</a>
+<a href="/netkb.html" title="NetKB">NKB</a>
+<a href="/credentials.html" title="Creds">Cred</a>
+<a href="/loot.html" title="Loot">Loot</a>
+<a href="/your-pax.html" title="Live EPD">EPD</a>
+<span class="sep">|</span>
+<a href="/wifi.html" title="WiFi">WiFi</a>
+<a href="/evil_ap.html" title="Evil AP">Evil</a>
+<a href="/store.html" title="Store">Store</a>
+<span class="sep">|</span>
+<a href="/bt_connect.html" title="BT Connect">BT</a>
+</div>
+    <div class="toolbar" id="mainToolbar">
+        <button type="button" onclick="window.location.href='/index.html'" title="Playground">
+            <img src="/web/images/console_icon.png" alt="your-pax" style="height: 50px;">
+        </button>
+        <button type="button" onclick="window.location.href='/config.html'" title="Config">
+            <img src="/web/images/config_icon.png" alt="Icon_config" style="height: 50px;">
+        </button>
+        <button type="button" onclick="window.location.href='/network.html'" title="Network">
+            <img src="/web/images/network_icon.png" alt="Icon_network" style="height: 50px;">
+        </button>
+        <button type="button" onclick="window.location.href='/netkb.html'" title="NetKB">
+            <img src="/web/images/netkb_icon.png" alt="Icon_netkb" style="height: 50px;">
+        </button>
+        <button type="button" onclick="window.location.href='/credentials.html'" title="Credentials">
+            <img src="/web/images/cred_icon.png" alt="Icon_cred" style="height: 50px;">
+        </button>
+        <button type="button" onclick="window.location.href='/loot.html'" title="Loot">
+            <img src="/web/images/loot_icon.png" alt="Icon_loot" style="height: 50px;">
+        </button>
+    </div>
+    <div class="image-container">
+        <img id="screenImage_Home" src="screen.png" onclick="toggleMenu()" alt="your-pax">
+    </div>
+
+</body>
+</html>

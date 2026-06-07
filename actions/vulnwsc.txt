@@ -1,0 +1,5 @@
+# Vulnerable WSC-enabled devices list for OneShot
+# Each line: BSSID|ESSID|Manufacturer
+# Add known vulnerable devices here
+# Example:
+# 00:11:22:33:44:55|ExampleNet|ExampleCorp

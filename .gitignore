@@ -1,0 +1,63 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+pip-wheel-metadata/
+*.pyo
+*.pyd
+*.whl
+.pytest_cache/
+.tox/
+env/
+venv/
+ENV/
+env.bak/
+.venv/
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Coverage
+htmlcov/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# IDE
+.vscode/
+.idea/
+*.iml
+*.suo
+*.swp
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Project specific
+data/logs/*
+data/output/data_stolen/*
+data/output/crackedpwd/*
+data/output/scan_results/*
+data/output/vulnerabilities/*
+backup/backups/*
+backup/uploads/*
+*.log
+config/shared_config.json
+web/screen.png
