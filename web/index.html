@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>your-pax Cyberviking - Playground</title>
+    <link rel="icon" href="web/images/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="web/css/styles.css">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" sizes="192x192" href="web/images/icon-192x192.png">
+    <script src="web/scripts/index.js" defer></script>
+    <script src="https://cdn3.devexpress.com/jslib/20.2.5/js/dx.all.js"></script>
+    <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/20.2.5/css/dx.common.css">
+    <link rel="stylesheet" href="https://cdn3.devexpress.com/jslib/20.2.5/css/dx.light.css">
+</head>
+
+<body>
+<div class="nav-mini">
+<a href="/index.html" title="Playground">P</a>
+<a href="/config.html" title="Config">Cfg</a>
+<a href="/network.html" title="Network">Net</a>
+<a href="/netkb.html" title="NetKB">NKB</a>
+<a href="/credentials.html" title="Creds">Cred</a>
+<a href="/loot.html" title="Loot">Loot</a>
+<a href="/your-pax.html" title="Live EPD">EPD</a>
+<span class="sep">|</span>
+<a href="/wifi.html" title="WiFi">WiFi</a>
+<a href="/evil_ap.html" title="Evil AP">Evil</a>
+<a href="/store.html" title="Store">Store</a>
+<span class="sep">|</span>
+<a href="/bt_connect.html" title="BT Connect">BT</a>
+</div>
+    <div class="toolbar" id="mainToolbar">
+        <button type="button" onclick="window.location.href='/index.html'" title="Playground">
+            <img src="/web/images/console_icon.png" alt="your-pax" style="height: 50px;">
+        </button>
+        <button type="button" onclick="window.location.href='/config.html'" title="Config">
+            <img src="/web/images/config_icon.png" alt="Icon_config" style="height: 50px;">
+        </button>
+        <button type="button" onclick="window.location.href='/network.html'" title="Network">
+            <img src="/web/images/network_icon.png" alt="Icon_network" style="height: 50px;">
+        </button>
+        <button type="button" onclick="window.location.href='/netkb.html'" title="NetKB">
+            <img src="/web/images/netkb_icon.png" alt="Icon_netkb" style="height: 50px;">
+        </button>
+        <button type="button" onclick="window.location.href='/credentials.html'" title="Credentials">
+            <img src="/web/images/cred_icon.png" alt="Icon_cred" style="height: 50px;">
+        </button>
+        <button type="button" onclick="window.location.href='/loot.html'" title="Loot">
+            <img src="/web/images/loot_icon.png" alt="Icon_loot" style="height: 50px;">
+        </button>
+        <button type="button" onclick="window.location.href='/store.html'" title="Store" style="margin-left:auto;">
+            <img src="/web/images/cred_icon.png" alt="Store" style="height: 50px;filter:sepia(1) hue-rotate(-20deg) saturate(3)">
+        </button>
+    </div>
+    <div class="console-toolbar">
+        <button type="button" class="toolbar-button" onclick="adjustFontSize(-1)" title="-">
+            <img src="/web/images/less.png" alt="Icon_less" style="height: 50px;">
+        </button>
+        <div id="yourpax-dropdown-container" class="toolbar-button"></div>
+        <button id="toggle-toolbar" type="button" class="toolbar-button" onclick="toggleToolbar()" data-open="false">
+            <img id="toggle-icon" src="/web/images/hide.png" alt="Toggle Toolbar" style="height: 50px;">
+        </button>
+        <div id="dropdown-container" class="toolbar-button"></div>
+        <button type="button" class="toolbar-button" onclick="adjustFontSize(1)" title="+">
+            <img src="/web/images/plus.png" alt="Icon_plus" style="height: 50px;">
+        </button>
+    </div>
+
+    <div id="bt-status-bar" style="text-align:center;background:#1a1a2e;border:1px solid #0f3460;padding:5px;margin:5px;border-radius:5px;">
+        <span id="btDisplayStatus" style="color:#00ff88;font-size:14px;">Bluetooth NAP: your-pax</span>
+        <span style="color:#888;margin:0 10px;">|</span>
+        <span id="btIpDisplay" style="color:#fff;font-size:14px;">192.168.4.1:8000</span>
+        <span style="color:#888;margin:0 10px;">|</span>
+        <span id="btClientsDisplay" style="color:#ffaa00;font-size:14px;">Clients: 0</span>
+        <span style="color:#888;margin:0 10px;">|</span>
+        <span id="wifiConnectionDisplay" style="color:#ff4444;font-size:14px;">WiFi: Not Connected</span>
+    </div>
+
+    <div class="console-toolbar">
+        <button id="toggle-console-button" class="toolbar-button" type="button" onclick="toggleConsole()">
+            <img id="toggle-console-image" src="/web/images/off.png" alt="Toggle Console" style="height: 30px;">
+        </button>
+        <button type="button" class="toolbar-button" onclick="triggerScan()" title="Network Scan">
+            <img src="/web/images/network_icon.png" alt="Scan" style="height: 40px;">
+        </button>
+        <button type="button" class="toolbar-button" onclick="triggerBruteforce()" title="Bruteforce All">
+            <img src="/web/images/cred_icon.png" alt="Brute" style="height: 40px;">
+        </button>
+        <button type="button" class="toolbar-button" onclick="triggerVulnScan()" title="Vuln Scan">
+            <img src="/web/images/icon_vuln.png" alt="Vuln" style="height: 40px;"onerror="this.style.display='none'">
+        </button>
+        <button type="button" class="toolbar-button" onclick="triggerSteal()" title="Steal Files">
+            <img src="/web/images/loot_icon.png" alt="Steal" style="height: 40px;">
+        </button>
+        <button type="button" class="toolbar-button" onclick="stopAll()" title="Stop All" style="background:#cc0000;">
+            <span style="color:white;font-weight:bold;padding:5px;">STOP</span>
+        </button>
+        <button id="manual-mode-button" type="button" class="toolbar-button" onclick="toggleManualMode()" title="Manual Mode">
+            <img id="manual-mode-icon" src="/web/images/manual.png" alt="Manual Mode" style="height: 50px;">
+        </button>
+    </div>
+    <div id="manual-mode-panel" class="toolbar-button hidden" class="hidden">
+        <select id="ip-dropdown" onchange="updatePortsAndActions()"></select>
+        <select id="port-dropdown"></select>
+        <select id="action-dropdown"></select>
+        <button type="button" onclick="executeManualAttack()">Execute Attack</button>
+    </div>
+    <div id="log-console"></div>
+    <div id="popupContainer"></div>
+
+    <script>
+        function escapeHtml(str) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            adjustLogConsoleHeight();
+            loadManualModeOptions();
+            updateBtStatus();
+            setInterval(updateBtStatus, 5000);
+        });
+
+        function updateBtStatus() {
+            fetch('/bluetooth_status')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('btDisplayStatus').innerText = data.active ? 'Bluetooth NAP: your-pax' : 'Bluetooth NAP: Inactive';
+                    document.getElementById('btDisplayStatus').style.color = data.active ? '#00ff88' : '#ff4444';
+                    document.getElementById('btClientsDisplay').innerText = 'Clients: ' + (data.connected_clients || 0);
+                }).catch(() => {});
+
+            fetch('/wifi_status')
+                .then(r => r.json())
+                .then(data => {
+                    var el = document.getElementById('wifiConnectionDisplay');
+                    if (data.connected) {
+                        el.innerHTML = 'WiFi: ' + escapeHtml(data.ssid) + ' (' + escapeHtml(data.signal) + 'dBm)';
+                        el.style.color = '#00ff88';
+                    } else {
+                        el.innerText = 'WiFi: Not Connected';
+                        el.style.color = '#ff4444';
+                    }
+                }).catch(() => {});
+        }
+
+        function triggerScan() {
+            fetch('/trigger_scan', { method: 'POST' })
+                .then(r => r.json())
+                .then(d => { if(d.status === 'triggered') console.log('Scan triggered'); })
+                .catch(e => console.error(e));
+        }
+
+        function triggerBruteforce() {
+            fetch('/trigger_bruteforce', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ protocol: 'all' })
+            })
+                .then(r => r.json())
+                .then(d => { if(d.status === 'triggered') console.log('Bruteforce triggered'); })
+                .catch(e => console.error(e));
+        }
+
+        function triggerVulnScan() {
+            fetch('/trigger_vulnscan', { method: 'POST' })
+                .then(r => r.json())
+                .then(d => { if(d.status === 'triggered') console.log('Vuln scan triggered'); })
+                .catch(e => console.error(e));
+        }
+
+        function triggerSteal() {
+            fetch('/trigger_steal', { method: 'POST' })
+                .then(r => r.json())
+                .then(d => { if(d.status === 'triggered') console.log('Steal triggered'); })
+                .catch(e => console.error(e));
+        }
+
+        function stopAll() {
+            fetch('/stop_all', { method: 'POST' })
+                .then(r => r.json())
+                .then(d => { if(d.status === 'stopped') console.log('All stopped'); })
+                .catch(e => console.error(e));
+        }
+    
+        function loadManualModeOptions() {
+            fetch('/netkb_data_json')
+                .then(response => response.json())
+                .then(data => {
+                    const ipDropdown = document.getElementById('ip-dropdown');
+                    const actionDropdown = document.getElementById('action-dropdown');
+    
+                    ipDropdown.innerHTML = data.ips.map(ip => `<option value="${escapeHtml(ip)}">${escapeHtml(ip)}</option>`).join('');
+                    actionDropdown.innerHTML = data.actions.map(action => `<option value="${escapeHtml(action)}">${escapeHtml(action)}</option>`).join('');
+                })
+                .catch(error => console.error('Error loading netkb data:', error));
+        }
+    
+        function updatePortsAndActions() {
+            const ipDropdown = document.getElementById('ip-dropdown');
+            const selectedIp = ipDropdown.value;
+    
+            fetch('/netkb_data_json')
+                .then(response => response.json())
+                .then(data => {
+                    const portDropdown = document.getElementById('port-dropdown');
+                    portDropdown.innerHTML = data.ports[selectedIp].map(port => `<option value="${escapeHtml(port)}">${escapeHtml(port)}</option>`).join('');
+                })
+                .catch(error => console.error('Error updating ports:', error));
+        }
+    
+        function executeManualAttack() {
+            const ip = document.getElementById('ip-dropdown').value;
+            const port = document.getElementById('port-dropdown').value;
+            const action = document.getElementById('action-dropdown').value;
+    
+            fetch('/execute_manual_attack', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ ip, port, action })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    console.log('Manual attack executed successfully:', data.message);
+                } else {
+                    console.error('Failed to execute manual attack:', data.message);
+                }
+                loadRecentLogs();  // Charger les logs récents après l'exécution de l'attaque
+            })
+            .catch(error => console.error('Error executing manual attack:', error));
+        }
+    
+        function loadRecentLogs() {
+            fetch('/get_logs')
+                .then(response => response.text())
+                .then(data => {
+                    const logConsole = document.getElementById('log-console');
+                    logConsole.innerHTML = '<pre>' + escapeHtml(data) + '</pre>';
+                })
+                .catch(error => console.error('Error loading recent logs:', error));
+        }
+    
+        function toggleManualMode() {
+            const panel = document.getElementById('manual-mode-panel');
+            const icon = document.getElementById('manual-mode-icon');
+            if (panel.classList.contains('hidden')) {
+                panel.classList.remove('hidden');
+                panel.classList.add('visible');
+                icon.src = '/web/images/ai.png';
+                stop_orchestrator();
+            } else {
+                panel.classList.remove('visible');
+                panel.classList.add('hidden');
+                icon.src = '/web/images/manual.png';
+                start_orchestrator();
+            }
+            adjustLogConsoleHeight();
+        }
+    
+        function adjustLogConsoleHeight() {
+            const panel = document.getElementById('manual-mode-panel');
+            const logConsole = document.getElementById('log-console');
+            if (panel.classList.contains('visible')) {
+                logConsole.style.height = `calc(100vh - ${panel.offsetHeight}px - 100px)`;
+            } else {
+                logConsole.style.height = 'calc(100vh - 100px)';
+            }
+        }
+    
+        function stop_orchestrator() {
+            fetch('/stop_orchestrator', { method: 'POST' })
+                .catch(error => console.error('Failed to stop orchestrator:', error));
+        }
+    
+        function start_orchestrator() {
+            fetch('/start_orchestrator', { method: 'POST' })
+                .catch(error => console.error('Failed to start orchestrator:', error));
+        }
+    </script>
+</body>
+</html>

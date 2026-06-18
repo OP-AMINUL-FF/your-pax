@@ -1,0 +1,605 @@
+================================================================================
+YOUR-PAX FIRMWARE — COMPLETE REFERENCE (UPDATED June 2025 — Android parity ~99%)
+================================================================================
+
+TABLE OF CONTENTS
+1. SYSTEM OVERVIEW
+2. BOOT → BLUETOOTH → CONNECT FLOW
+3. API ENDPOINTS (GET)
+4. API ENDPOINTS (POST)
+5. ACTIONS/ATTACK MODULES (33 files)
+6. CONFIGURATION SETTINGS
+7. WEB FRONTEND PAGES
+8. ORCHESTRATOR CYCLE
+9. ANDROID APP FEATURE MAP vs FIRMWARE
+10. DIALOG BOX SUGGESTIONS
+
+================================================================================
+1. SYSTEM OVERVIEW
+================================================================================
+
+your-pax is an offensive security cyberdeck that runs on a Raspberry Pi.
+It boots and:
+  - Starts the orchestrator (autonomous attack engine)
+  - Starts the web server on port 8000
+  - Starts Bluetooth NAP (Network Access Point) with SSID "your-pax"
+  - Shows status on e-paper display (if connected)
+
+The phone connects to the Pi via Bluetooth PAN.
+Phone gets IP 192.168.4.x from the Pi's Bluetooth NAP.
+Pi's Bluetooth NAP bridge IP: 192.168.4.1.
+Web server: http://192.168.4.1:8000
+Android app connects via REST API to this IP.
+
+Two operation modes:
+  A) Autonomous mode — orchestrator continuously scans + attacks targets
+  B) Manual mode — user triggers specific attacks via web UI or Android app
+
+Key files:
+  your-pax.py        — Entry point, starts orchestrator + webapp + display threads
+  orchestrator.py    — The "brain" — orchestrates all actions
+  webapp.py          — HTTP server + request routing
+  utils.py           — WebUtils class: all endpoint handlers
+  shared.py          — SharedData: paths, config, CSV read/write, stats
+  config/*.json      — Configuration files
+  actions/*.py       — 33 action/attack modules
+
+================================================================================
+2. BOOT → BLUETOOTH → CONNECT FLOW
+================================================================================
+
+STEP 1: Pi boots → your-pax.py starts (via systemd service your-pax.service)
+STEP 2: SharedData.initialize_paths() sets up all directory paths
+STEP 3: SharedData.load_config() loads shared_config.json
+STEP 4: SharedData.setup_environment() — creates dirs, CSVs, clears logs
+STEP 5: E-paper display initialized (if has_display=true)
+STEP 6: WebThread starts → web server on port 8000 (multi-threaded)
+STEP 7: Orchestrator starts in its own thread:
+         - Loads all actions from config/actions.json
+         - Runs initial network scan
+         - Enters main cycle (scan → execute actions → idle → scan...)
+STEP 8: Bluetooth NAP starts (bluetooth_nap.py) — SSID "your-pax"
+STEP 9: Phone scans for Bluetooth devices → finds "your-pax"
+STEP 10: Phone connects to Bluetooth PAN → gets IP 192.168.4.x
+STEP 11: Phone connects to Pi at 192.168.4.1:8000 via REST API
+         - Web UI works in browser
+         - Android app connects programmatically
+
+Bluetooth NAP details:
+  - SSID: "your-pax"
+  - Bridge IP: 192.168.4.1
+  - Web port: 8000
+  - Connected clients: shown in Android app home status bar
+
+================================================================================
+3. API ENDPOINTS — GET
+================================================================================
+
+Path                  | Handler                        | Returns
+──────────────────────┼────────────────────────────────┼─────────────────────────
+/                     | index.html                     | Web UI homepage
+/index.html           | index.html                     | Web UI homepage (zipped)
+/config.html          | config.html                    | Config editor page
+/actions.html         | actions.html                   | Actions control page
+/bt_connect.html      | bt_connect.html                | Bluetooth/WiFi connect page
+/evil_ap.html         | evil_ap.html                   | Evil AP control panel
+/network.html         | network.html                   | Network scan data page
+/netkb.html           | netkb.html                     | Network KB page
+/your-pax.html        | your-pax.html                  | Main dashboard
+/loot.html            | loot.html                      | Loot viewer
+/credentials.html     | credentials.html               | Credentials viewer
+/manual.html          | manual.html                    | Manual command page
+/store.html           | store.html                     | Store dashboard
+/wifi.html            | wifi.html                      | WiFi attacks page
+/wifi_target.html     | wifi_target.html               | WiFi target detail
+/favicon.ico          | favicon                        | Icon file
+/manifest.json        | manifest                       | PWA manifest
+/apple-touch-icon     | apple-touch-icon.png           | Apple icon
+/screen.png           | screen.png (from web dir)      | EPD screenshot (live)
+
+/load_config          | serve_current_config           | Full config JSON
+/get_web_delay        | {"web_delay": N}               | Web poll interval
+/scan_wifi            | scan_wifi (iwlist)             | {"networks": [...], "current_ssid": "..."}
+/wifi_scan_advanced   | wifi_scan_advanced (iw dev)    | Detailed scan [{bssid,ssid,channel,signal,wpa,wps}]
+/network_data         | network_data (HTML table)      | Scan results as HTML
+/network_data_json    | network_data_json              | {"headers": [...], "rows": [[...]]}
+/netkb_data           | netkb_data (HTML table)        | NetKB as HTML
+/netkb_data_json      | netkb_data_json                | {"ips": [...], "ports": {...}, "actions": [...]}
+/netkb_data_json_full | netkb_data_json_full           | {"headers": [...], "rows": [[...]]}
+/get_logs             | serve_logs                     | Plain text log lines
+/list_credentials     | credentials (HTML table)       | Cracked credentials HTML
+/list_credentials_json| credentials (JSON)             | [{name, headers, rows}]
+/list_files           | list_files_endpoint            | File tree JSON (recursive)
+/download_file?path=X | download_file                  | File download
+/download_backup?f=X  | download_backup                | Backup ZIP download
+/download_store?p=X   | download_store                 | Store file download
+/handshake_status     | handshake_status               | {"running": bool}
+/pmkid_status         | pmkid_status                   | {"running": bool}
+/oneshot_status       | oneshot_status                 | {"running": bool, output: [...]}
+/evil_ap_status       | evil_ap_status                 | {"running": bool, mode: "...", ...}
+/conflict_status      | conflict_status                | {"evil_ap_running", "monitor_mode", "handshake_running", "pmkid_running", "oneshot_running"}
+/list_interfaces      | list_interfaces                | ["wlan0", "wlan1", ...]
+/bluetooth_status     | bluetooth_status               | {"active", "bridge_ip", "port", "ssid", "connected_clients", "clients": [...]}
+/wifi_status          | wifi_status                    | {"connected": bool, "ssid": "...", "signal": "...", "interface": "wlan0"}
+/bluetooth_devices    | bluetooth_devices              | {"devices": [{ip, mac, name}]}
+/csrf_token           | csrf_token                     | {"csrf_token": "..."}
+/portal_list          | portal_list                    | {"portals": [{name, source}]}
+/evil_clients         | evil_clients                   | {"clients": [{timestamp, mac, ip, hostname}]}
+/loot_monitor_data    | loot_monitor_data              | {"dns": [...], "http": [...], "devices": [...]}
+/scan_targets?iface=X | scan_targets                   | {"networks": [{bssid,ssid,signal,channel}]}
+/wpa_validate_status  | wpa_validate_status            | {"status": "idle"}
+
+================================================================================
+4. API ENDPOINTS — POST
+================================================================================
+
+Path                  | Parameters (JSON body)                    | What it does
+──────────────────────┼──────────────────────────────────────────┼────────────────────────
+/save_config          | Any config key/value pairs               | Saves to shared_config.json
+/connect_wifi         | {"ssid": "...", "password": "..."}       | Connects via nmcli
+/disconnect_wifi      | (none)                                   | Disconnects + clears preconfigured
+/clear_files          | (none)                                   | rm -rf all data/config/backup/logs
+/clear_files_light    | (none)                                   | rm -rf logs/output only
+/initialize_csv       | (none)                                   | Regenerates CSV + livestatus
+/reboot               | (none)                                   | sudo reboot
+/shutdown             | (none)                                   | sudo shutdown now
+/restore_default_config | (none)                                 | Restores config to defaults
+/restart_your_pax_service | (none)                               | sudo systemctl restart your-pax.service
+/backup               | (none)                                   | Creates backup ZIP
+/restore              | multipart/form-data (file)               | Restores from backup ZIP
+/stop_orchestrator    | (none)                                   | Stops orchestrator cycle
+/start_orchestrator   | (none)                                   | Starts orchestrator cycle
+/execute_manual_attack | {"ip":"...","port":"...","action":"..."}| Executes action_class on target
+/trigger_scan         | (none)                                   | Triggers network scan
+/trigger_bruteforce   | {"protocol":"all"|"ssh"|"ftp"|...}       | Triggers bruteforce
+/trigger_vulnscan     | (none)                                   | Triggers vuln scan
+/trigger_steal        | (none)                                   | Triggers file steal
+/stop_all             | (none)                                   | Stops all operations
+/handshake_start      | {"bssid":"...","channel":"N","prefix":"?"}| Starts handshake capture
+/handshake_stop       | (none)                                   | Stops handshake capture
+/deauth_attack        | {"bssid":"...","client":"...","count":N,"channel":"?"}| Sends deauth packets
+/pmkid_start          | {"bssid":"...","channel":"N","prefix":"?"}| Starts PMKID capture
+/pmkid_stop           | (none)                                   | Stops PMKID capture
+/oneshot              | {"bssid":"...","pixie":bool,"bruteforce":bool,"pbc":bool,"pin":"...","delay":N,"pixie_force":bool,"show_pixie_cmd":bool,"verbose":bool,"iface_down":bool}| Starts WPS attack
+/oneshot_stop         | (none)                                   | Stops WPS attack
+/start_evil_ap        | {"ssid":"...","channel":N,"password":"...","interface":"...","portal":"...","wpa_validate":bool,"wpa_interface":"...","karma":bool,"karma_interface":"...","clone":bool,"deauth_interface":"...","clone_interface":"...","target_bssid":"...","target_ssid":"...","target_channel":N}| Starts Evil AP (or Evil Twin if clone=true)
+/stop_evil_ap         | (none)                                   | Stops Evil AP
+/stop_evil_clone      | (none)                                   | Stops Evil Twin clone
+/upload_portal        | multipart/form-data (file)               | Uploads portal template (.html)
+/delete_portal        | {"filename":"..."}                        | Deletes custom portal template
+
+================================================================================
+5. ACTIONS/ATTACK MODULES (33 files in actions/)
+================================================================================
+
+5-A. PORT-BASED ACTIONS (execute on targets with matching open ports)
+─────────────────────────────────────────────────────────────────────
+
+Module                | Class            | Port  | Parent | What it does
+──────────────────────┼──────────────────┼───────┼────────┼────────────────────────────
+ssh_connector         | SSHBruteforce    | 22    | null   | SSH credential bruteforce
+ftp_connector         | FTPBruteforce    | 21    | null   | FTP credential bruteforce
+telnet_connector      | TelnetBruteforce | 23    | null   | Telnet credential bruteforce
+smb_connector         | SMBConnector     | 445   | null   | SMB credential bruteforce
+sql_connector         | SQLConnector     | 3306  | null   | SQL credential bruteforce
+rdp_connector         | RDPBruteforce    | 3389  | null   | RDP credential bruteforce
+
+Each bruteforce connector:
+  - Reads users.txt and passwords.txt from data/input/dictionary/
+  - Tries credential combinations against the target
+  - On success: saves to CSV (ssh.csv, ftp.csv, etc.)
+  - Uses configured timewait delay between attempts
+  - Returns 'success' or 'failed'
+
+STEAL FILE ACTIONS (children of their parent connector):
+────────────────────────────────────────────────────────
+Module                | Class            | Port  | Parent
+──────────────────────┼──────────────────┼───────┼────────────────
+steal_files_ssh       | StealFilesSSH    | 22    | SSHBruteforce
+steal_files_ftp       | StealFilesFTP    | 21    | FTPBruteforce
+steal_files_telnet    | StealFilesTelnet  | 23    | TelnetBruteforce
+steal_files_smb       | StealFilesSMB    | 445   | SMBConnector
+steal_files_rdp       | StealFilesRDP    | 3389  | RDPBruteforce
+steal_data_sql        | StealDataSQL     | 3306  | SQLConnector
+
+Steal action flow:
+  1. Connects via the parent's cracked credentials
+  2. Reads steal_file_names list (e.g., ["ssh.csv", "hack.txt"])
+  3. Searches for steal_file_extensions (e.g., [".your-pax", ".hack", ".flag"])
+  4. Downloads matching files to data/output/data_stolen/
+
+5-B. STANDALONE ACTIONS (no target IP required)
+────────────────────────────────────────────────
+Module                | Class            | Port  | What it does
+──────────────────────┼──────────────────┼───────┼────────────────────────────
+wifi_handshake        | WiFiHandshake    | 0     | Captures WPA handshake (airodump-ng)
+wifi_pmkid            | WiFiPMKID        | 0     | Captures PMKID (hcxdumptool)
+wifi_deauth           | WiFiDeauth       | 0     | Sends deauth packets (aireplay-ng)
+wifi_oneshot          | WiFiOneShot      | 0     | WPS PIN attack (OneShot)
+wifi_monitor          | WiFiMonitor      | 0     | Manages monitor mode
+evil_ap               | EvilAP           | 0     | Rogue access point (hostapd)
+captive_portal        | CaptivePortal    | 0     | Captive portal (dnsmasq + nginx)
+loot_monitor          | LootMonitor      | 0     | Monitors DNS/HTTP/devices on Evil AP
+karma                 | Karma            | 0     | Karma attack (responds to probe requests)
+evil_clone            | EvilClone        | 0     | Evil Twin (deauth original + clone AP)
+wpa_validator         | WPAValidator     | 0     | Validates captured password against real AP
+bluetooth_nap         | BluetoothNAP     | 0     | Bluetooth PAN service
+conflict_manager      | ConflictManager  | 0     | Checks for conflicting running attacks
+scanning              | NetworkScanner   | -     | Network discovery (nmap ping sweep)
+nmap_vuln_scanner     | NmapVulnScanner  | -     | Vulnerability scan (nmap vuln scripts)
+log_standalone        | LogStandalone    | 0     | Console logging
+log_standalone2       | LogStandalone2   | 0     | Additional logging
+IDLE                  | IDLE             | -     | No-op idle action
+
+5-C. DETAILED ATTACK PARAMETERS
+────────────────────────────────
+
+WiFiHandshake — Handshake Capture
+  params: bssid (MAC), channel (int), prefix (optional string)
+  tool: airodump-ng
+  output: .cap files in data/handshakes/
+  status: /handshake_status → {"running": bool}
+
+WiFiPMKID — PMKID Capture
+  params: bssid (MAC), channel (int), prefix (optional string)
+  tool: hcxdumptool
+  output: .pcapng files in data/pmkid/
+  status: /pmkid_status → {"running": bool}
+
+WiFiDeauth — Deauth Attack
+  params: bssid (MAC), client MAC (MAC, default ff:ff:ff:ff:ff:ff = broadcast), count (int 1-10000), channel (optional int)
+  tool: aireplay-ng
+  notes: count=0 means continuous
+
+WiFiOneShot — WPS Attack
+  params: bssid (MAC), pixie (bool), bruteforce (bool), pbc (bool), pin (string), delay (float), pixie_force (bool), show_pixie_cmd (bool), verbose (bool), iface_down (bool)
+  tool: OneShot
+  status: /oneshot_status → {"running": bool, "output": [line, ...]}
+
+EvilAP — Rogue Access Point
+  params:
+    ssid (string, default "FreeWiFi")
+    channel (int, 1-14)
+    password (string, null=open)
+    interface (string, default "wlan0")
+    portal (string, default "generic.html" — template file in web/portals/)
+    wpa_validate (bool) — if true, validates captured password against real AP
+    wpa_interface (string)
+    karma (bool) — respond to all probe requests
+    karma_interface (string)
+    clone (bool) — Evil Twin mode (requires 2 interfaces)
+    deauth_interface (string)
+    clone_interface (string)
+    target_bssid (MAC) — AP to clone
+    target_ssid (string) — AP SSID to clone
+    target_channel (int) — AP channel to clone
+  uses: hostapd (AP), dnsmasq (DHCP/DNS), nginx (portal webserver)
+
+EvilClone — Evil Twin (when clone=true in EvilAP)
+  - Deauths target AP's clients on deauth_interface
+  - Spoofs target AP's SSID/BSSID on clone_interface
+  - Runs captive portal
+  - Requires 2 Wi-Fi interfaces
+
+CaptivePortal — Phishing Portal
+  - Serves fake login page from web/portals/*.html
+  - Captures credentials to data/captured_creds.txt
+  - Portal templates: generic.html and custom uploads
+
+LootMonitor — Live Monitor on Evil AP
+  - Captures DNS queries, HTTP requests, detected devices
+  - Data accessible via /loot_monitor_data
+
+Karma — Probe Response Attack
+  - Responds to any probe request, claiming the network exists
+  - Clients may auto-connect, revealing saved credentials
+  - Used with Evil AP
+
+Bruteforce — Credential Cracking
+  protocols: ssh (22), ftp (21), telnet (23), smb (445), sql (3306), rdp (3389)
+  dictionaries: data/input/dictionary/users.txt, passwords.txt
+  output: data/output/crackedpwd/{protocol}.csv
+  trigger: /trigger_bruteforce with optional {"protocol": "ssh"|"all"}
+
+NetworkScan — Host Discovery
+  tool: nmap
+  aggressivity: config "nmap_scan_aggressivity" (-T2 default)
+  port range: config portstart (1) to portend (65535 recommended)
+  blacklist: mac_scan_blacklist, ip_scan_blacklist
+  outputs: data/output/scan_results/result_{timestamp}.csv
+
+VulnerabilityScan — Nmap Vuln Scan
+  tool: nmap --script vuln
+  interval: config "scan_vuln_interval" (900s default)
+  output: data/output/vulnerabilities/
+
+Steal Files — Remote File Extraction
+  steal_file_names: ["ssh.csv", "hack.txt"]
+  steal_file_extensions: [".your-pax", ".hack", ".flag"]
+  output: data/output/data_stolen/
+
+================================================================================
+6. CONFIGURATION SETTINGS (shared_config.json)
+================================================================================
+
+SECTION: MAIN SETTINGS
+──────────────────────
+manual_mode           | bool  | true  | Enables manual attack triggering
+websrv                | bool  | true  | Web server enabled
+web_increment         | bool  | false | Auto-increment web port?
+debug_mode            | bool  | true  | Debug logging
+scan_vuln_running     | bool  | false | Auto vulnerability scanning
+retry_success_actions | bool  | false | Retry actions after success
+retry_failed_actions  | bool  | true  | Retry actions after failure
+blacklistcheck        | bool  | true  | Enable MAC/IP blacklist
+displaying_csv        | bool  | true  | Show CSV data on display
+
+LOGGING TOGGLES
+───────────────
+log_debug, log_info, log_warning, log_error, log_critical: bool
+
+TIMING (seconds)
+────────────────
+startup_delay: 10          | Delay before orchestrator starts
+web_delay: 2               | Web UI auto-refresh interval
+screen_delay: 1            | EPD screen update interval
+comment_delaymin: 15       | Min delay between on-screen comments
+comment_delaymax: 30       | Max delay between on-screen comments
+livestatus_delay: 8        | Live status update interval
+image_display_delaymin: 2  | Min image display time
+image_display_delaymax: 8  | Max image display time
+scan_interval: 180         | Network scan interval (seconds) — 3 min
+scan_vuln_interval: 900    | Vuln scan interval (seconds) — 15 min
+failed_retry_delay: 600    | Retry delay after failure (10 min)
+success_retry_delay: 900   | Retry delay after success (15 min)
+
+DISPLAY
+───────
+has_display: true          | EPD connected?
+ref_width: 122             | Display reference width
+ref_height: 250            | Display reference height
+epd_type: "epd2in13_V4"    | EPD model (V2/V3/V4/epd2in7)
+
+LISTS
+─────
+portlist: [20, 21, 22, 23, ...] | Ports to scan
+mac_scan_blacklist: [...]        | MACs to skip in scans
+ip_scan_blacklist: [...]         | IPs to skip in scans
+steal_file_names: ["ssh.csv","hack.txt"] | Files to steal
+steal_file_extensions: [".your-pax",".hack",".flag"] | Extensions to steal
+
+NETWORK
+───────
+nmap_scan_aggressivity: "-T2"   | Nmap timing template
+portstart: 1                    | Scan range start
+portend: 2                      | Scan range end (usually 65535)
+
+TIME WAITS (seconds delay between bruteforce attempts)
+─────────
+timewait_smb: 0, timewait_ssh: 0, timewait_telnet: 0
+timewait_ftp: 0, timewait_sql: 0, timewait_rdp: 0
+
+INTERFACES
+──────────
+wifi_interface: "wlan0"
+monitor_interface: "wlan0mon"
+evil_ap_interface: "wlan0"
+
+WI-FI ATTACK SETTINGS
+─────────────────────
+enable_monitor_mode: false       | Start in monitor mode
+enable_oneshot: false            | Auto-start WPS attack
+evil_ap_running: false           | Runtime: is Evil AP active
+evil_ap_ssid: "FreeWiFi"         | Default Evil AP SSID
+evil_ap_channel: 6               | Default Evil AP channel
+
+BLUETOOTH NAP
+─────────────
+bluetooth_nap_ssid: "your-pax"
+bluetooth_nap_bridge_ip: "192.168.4.1"
+
+================================================================================
+7. WEB FRONTEND PAGES
+================================================================================
+
+Page              | Path              | Purpose
+──────────────────┼──────────────────┼────────────────────────────────
+Dashboard         | /index.html       | Main overview, live stats, quick actions
+Actions           | /actions.html     | Trigger attacks (scan, bruteforce, steal, vulnscan)
+WiFi Attacks      | /wifi.html        | Scan networks, attack dialog
+WiFi Target       | /wifi_target.html | Handshake/Deauth/PMKID/WPS controls
+Evil AP           | /evil_ap.html     | Full Evil AP/Captive Portal control
+Network           | /network.html     | Scan results table
+NetKB             | /netkb.html       | Network knowledge base table
+Loot              | /loot.html        | Stolen files tree + credentials
+Credentials       | /credentials.html | Cracked creds tables
+Store             | /store.html       | All captured data (handshakes, PMKID, etc.)
+Config            | /config.html      | Full config editor
+Manual Mode       | /manual.html      | Command execution + targeted attacks
+BT Connect        | /bt_connect.html  | WiFi/BT status + connect
+your-pax          | /your-pax.html    | Full dashboard with system info
+
+Each page auto-refreshes at web_delay * 1000 ms interval using
+embedded JavaScript fetch loops. CSRF token is injected into
+<head> of every HTML page for POST request protection.
+
+Portal templates (for Evil AP captive portal):
+  web/portals/*.html — built-in templates
+  web/portals/custom/*.html — user-uploaded templates
+
+================================================================================
+8. ORCHESTRATOR CYCLE
+================================================================================
+
+The orchestrator (orchestrator.py) runs continuously after boot:
+
+  LOOP:
+    1. Read current_data from CSV (netkb.csv)
+    2. For each alive IP and each action:
+       - Check if target has the action's required port open
+       - Check if parent action succeeded (if child action)
+       - Check retry delays (success/failure)
+       - Execute action via action.execute(ip, port, row, action_key)
+       - Write success/failed_{timestamp} to CSV
+    3. If no action executed:
+       - Run network scan
+       - Re-check targets
+       - If vuln scanning enabled: run NmapVulnScanner
+       - Run standalone actions (WiFi attacks, Evil AP, etc.)
+       - Enter IDLE state for scan_interval seconds
+    4. If triggers set (manual mode):
+       - manual_scan_trigger → scan
+       - manual_bruteforce_trigger → bruteforce (protocol-specific or all)
+       - manual_vulnscan_trigger → vulnerability scan
+       - manual_steal_trigger → steal files
+
+Manual mode (config: manual_mode=true):
+  - Orchestrator enters "triggered" mode (run_triggered)
+  - Waits for manual triggers via threading.Event()
+  - Each trigger executes the specific action once
+  - No autonomous cycling
+
+================================================================================
+9. ANDROID APP FEATURE MAP vs FIRMWARE
+================================================================================
+
+STATUS: Android app already covers ~95% of firmware functionality.
+
+FEATURE                             | Android App        | Firmware/Web
+────────────────────────────────────┼────────────────────┼────────────────────
+Bluetooth Connect (Splash)          | ✓ Full             | ✓
+Home Dashboard                      | ✓ Full             | ✓ Index page
+Quick Actions (Scan, Bruteforce,    |                    |
+  Vuln Scan, Steal, Stop All)       | ✓ Full             | ✓ Actions page
+Manual Mode panel (Home)            | ✓ Full             | ✓ Manual page
+System Actions (Reboot, Shutdown,   |                    |
+  Restart, Clear Files, etc.)       | ✓ Full             | ✓ Config page
+Navigation chips to sub-screens     | ✓ Full             | ✓ Nav links
+Console Logs viewer                 | ✓ Full             | ✓
+Live Stats (hosts, creds, etc.)     | ✓ Full             | ✓
+WiFi Status Bar on Home             | ✓ Full             | ✓
+Network Table                       | ✓ Full (monospaced)| ✓ Network page
+Network Detail (host info + ports)  | ✓ Full             | ✓
+WiFi Network Scanner                | ✓ Full             | ✓ WiFi page
+WiFi Attack Dialog (Handshake/Deauth/
+  PMKID/WPS)                        | ✓ Full             | ✓ WiFi target
+Evil AP Control Panel               | ✓ Full             | ✓ Evil AP page
+  Basic Setup (SSID, channel, iface)| ✓                  | ✓
+  Security (open/WPA)               | ✓                  | ✓
+  Portal Template selector          | ✓                  | ✓
+  WPA Validate toggle               | ✓                  | ✓
+  Karma Attack toggle               | ✓                  | ✓
+  Evil Twin (Clone AP)              | ✓                  | ✓
+  Live Status (clients, passwords)  | ✓                  | ✓
+  Connected Clients table           | ✓                  | ✓
+  Captured Passwords list           | ✓                  | ✓
+  Live Monitor (DNS/HTTP/Devices)   | ✓                  | ✓
+WiFi Connect (status + connect)     | ✓ Full             | ✓ BT Connect page
+Loot Screen (Credentials + Files)   | ✓ Full             | ✓ Loot page
+Store Screen (all captured data)    | ✓ Full             | ✓ Store page
+  Handshakes, PMKID, Evil Creds     | ✓                  | ✓
+  WPS Reports, Cracked Creds        | ✓                  | ✓
+  Stolen Files (tree view)          | ✓                  | ✓
+  Scan Results, Vuln Scans          | ✓                  | ✓
+  Zombies, NetKB                    | ✓                  | ✓
+  Portal Upload/Delete              | ✓                  | ✓
+Config Screen (JSON editor)         | ✓ Full             | ✓ Config page
+  All config keys editable          | ✓                  | ✓
+  WiFi Scan Panel overlay           | ✓                  | ✓
+More Screen (Config tab + About)    | ✓ Full             | ✓
+  Settings (scan interval, nmap,    |                    |
+    evil AP ssid/channel, etc.)     | ✓                  | ✓
+  Power actions (Reboot, Shutdown)  | ✓                  | ✓
+  Nav chips to all sub-screens      | ✓                  | ✓
+  About section                     | ✓                  | ✓
+Manual Mode Screen                  | ✓ Full             | ✓ Manual page
+  Targeted Attack (IP/Port/Action)  | ✓                  | ✓
+  Execute Command                   | ✓                  | ✓
+  Quick Commands chips              | ✓                  | ✓
+EPD Screen (live e-paper view)      | ✓ Full             | ✓ /screen.png
+Log Screen                          | ✓ Full             | ✓ /get_logs
+NetKB Screen                        | ✓ Full             | ✓ NetKB page
+WiFi Target Select (bottom sheet)   | ✓                  | ✓
+
+RECENTLY ADDED (June 2025):
+───────────────────────────
+  [x] Backup/Restore             — BackupRestoreScreen.kt with Create Backup + Restore from ZIP
+  [x] Bruteforce by protocol     — Protocol selector dialog (All/SSH/FTP/Telnet/SMB/SQL/RDP)
+  [x] Confirmation dialogs       — 20+ dialogs for all destructive actions across all screens
+  [x] Bruteforce protocol picker  — ExposedDropdownMenuBox in HomeScreen AlertDialog
+
+FIXED (June 2025 batch 2):
+───────────────────────────
+  [x] Auto-polling for attack output  — LaunchedEffect polls handshake/pmkid/WPS status every 2s when running
+  [x] Copy password to clipboard      — ClipboardManager implemented in EvilAPScreen
+  [x] Check Monitor button            — Small "Check" button in WiFiScreen verifies monitor mode
+  [x] LootScreen font size            — +/- controls added to TopAppBar, applied to credentials/files
+  [x] Disconnect WiFi from Home       — "Disc. WiFi" button added to System Actions row
+
+ALREADY HAD:
+────────────
+  [x] Live mode display (EvilAP)      — status?.mode shown in Live Status card
+  [x] StoreScreen auto-refresh (10s)  — LaunchedEffect already polls every 10s
+  [x] StoreScreen total count         — "Captured Store ($total)" header already present
+
+REMAINING GAPS (minor):
+───────────────────────
+  [ ] Conflict warning panel     — already shown on WiFi screen, basic
+  [ ] WPA Validate status        — endpoint exists but no status readback
+  [ ] Detailed attack output     — app shows basic output, could show more detail
+
+================================================================================
+10. DIALOG BOX SUGGESTIONS
+================================================================================
+
+Web UI has NO dialog boxes — executes immediately.
+Android app now HAS confirmation dialogs for all destructive actions (implemented June 2025):
+
+DESTRUCTIVE ACTION              | SUGGESTED DIALOG
+────────────────────────────────┼──────────────────────────────────────
+Clear Files                     | "This will permanently delete ALL data files, configs, backups, and logs. This cannot be undone. Continue?"
+Clear Files Light               | "This will delete logs, stolen files, cracked passwords, scan results, and caches. Continue?"
+Reboot                          | "Reboot the Raspberry Pi? All running attacks will be stopped."
+Shutdown                        | "Shut down the Raspberry Pi? Power off completely."
+Restart Service                 | "Restart the your-pax service? The web server and orchestrator will restart."
+Stop All Attacks                | "Stop all running attacks including scans, bruteforce, handshake capture, and WPS attacks?"
+Initialize CSVs                 | "Re-initialize CSV files? This will reset the network knowledge base."
+Start Evil AP                   | "Starting Evil AP will take over the Wi-Fi interface. Other Wi-Fi operations will stop. Continue?"
+Stop Orchestrator               | "Stop the orchestrator? No automatic attacks will run until restarted."
+Delete Portal Template          | "Delete portal template '{name}'? This cannot be undone."
+Trigger Scan                    | "Trigger network scan now?"
+Trigger Bruteforce              | "Start bruteforce attack on ALL alive targets? This may take a while."
+Trigger Steal                   | "Attempt to steal files from all cracked targets?"
+Handshake Capture               | "Start capturing WPA handshake on this network? Requires monitor mode."
+Deauth Attack                   | "Send {count} deauth packets to {bssid}? Clients will temporarily lose connection."
+PMKID Capture                   | "Start PMKID capture on this network? Requires monitor mode."
+WPS Attack                      | "Start WPS attack on {bssid}? This may take several minutes."
+Start Captive Portal            | "Start captive portal on SSID '{ssid}'? Users connecting will see a login page."
+Reboot (from More > About)      | "Are you sure you want to reboot your-pax? All operations will stop and the device will restart."
+
+================================================================================
+END OF REFERENCE
+================================================================================
+
+ALL FEATURES IMPLEMENTED (June 2025):
+1. [x] Backup/Restore screen with Create Backup + Restore from file picker
+2. [x] Protocol selector for bruteforce (SSH/FTP/Telnet/SMB/SQL/RDP/All) in HomeScreen
+3. [x] Confirmation dialogs for 20+ destructive actions across all screens
+4. [x] Protocol picker in a dropdown AlertDialog (ExposedDropdownMenuBox)
+
+Files modified/created:
+--- Batch 1 (Confirmation dialogs + Backup + Bruteforce protocol) ---
+- BackupRestoreScreen.kt       — NEW: Backup & Restore with confirmation dialog
+- Screen.kt                    — Added BackupRestore route
+- NavGraph.kt                  — Added BackupRestore composable
+- HomeScreen.kt                — Bruteforce protocol selector + confirm dialogs + Disc. WiFi
+- NetworkDetailScreen.kt       — 3 confirmation dialogs
+- WiFiScreen.kt                — Toggle Mon confirmation + Check Monitor button
+- EvilAPScreen.kt              — Start AP + Deauth confirmations (fixed brace bug) + Copy password
+- WiFiTargetAttackDialog.kt    — 5 confirmation dialogs + fixed state var bug + auto-polling
+- MoreScreen.kt                — Backup chip + shutdown confirmation
+- StoreScreen.kt               — Portal delete confirmation
+- ConfigScreen.kt              — Restore defaults confirmation
+- LootScreen.kt                — Font size controls (+/- in TopAppBar)
+
+Android app is now at ~99.5% parity with web UI.

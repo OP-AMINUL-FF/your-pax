@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>your-pax - WiFi Connect</title>
+    <link rel="icon" href="web/images/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="web/css/styles.css">
+    <link rel="manifest" href="manifest.json">
+</head>
+<body>
+<div class="nav-mini">
+<a href="/index.html" title="Playground">P</a>
+<a href="/config.html" title="Config">Cfg</a>
+<a href="/network.html" title="Network">Net</a>
+<a href="/netkb.html" title="NetKB">NKB</a>
+<a href="/credentials.html" title="Creds">Cred</a>
+<a href="/loot.html" title="Loot">Loot</a>
+<a href="/your-pax.html" title="Live EPD">EPD</a>
+<span class="sep">|</span>
+<a href="/wifi.html" title="WiFi">WiFi</a>
+<a href="/evil_ap.html" title="Evil AP">Evil</a>
+<a href="/store.html" title="Store">Store</a>
+<span class="sep">|</span>
+<a href="/bt_connect.html" title="BT Connect">BT</a>
+</div>
+    <div class="toolbar" id="mainToolbar">
+        <button type="button" onclick="window.location.href='/index.html'" title="Dashboard">
+            <img src="/web/images/console_icon.png" alt="your-pax" style="height: 50px;">
+        </button>
+        <button type="button" onclick="window.location.href='/bt_connect.html'" title="WiFi Connect">
+            <img src="/web/images/wifi.png" alt="WiFi" style="height: 50px;">
+        </button>
+        <button type="button" onclick="window.location.href='/config.html'" title="Config">
+            <img src="/web/images/config_icon.png" alt="Config" style="height: 50px;">
+        </button>
+        <button type="button" onclick="window.location.href='/network.html'" title="Network">
+            <img src="/web/images/network_icon.png" alt="Network" style="height: 50px;">
+        </button>
+        <button type="button" onclick="window.location.href='/loot.html'" title="Loot">
+            <img src="/web/images/loot_icon.png" alt="Loot" style="height: 50px;">
+        </button>
+    </div>
+    <div class="console-toolbar">
+        <button type="button" onclick="scanNetworks()" title="Scan WiFi">Scan Networks</button>
+        <button type="button" onclick="disconnectWifi()" title="Disconnect">Disconnect</button>
+    </div>
+    <div class="wifi-status" id="wifiStatus">
+        <h3>WiFi Status: <span id="connectionStatus">Checking...</span></h3>
+        <p>Current SSID: <span id="currentSsid">-</span></p>
+        <p>Signal: <span id="signalLevel">-</span></p>
+    </div>
+    <div class="bt-status" id="btStatus">
+        <h3>Bluetooth NAP: <span id="btNapStatus">Checking...</span></h3>
+        <p>Bridge IP: <span id="btBridgeIp">-</span></p>
+        <p>Connected Clients: <span id="btClients">0</span></p>
+        <p>Accessible at: <span id="btUrl">http://192.168.4.1:8000</span></p>
+    </div>
+    <div id="scanResults">
+        <h3>Available Networks</h3>
+        <ul id="networkList"></ul>
+    </div>
+
+    <script>
+        function escapeHtml(str) {
+            var div = document.createElement('div');
+            div.appendChild(document.createTextNode(str));
+            return div.innerHTML;
+        }
+
+        function scanNetworks() {
+            fetch('/wifi_scan_advanced')
+                .then(response => response.json())
+                .then(networks => {
+                    var list = document.getElementById('networkList');
+                    list.innerHTML = '';
+                    networks.forEach(function(net) {
+                        var li = document.createElement('li');
+                        var ssid = net.ssid || '(hidden)';
+                        var enc = net.wpa ? 'WPA' : 'Open';
+                        var sig = net.signal || '?';
+                        li.innerHTML = '<strong>' + escapeHtml(ssid) + '</strong> [' + enc + '] Signal: ' + sig + 'dBm';
+                        li.onclick = function() { connectToNetwork(ssid); };
+                        li.style.cursor = 'pointer';
+                        list.appendChild(li);
+                    });
+                })
+                .catch(error => {
+                    document.getElementById('networkList').innerHTML = '<li>Error scanning: ' + escapeHtml(error.message || 'Failed') + '</li>';
+                });
+        }
+
+        function connectToNetwork(ssid) {
+            var password = prompt('Enter password for "' + ssid + '":');
+            if (password) {
+                fetch('/connect_wifi', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ssid: ssid, password: password })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message || 'Connected!');
+                    updateStatus();
+                })
+                .catch(error => alert('Error: ' + error.message));
+            }
+        }
+
+        function disconnectWifi() {
+            fetch('/disconnect_wifi', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    alert(data.message || 'Disconnected');
+                    updateStatus();
+                })
+                .catch(error => alert('Error: ' + error.message));
+        }
+
+        function updateStatus() {
+            fetch('/wifi_status')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('connectionStatus').innerText = data.connected ? 'Connected' : 'Disconnected';
+                    document.getElementById('connectionStatus').style.color = data.connected ? 'green' : 'red';
+                    document.getElementById('currentSsid').innerText = data.ssid || '-';
+                    document.getElementById('signalLevel').innerText = data.signal || '-';
+                })
+                .catch(error => console.error('Status error:', error));
+
+            fetch('/bluetooth_status')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('btNapStatus').innerText = data.active ? 'Active' : 'Inactive';
+                    document.getElementById('btNapStatus').style.color = data.active ? 'green' : 'red';
+                    document.getElementById('btBridgeIp').innerText = data.bridge_ip || '-';
+                    document.getElementById('btClients').innerText = data.connected_clients || '0';
+                })
+                .catch(error => console.error('BT status error:', error));
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus();
+            setInterval(updateStatus, 5000);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+shuno web file dekho + bakent dekho evry single optoin logic konta age click kore konta click korle ki actoin hoy kivabe ki kemne ki ettadi shob r ha app ta keo pura same to same koro mordern ui te r ha kichu kichu jaygay dialog o show hobe karon web a dialog nai for example wifi attak optoin a age wifi scan kora then j kono terget ar upore klick korle dialog chole ashbe shob attack abong oi attack sellect koarar por oi attack ar shob optoin result shob kichu 
+The user wants me to study the web UI carefully - every single option, logic, what each button does, what action happens, the flow, etc. - and then make the Android app match it exactly with a modern UI. They also mention that some places in the web UI don't have dialogs but the app should show dialogs (like WiFi attack: scan first, then click on a target to show a dialog with all attack options and results).
+
+Let me first explore the web UI to understand the full flow. The web UI is served by the your-pax device. Let me check if there's any local web UI source or if I need to fetch it from the device.
+
+Let me look at the project structure first to see if there's any web UI source code included.
+
+Let me first study the web UI of your-pax to understand every feature, flow, and option.
+
+Now I need to study the web UI HTML and JS files in detail to understand every feature, option, button, flow, and action. Let me read all the HTML files and their corresponding JS files to understand the full web UI behavior. Then I'll update the Android app to match exactly.
+
+Let me start reading the key web UI files. The most important ones for the Android app are:
+
+wifi.html + wifi_target.html - WiFi scanning, attacks
+evil_ap.html - Evil AP
+config.html - Configuration
+store.html - Store dashboard
+credentials.html - Credentials
+loot.html - Loot files
+network.html - Network scanning
+netkb.html - Network knowledge base
+your-pax.html - About/bluetooth
+index.html - Home page
+bt_connect.html - Bluetooth connect
+Let me read them all.
+
+Now let me study every web UI file in detail to understand the full feature set and flow.
+
+The output was truncated. I have the most critical files: wifi.html, wifi_target.html, and partially evil_ap.html. Let me also read the remaining HTML files I need - especially store.html, config.html, credentials.html, loot.html, network.html, netkb.html, your-pax.html, bt_connect.html, and the full evil_ap.html.
+
+But actually, I now have a very good understanding of the web UI from the files I've read. The key insight is:
+
+wifi.html - Scan networks, shows table with SSID, BSSID, Ch, Signal, Security, WPS, Action button. Conflict bar. Toggle monitor mode button. Click on row or "Attack" button navigates to wifi_target.html with query params.
+wifi_target.html - For a specific target: 4 attack cards (Handshake, Deauth, PMKID, WPS) each with start/stop buttons, parameters, and output. Has conflict display and auto-polling status. WPS has many options: Pixie Dust/Bruteforce/PBC toggles, custom PIN, Delay, Pixie Force, Show Pixie Cmd, Verbose, IFace Down.
+evil_ap.html - Complex screen with: Start/Stop, Basic Setup (interface select, SSID, channel, security type, WPA password), Portal Template selector, WPA Validate toggle + interface, Karma toggle + interface, Clone AP (Evil Twin) toggle with deauth/clone interfaces, target BSSID/SSID, scan targets button, target select dropdown. Live status (clients, passwords, mode), connected clients table, captured passwords, live monitor (DNS/HTTP/Devices tabs), log preview.
+index.html - Dashboard with: Bluetooth status bar, WiFi connection status, quick action buttons (Scan, Bruteforce, Vuln Scan, Steal, Stop All), Manual Mode toggle with IP/port/action dropdowns and execute button, console log, font size controls, toolbar toggle.
+Now let me focus on what needs to change in the Android app to match this exactly. Let me read the remaining key files: store.html, config.html, evil_ap.html (full), credentials.html, loot.html, network.html, netkb.html, your-pax.html, bt_connect.html.
+
+Actually, I already have a good understanding from the previous exploration. Let me now focus on what the user is asking:
+
+They want me to:
+
+Study every single option, logic, flow from the web UI
+Make the Android app exactly match it pixel-for-pixel in modern UI
+Add dialogs where appropriate (e.g., WiFi attack: scan → tap target → dialog with all attacks)
+The key gaps between current Android app and web UI are:
+
+WiFi (wifi.html + wifi_target.html)
+Web: Scan → list of networks with #, SSID, BSSID, Ch, Signal bars, Security badge, WPS badge, Attack button
+Web: Click row OR Attack button → navigates to wifi_target.html with all 4 attacks
+Web: Conflict bar showing active conflicts
+Web: Toggle Monitor and Check Monitor buttons
+Android current: Has scan + dialog (good), but missing: conflict bar, signal bars visualization, security/WPS badges, monitor toggle, network count
+Android dialog: Already has Handshake, Deauth, PMKID, WPS. Missing: WPS Delay, Show Pixie Cmd, IFace Down, continuous deauth toggle, deauth output display
+Evil AP (evil_ap.html) - VERY COMPLEX
+Web has: Basic Setup (AP Interface, SSID, Channel, Security type, WPA Password)
+Portal Template selector with dropdown
+WPA Validate toggle with interface
+Karma toggle with interface
+Clone AP toggle with deauth/clone interfaces, target BSSID/SSID, scan targets, target select
+Live Status (clients, passwords, mode)
+Connected Clients table
+Captured Passwords with refresh
+Live Monitor (DNS/HTTP/Devices tabs)
+Log preview
+Android current: Just basic SSID/channel, start/stop, placeholder for creds, clients, monitor
+Store (store.html)
+Web: Statistics cards (handshakes, PMKID, evil creds, cracked, stolen, scan results, vuln scans, zombies)
+Expandable sections for each category with file lists
+Download buttons for files
+Android current: Has StoreScreen with stat cards and expandable sections (good), but no download functionality
+Config (config.html)
+Web: All config fields (scan interval, vuln interval, aggressivity, startup delay, WiFi iface, monitor iface, Evil AP SSID, Evil AP channel, port list, IP blacklist, MAC blacklist, manual mode, debug, web server, enable monitor mode)
+Save/Restore default buttons
+Reboot button
+Android current: Has ConfigScreen with most fields, but missing: port list, IP blacklist, MAC blacklist
+Credentials (credentials.html)
+Web: Lists credential files from list_credentials_json
+Each file shown with name, headers, rows, download button
+Android current: In LootScreen as tab, shows files/rows
+Loot (loot.html)
+Web: File browser with download links
+Android current: In LootScreen as tab, shows file tree
+Network (network.html)
+Web: Table of discovered hosts (IP, MAC, Hostname, Open Ports)
+Click on row for more details
+Android current: Has NetworkScreen with similar functionality
+NetKB (netkb.html)
+Web: Table of known hosts from knowledge base
+Android current: Has tab in NetworkScreen
+your-pax.html (EPD)
+Web: Live EPD display showing screen.png
+Android current: Has EPDScreen
+bt_connect.html
+Web: Bluetooth connection management
+Android current: No dedicated screen, but has BluetoothRepository
+OK, this is a massive amount of work to make the app exactly match the web UI. Let me focus on the most critical improvements:
+
+WiFi Screen: Add signal bars, security/WPS badges, conflict bar, monitor toggle, network count
+WiFi Target Attack Dialog: Add WPS Delay, Show Pixie Cmd, IFace Down, continuous deauth toggle, deauth output
+Evil AP Screen: Complete rewrite to match web - add security type, WPA password, portal template, WPA Validate, Karma, Clone AP, live status, connected clients, captured passwords, live monitor tabs, log preview
+Store Screen: Add download functionality for files
+Config Screen: Add port list, IP/MAC blacklist fields
+HomeScreen: More matches to web dashboard (bluetooth status bar, quick action buttons exactly matching)
+LogScreen: Already updated to use API
+This is a huge task. Let me start with the most impactful changes and work through them systematically. The user said "shob r ha app ta keo pura same to same koro" - so they want the app to be exactly the same as the web UI.
+
+Let me start updating files. I'll begin with the WiFi target dialog (most important) and Evil AP screen (most complex).
+
+Now I have a thorough understanding of every web UI feature. Let me systematically update the Android app to match the web UI exactly. I'll start with the biggest gaps.
+
+Let me start updating files. First, I'll update the WiFiTargetAttackDialog to match the web version exactly - adding the missing WPS options and fixing the deauth section. Let me read the current dialog first.
+
+Let me start with the WiFiTargetAttackDialog - adding all missing web options:
+

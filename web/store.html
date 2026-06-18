@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>your-pax - Store</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#0a0a0a;color:#fff;padding:20px;font-size:13px}
+h1{color:#ffcc00;font-size:20px;margin-bottom:15px;border-bottom:1px solid #333;padding-bottom:8px;display:flex;justify-content:space-between;align-items:center}
+h2{font-size:15px;margin:0 0 8px;display:flex;align-items:center;gap:8px}
+h2 .count{font-size:11px;color:#888;font-weight:normal}
+.card{background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:15px;margin-bottom:12px}
+.card.hs{border-left:3px solid #0066cc}
+.card.pmkid{border-left:3px solid #cc6600}
+.card.cred{border-left:3px solid #00cc66}
+.card.wps{border-left:3px solid #ff6600}
+.card.evil{border-left:3px solid #cc3333}
+.card.files{border-left:3px solid #9933cc}
+.card.scan{border-left:3px solid #3399ff}
+.card.vuln{border-left:3px solid #ff3366}
+.card.zombie{border-left:3px solid #33ff99}
+.card.netkb{border-left:3px solid #66ccff}
+button{padding:6px 12px;border:none;border-radius:4px;cursor:pointer;font-size:11px;margin:2px}
+.btn-dl{background:#0066cc;color:#fff}
+.btn-refresh{background:#333;color:#ccc}
+.nav{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;align-items:center}
+.nav a{color:#888;text-decoration:none;padding:5px 10px;border-radius:4px;font-size:13px}
+.nav a:hover,.nav a.active{color:#fff;background:#333}
+.nav .spacer{flex:1}
+.nav .corner{color:#ffcc00;font-weight:bold;font-size:14px}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:15px}
+.stat-box{background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:12px 18px;text-align:center;flex:1;min-width:90px}
+.stat-box .num{font-size:22px;font-weight:bold;display:block}
+.stat-box .lbl{font-size:10px;color:#888;text-transform:uppercase;letter-spacing:1px}
+.stat-box.hs .num{color:#0066cc}.stat-box.pmkid .num{color:#cc6600}
+.stat-box.cred .num{color:#00cc66}.stat-box.wps .num{color:#ff6600}
+.stat-box.files .num{color:#9933cc}.stat-box.evil .num{color:#cc3333}
+.stat-box.scan .num{color:#3399ff}.stat-box.vuln .num{color:#ff3366}
+.stat-box.zombie .num{color:#33ff99}.stat-box.netkb .num{color:#66ccff}
+table{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+th,td{padding:5px 8px;text-align:left;border-bottom:1px solid #222;font-size:11px}
+th{background:#222;color:#aaa;font-weight:normal;text-transform:uppercase;font-size:10px;letter-spacing:0.5px}
+tr:hover{background:#222}
+.badge{padding:2px 6px;border-radius:3px;font-size:10px}
+.badge-cap{background:#004488;color:#fff}.badge-pcap{background:#884400;color:#fff}
+.badge-txt{background:#448800;color:#fff}.badge-csv{background:#880044;color:#fff}
+.badge-json{background:#444488;color:#fff}
+.empty{text-align:center;color:#555;padding:20px;font-size:12px}
+pre.creds{background:#0d0d0d;padding:10px;border-radius:4px;font-size:11px;color:#ff6666;max-height:200px;overflow-y:auto;margin-top:6px;font-family:Consolas,monospace}
+pre.wps-out{background:#0d0d0d;padding:10px;border-radius:4px;font-size:11px;color:#0f0;max-height:250px;overflow-y:auto;margin-top:6px;font-family:Consolas,monospace}
+.tree{font-family:Consolas,monospace;font-size:11px;margin-top:4px}
+.tree-item{padding:2px 0;color:#ccc;display:flex;align-items:center;gap:6px}
+.tree-dir{color:#ffcc00;font-weight:bold}
+.tree-file{color:#aaa}
+.tree-indent{display:inline-block;width:16px}
+.tree-toggle{cursor:pointer;color:#888;user-select:none;font-size:10px;margin-right:2px}
+.tree-toggle:hover{color:#fff}
+.tree-children{margin-left:20px;border-left:1px solid #333;padding-left:10px;display:none}
+.tree-children.open{display:block}
+</style>
+</head>
+<body>
+<div class="nav-mini">
+<a href="/index.html" title="Playground">P</a>
+<a href="/config.html" title="Config">Cfg</a>
+<a href="/network.html" title="Network">Net</a>
+<a href="/netkb.html" title="NetKB">NKB</a>
+<a href="/credentials.html" title="Creds">Cred</a>
+<a href="/loot.html" title="Loot">Loot</a>
+<a href="/your-pax.html" title="Live EPD">EPD</a>
+<span class="sep">|</span>
+<a href="/wifi.html" title="WiFi">WiFi</a>
+<a href="/evil_ap.html" title="Evil AP">Evil</a>
+<a href="/store.html" title="Store">Store</a>
+<span class="sep">|</span>
+<a href="/bt_connect.html" title="BT Connect">BT</a>
+</div>
+<div class="nav">
+<a href="index.html">&larr; Home</a>
+<a href="wifi.html">Wi-Fi Attacks</a>
+<a href="evil_ap.html">Evil AP</a>
+<a href="config.html">Config</a>
+<span class="spacer"></span>
+<a href="store.html" style="color:#ffcc00;font-weight:bold;font-size:14px">STORE</a>
+</div>
+
+<h1>
+<span>Captured Store <span id="totalCount" style="font-size:12px;color:#888;font-weight:normal">(0)</span></span>
+<button class="btn-refresh" onclick="loadStore()">Refresh</button>
+</h1>
+
+<div class="stats" id="statsRow">
+<div class="stat-box hs"><span class="num" id="sHandshakes">0</span><span class="lbl">Handshakes</span></div>
+<div class="stat-box pmkid"><span class="num" id="sPMKID">0</span><span class="lbl">PMKID</span></div>
+<div class="stat-box wps"><span class="num" id="sWPS">0</span><span class="lbl">WPS</span></div>
+<div class="stat-box evil"><span class="num" id="sEvil">0</span><span class="lbl">Evil Creds</span></div>
+<div class="stat-box cred"><span class="num" id="sCreds">0</span><span class="lbl">Cracked</span></div>
+<div class="stat-box files"><span class="num" id="sFiles">0</span><span class="lbl">Files</span></div>
+<div class="stat-box scan"><span class="num" id="sScans">0</span><span class="lbl">Scans</span></div>
+<div class="stat-box vuln"><span class="num" id="sVulns">0</span><span class="lbl">Vulns</span></div>
+<div class="stat-box zombie"><span class="num" id="sZombies">0</span><span class="lbl">Zombies</span></div>
+<div class="stat-box netkb"><span class="num" id="sNetKB">0</span><span class="lbl">NetKB</span></div>
+</div>
+
+<div class="card hs">
+<h2>Handshake Captures <span class="count" id="hsCount">(0)</span></h2>
+<div id="hsSection"><div class="empty">No handshake captures yet</div></div>
+</div>
+
+<div class="card pmkid">
+<h2>PMKID Captures <span class="count" id="pmkidCount">(0)</span></h2>
+<div id="pmkidSection"><div class="empty">No PMKID captures yet</div></div>
+</div>
+
+<div class="card evil">
+<h2>Evil AP Captured Credentials <span class="count" id="evilCount">(0)</span></h2>
+<div id="evilSection"><div class="empty">No credentials captured yet</div></div>
+</div>
+
+<div class="card wps">
+<h2>WPS Attack Results <span class="count" id="wpsCount">(0)</span></h2>
+<div id="wpsSection"><div class="empty">No WPS attacks run yet</div></div>
+</div>
+
+<div class="card cred">
+<h2>Cracked Service Credentials <span class="count" id="credCount">(0)</span></h2>
+<div id="credSection"><div class="empty">No cracked credentials yet</div></div>
+</div>
+
+<div class="card files">
+<h2>Stolen Files <span class="count" id="fileCount">(0)</span></h2>
+<div id="fileSection"><div class="empty">No stolen files yet</div></div>
+</div>
+
+<div class="card scan">
+<h2>Network Scan Results <span class="count" id="scanCount">(0)</span></h2>
+<div id="scanSection"><div class="empty">No network scan results yet</div></div>
+</div>
+
+<div class="card vuln">
+<h2>Vulnerability Scans <span class="count" id="vulnCount">(0)</span></h2>
+<div id="vulnSection"><div class="empty">No vulnerability scans yet</div></div>
+</div>
+
+<div class="card zombie">
+<h2>Zombies <span class="count" id="zombieCount">(0)</span></h2>
+<div id="zombieSection"><div class="empty">No zombie records yet</div></div>
+</div>
+
+<div class="card netkb">
+<h2>Network Knowledge Base <span class="count" id="netkbCount">(0)</span></h2>
+<div id="netkbSection"><div class="empty">No network KB entries yet</div></div>
+</div>
+
+<div class="card files" style="border-left-color:#ff8800">
+<h2>Portal Templates <span class="count" id="portalCount">(0)</span></h2>
+<div id="portalSection">
+<div class="portal-upload" style="margin-bottom:12px;padding:10px;background:#151515;border-radius:6px;border:1px dashed #444">
+<form id="portalUploadForm" enctype="multipart/form-data" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+<input type="file" id="portalFileInput" accept=".html" style="flex:1;min-width:140px;background:#1a1a1a;color:#ccc;border:1px solid #333;border-radius:4px;padding:5px 8px;font-size:12px">
+<button type="submit" class="btn-dl" style="padding:6px 14px">Upload Template</button>
+</form>
+<div id="portalUploadStatus" style="font-size:11px;margin-top:6px;color:#888"></div>
+</div>
+<div id="portalList"><div class="empty">Loading...</div></div>
+</div>
+</div>
+
+<style>
+.portal-item{padding:6px 10px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #222;font-size:12px}
+.portal-item:last-child{border-bottom:none}
+.portal-name{color:#ddd}
+.portal-badge{font-size:9px;padding:2px 6px;border-radius:3px;margin-left:6px}
+.portal-badge.builtin{background:#333;color:#888}
+.portal-badge.custom{background:#884400;color:#ffcc00}
+.portal-active{color:#0c0;font-size:10px;margin-left:8px}
+</style>
+
+<script>
+function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+}
+
+function loadStore() {
+    fetch('/store_data').then(r=>r.json()).then(d=>{
+        const total = d.handshakes.length + d.pmkid.length + d.creds_evil.length
+            + (d.wps_reports||[]).length + d.creds_cracked.count + d.stolen_files.length
+            + d.scan_results.length + d.vuln_scans.length + d.zombies.length
+            + (d.netkb_count||0);
+        document.getElementById('totalCount').textContent = `(${total})`;
+
+        document.getElementById('sHandshakes').textContent = d.handshakes.length;
+        document.getElementById('sPMKID').textContent = d.pmkid.length;
+        document.getElementById('sWPS').textContent = (d.wps_reports||[]).length;
+        document.getElementById('sEvil').textContent = d.creds_evil.length;
+        document.getElementById('sCreds').textContent = d.creds_cracked.count;
+        document.getElementById('sFiles').textContent = d.stolen_files.length;
+        document.getElementById('sScans').textContent = d.scan_results.length;
+        document.getElementById('sVulns').textContent = d.vuln_scans.length;
+        document.getElementById('sZombies').textContent = d.zombies.length;
+        document.getElementById('sNetKB').textContent = d.netkb_count||0;
+
+        // Handshakes
+        document.getElementById('hsCount').textContent = `(${d.handshakes.length})`;
+        let hsHtml = '';
+        if (d.handshakes.length) {
+            hsHtml = '<table><thead><tr><th>File</th><th>Size</th><th>Modified</th><th></th></tr></thead><tbody>';
+            d.handshakes.forEach(f=>{
+                hsHtml += `<tr><td>${escapeHtml(f.name)}</td><td>${escapeHtml(f.size)}</td><td>${escapeHtml(f.modified)}</td>
+                    <td><button class="btn-dl" onclick="window.open('/download_store?path=${encodeURIComponent(f.path)}')">Download</button></td></tr>`;
+            });
+            hsHtml += '</tbody></table>';
+        } else { hsHtml = '<div class="empty">No handshake captures yet</div>'; }
+        document.getElementById('hsSection').innerHTML = hsHtml;
+
+        // PMKID
+        document.getElementById('pmkidCount').textContent = `(${d.pmkid.length})`;
+        let pmHtml = '';
+        if (d.pmkid.length) {
+            pmHtml = '<table><thead><tr><th>File</th><th>Size</th><th>Modified</th><th></th></tr></thead><tbody>';
+            d.pmkid.forEach(f=>{
+                pmHtml += `<tr><td>${escapeHtml(f.name)}</td><td>${escapeHtml(f.size)}</td><td>${escapeHtml(f.modified)}</td>
+                    <td><button class="btn-dl" onclick="window.open('/download_store?path=${encodeURIComponent(f.path)}')">Download</button></td></tr>`;
+            });
+            pmHtml += '</tbody></table>';
+        } else { pmHtml = '<div class="empty">No PMKID captures yet</div>'; }
+        document.getElementById('pmkidSection').innerHTML = pmHtml;
+
+        // Evil AP creds
+        document.getElementById('evilCount').textContent = `(${d.creds_evil.length})`;
+        let evilHtml = '';
+        if (d.creds_evil.length) {
+            evilHtml = '<pre class="creds">';
+            d.creds_evil.forEach(c=>{
+                if (typeof c === 'string') { evilHtml += escapeHtml(c) + '\n'; }
+                else { evilHtml += escapeHtml(c.time||'') + ' | ' + escapeHtml(c.password||'') + '\n'; }
+            });
+            evilHtml += '</pre>';
+        } else { evilHtml = '<div class="empty">No credentials captured yet</div>'; }
+        document.getElementById('evilSection').innerHTML = evilHtml;
+
+        // WPS Reports
+        const wpsReports = d.wps_reports||[];
+        document.getElementById('wpsCount').textContent = `(${wpsReports.length})`;
+        let wpsHtml = '';
+        if (wpsReports.length) {
+            wpsHtml = '';
+            wpsReports.forEach(r=>{
+                const ext = r.file.endsWith('.csv') ? 'csv' : 'txt';
+                wpsHtml += `<div style="margin-bottom:10px"><strong style="color:#ff6600;font-size:12px">${escapeHtml(r.file)}</strong>`;
+                if (ext === 'csv') {
+                    wpsHtml += '<pre class="wps-out" style="max-height:300px">';
+                    const lines = r.content.split('\n');
+                    wpsHtml += '<table><thead><tr>';
+                    const headers = lines[0].split(',');
+                    headers.forEach(h=>{ wpsHtml += `<th>${escapeHtml(h.trim())}</th>`; });
+                    wpsHtml += '</tr></thead><tbody>';
+                    for (let i=1; i<lines.length; i++) {
+                        if (!lines[i].trim()) continue;
+                        const cols = lines[i].split(',');
+                        wpsHtml += '<tr>';
+                        cols.forEach(c=>{ wpsHtml += `<td>${escapeHtml(c.trim())}</td>`; });
+                        wpsHtml += '</tr>';
+                    }
+                    wpsHtml += '</tbody></table></pre></div>';
+                } else {
+                    wpsHtml += `<pre class="wps-out">${escapeHtml(r.content)}</pre></div>`;
+                }
+            });
+        } else { wpsHtml = '<div class="empty">No WPS attacks run yet</div>'; }
+        document.getElementById('wpsSection').innerHTML = wpsHtml;
+
+        // Cracked creds
+        document.getElementById('credCount').textContent = `(${d.creds_cracked.count})`;
+        let credHtml = '';
+        if (d.creds_cracked.count) {
+            credHtml = '<table><thead><tr><th>Service</th><th>Entries</th><th></th></tr></thead><tbody>';
+            d.creds_cracked.services.forEach(s=>{
+                const svc = s.name.toLowerCase();
+                credHtml += `<tr><td>${escapeHtml(s.name)}</td><td>${escapeHtml(String(s.count))}</td>
+                    <td><button class="btn-dl" onclick="window.open('/download_store?path=${encodeURIComponent('data/output/crackedpwd/'+svc+'.csv')}')">Download</button></td></tr>`;
+            });
+            credHtml += '</tbody></table>';
+        } else { credHtml = '<div class="empty">No cracked credentials yet</div>'; }
+        document.getElementById('credSection').innerHTML = credHtml;
+
+        // Stolen Files - show directory tree
+        document.getElementById('fileCount').textContent = `(${d.stolen_files.length})`;
+        let fileHtml = '';
+        if (d.stolen_files.length) {
+            const tree = buildTree(d.stolen_files);
+            fileHtml = '<div class="tree">';
+            fileHtml += renderTree(tree);
+            fileHtml += '</div>';
+        } else { fileHtml = '<div class="empty">No stolen files yet</div>'; }
+        document.getElementById('fileSection').innerHTML = fileHtml;
+
+        // Scan Results
+        document.getElementById('scanCount').textContent = `(${d.scan_results.length})`;
+        let scanHtml = '';
+        if (d.scan_results.length) {
+            scanHtml = '<table><thead><tr><th>File</th><th>Size</th><th>Modified</th><th></th></tr></thead><tbody>';
+            d.scan_results.forEach(f=>{
+                scanHtml += `<tr><td>${escapeHtml(f.name)}</td><td>${escapeHtml(f.size)}</td><td>${escapeHtml(f.modified)}</td>
+                    <td><button class="btn-dl" onclick="window.open('/download_store?path=${encodeURIComponent(f.path)}')">Download</button></td></tr>`;
+            });
+            scanHtml += '</tbody></table>';
+        } else { scanHtml = '<div class="empty">No network scan results yet</div>'; }
+        document.getElementById('scanSection').innerHTML = scanHtml;
+
+        // Vuln Scans
+        document.getElementById('vulnCount').textContent = `(${d.vuln_scans.length})`;
+        let vulnHtml = '';
+        if (d.vuln_scans.length) {
+            vulnHtml = '<table><thead><tr><th>File</th><th>Size</th><th>Modified</th><th></th></tr></thead><tbody>';
+            d.vuln_scans.forEach(f=>{
+                const ext = escapeHtml(f.name.split('.').pop());
+                const badge = ext==='csv'?'badge-csv':ext==='txt'?'badge-txt':ext==='json'?'badge-json':'';
+                vulnHtml += `<tr><td><span class="badge ${badge}">${ext.toUpperCase()}</span> ${escapeHtml(f.name)}</td><td>${escapeHtml(f.size)}</td><td>${escapeHtml(f.modified)}</td>
+                    <td><button class="btn-dl" onclick="window.open('/download_store?path=${encodeURIComponent(f.path)}')">Download</button></td></tr>`;
+            });
+            vulnHtml += '</tbody></table>';
+        } else { vulnHtml = '<div class="empty">No vulnerability scans yet</div>'; }
+        document.getElementById('vulnSection').innerHTML = vulnHtml;
+
+        // Zombies
+        document.getElementById('zombieCount').textContent = `(${d.zombies.length})`;
+        let zombieHtml = '';
+        if (d.zombies.length) {
+            zombieHtml = '<table><thead><tr><th>File</th><th>Size</th><th>Modified</th><th></th></tr></thead><tbody>';
+            d.zombies.forEach(f=>{
+                zombieHtml += `<tr><td>${escapeHtml(f.name)}</td><td>${escapeHtml(f.size)}</td><td>${escapeHtml(f.modified)}</td>
+                    <td><button class="btn-dl" onclick="window.open('/download_store?path=${encodeURIComponent(f.path)}')">Download</button></td></tr>`;
+            });
+            zombieHtml += '</tbody></table>';
+        } else { zombieHtml = '<div class="empty">No zombie records yet</div>'; }
+        document.getElementById('zombieSection').innerHTML = zombieHtml;
+
+        // Network KB
+        document.getElementById('netkbCount').textContent = `(${d.netkb_count||0})`;
+        let netkbHtml = '';
+        if (d.netkb_count > 0) {
+            netkbHtml = `<div style="color:#66ccff;font-size:24px;font-weight:bold;text-align:center;padding:15px">${escapeHtml(String(d.netkb_count))} entries</div>`;
+        } else { netkbHtml = '<div class="empty">No network KB entries yet</div>'; }
+        document.getElementById('netkbSection').innerHTML = netkbHtml;
+    }).catch(error => console.error('Store load failed:', error));
+}
+
+function buildTree(files) {
+    const root = {};
+    files.forEach(f=>{
+        const parts = f.rel.replace(/\\/g,'/').split('/');
+        let cur = root;
+        parts.forEach((part, i)=>{
+            if (i === parts.length - 1) {
+                cur._files = cur._files || [];
+                cur._files.push(f);
+            } else {
+                cur[part] = cur[part] || {};
+                cur = cur[part];
+            }
+        });
+    });
+    return root;
+}
+
+function renderTree(node, depth) {
+    let html = '';
+    const keys = Object.keys(node).filter(k=>!k.startsWith('_'));
+    keys.forEach(k=>{
+        const escK = escapeHtml(k);
+        const childCount = countFiles(node[k]);
+        html += `<div class="tree-item">
+            <span class="tree-indent"></span>
+            <span class="tree-toggle" onclick="toggleTree(this)">&#9654;</span>
+            <span class="tree-dir">${escK}/</span>
+            <span style="color:#666;font-size:10px">(${childCount} files)</span>
+        </div>
+        <div class="tree-children">
+            ${renderTree(node[k], depth + 1)}
+        </div>`;
+    });
+    if (node._files) {
+        node._files.forEach(f=>{
+            html += `<div class="tree-item">
+                <span class="tree-indent"></span>
+                <span style="display:inline-block;width:10px"></span>
+                <span class="tree-file">${escapeHtml(f.name)}</span>
+                <span style="color:#666;font-size:10px">(${escapeHtml(f.size)} bytes)</span>
+                <button class="btn-dl btn-sm" onclick="window.open('/download_store?path=${encodeURIComponent(f.path)}')">DL</button>
+            </div>`;
+        });
+    }
+    return html;
+}
+
+function countFiles(node) {
+    let c = 0;
+    Object.keys(node).forEach(k=>{
+        if (k === '_files') c += node[k].length;
+        else if (typeof node[k] === 'object') c += countFiles(node[k]);
+    });
+    return c;
+}
+
+function toggleTree(el) {
+    const isOpen = el.dataset.open === 'true';
+    el.dataset.open = isOpen ? 'false' : 'true';
+    el.textContent = isOpen ? '\u25B6' : '\u25BC';
+    const children = el.parentElement.nextElementSibling;
+    if (children) children.classList.toggle('open');
+}
+
+function loadPortals() {
+    fetch('/portal_list').then(function(r){return r.json()}).then(function(d){
+        var list = qs('portalList');
+        var count = qs('portalCount');
+        var portals = d.portals || [];
+        count.textContent = '(' + portals.length + ')';
+        if (!portals.length) {
+            list.innerHTML = '<div class="empty">No portal templates found</div>';
+            return;
+        }
+        var pref = 'generic.html';
+        try { pref = localStorage.getItem('portal_pref') || 'generic.html'; } catch(e){}
+        var html = '';
+        portals.forEach(function(p){
+            var isCustom = p.source === 'custom';
+            var badge = isCustom ? '<span class="portal-badge custom">custom</span>' : '<span class="portal-badge builtin">built-in</span>';
+            var active = p.name === pref ? '<span class="portal-active">&#9679; in use</span>' : '';
+            var delBtn = isCustom ? '<button class="btn-sm" style="background:#633;color:#ddd;padding:3px 8px;font-size:10px" onclick="deletePortal(\''+escapeHtml(p.name).replace(/'/g,"\\'")+'\')">Delete</button>' : '';
+            html += '<div class="portal-item"><span><span class="portal-name">'+escapeHtml(p.name)+'</span>'+badge+active+'</span><span>'+delBtn+'</span></div>';
+        });
+        list.innerHTML = html;
+    }).catch(function(){
+        qs('portalList').innerHTML = '<div class="empty">Failed to load portals</div>';
+    });
+}
+
+function deletePortal(name) {
+    if (!confirm('Delete portal "' + name + '"?')) return;
+    fetch('/delete_portal', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({filename:name})})
+    .then(function(r){return r.json()}).then(function(d){
+        if (d.status === 'success') { loadPortals(); }
+        else { alert('Delete failed'); }
+    }).catch(function(){ alert('Delete request failed'); });
+}
+
+var portalForm = qs('portalUploadForm');
+if (portalForm) {
+    portalForm.addEventListener('submit', function(e){
+        e.preventDefault();
+        var fileInput = qs('portalFileInput');
+        var file = fileInput.files[0];
+        if (!file) { qs('portalUploadStatus').textContent = 'Please select a .html file'; return; }
+        if (!file.name.endsWith('.html')) { qs('portalUploadStatus').textContent = 'Only .html files allowed'; return; }
+        var formData = new FormData();
+        formData.append('file', file);
+        formData.append('filename', file.name);
+        qs('portalUploadStatus').textContent = 'Uploading...';
+        fetch('/upload_portal', {method:'POST', body:formData})
+        .then(function(r){return r.json()}).then(function(d){
+            if (d.status === 'success') {
+                qs('portalUploadStatus').textContent = 'Uploaded ' + d.filename;
+                fileInput.value = '';
+                loadPortals();
+            } else {
+                qs('portalUploadStatus').textContent = 'Upload failed';
+            }
+        }).catch(function(){ qs('portalUploadStatus').textContent = 'Upload error'; });
+    });
+}
+
+function qs(id) { return document.getElementById(id); }
+
+loadStore();
+loadPortals();
+setInterval(loadStore, 10000);
+</script>
+</body>
+</html>

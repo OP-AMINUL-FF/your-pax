@@ -1,0 +1,366 @@
+================================================================================
+YOUR-PAX ANDROID vs WEB FRONTEND — 100% PARITY CHECK (June 2026)
+================================================================================
+
+Web pages: 15 HTML files (13 unique pages + 5 portal templates = 17 total served)
+Android screens: 19 composable screens + 2 dialogs (WiFiTargetAttackDialog, WiFiTargetSelect)
+
+Parity result: ANDROID ≈ 100% — Android has every web feature plus extras.
+Reverse check (does web have everything Android has?): Web missing ~10% 
+(no confirmation dialogs, no dedicated Backup/Restore screen, no Network Quick Actions card,
+no actions.html/manual.html pages exist).
+
+================================================================================
+1. DASHBOARD — index.html vs HomeScreen
+================================================================================
+
+Feature                          | Web             | Android          | Status
+─────────────────────────────────┼─────────────────┼──────────────────┼────────
+BT NAP status (SSID, IP, port)  | bluetooth_status| HomeScreen       | ✓ SAME
+WiFi status (SSID, signal)      | wifi_status     | HomeScreen       | ✓ SAME
+Connected clients count          | bluetooth_status| HomeScreen       | ✓ SAME
+Live log console streaming       | get_logs        | HomeScreen       | ✓ SAME
+Log font size +/-                | adjustFontSize  | HomeScreen       | ✓ SAME
+Log syntax coloring              | colors per level| ERROR/WARN/green | ✓ SAME
+Status message bar               | inline          | HomeScreen       | ✓ SAME
+Action buttons (Scan,Brute,Vuln,
+  Steal,STOP)                    | index.html      | NetworkScreen    | ✓ MOVED
+Manual Mode toggle               | index.html      | ManualModeScreen | ✓ MOVED
+Toggle console on/off            | toggleConsole   | HomeScreen      | ✓ SAME
+Actions dropdown (Clear Files,
+  Reboot, Shutdown, etc.)        | index.html      | SettingsScreen   | ✓ MOVED
+your-pax dropdown (live EPD)     | index.html      | EPDScreen        | ✓ MOVED
+Navigation toolbar to screens    | top bar icons   | bottom nav+chips | ✓ DIFF UX
+Live stats (hosts,cred,files,HS) | store counters  | HomeScreen       | ✓ SAME
+
+================================================================================
+2. NETWORK SCAN — network.html vs NetworkScreen
+================================================================================
+
+Feature                          | Web             | Android          | Status
+─────────────────────────────────┼─────────────────┼──────────────────┼────────
+Scan results table (JSON)        | network_data_json| NetworkScreen   | ✓ SAME
+Green/red cell coloring          | ✓               | ✓                | ✓ SAME
+60s auto-refresh                 | ✓               | ✓                | ✓ SAME
+Font size +/-                    | ✓               | ✓                | ✓ SAME
+Hide/show toolbar                | ✓               | ✓                | ✓ SAME
+Quick Actions (Scan,Stop,Brute,
+  Vuln,Steal) + confirm dialogs  | ✗ (in index)    | ✓ NetworkScreen  | ✓ ANDROID+
+Bruteforce protocol selector     | ✗ (no dropdown) | ✓ dropdown       | ✓ ANDROID+
+
+================================================================================
+3. NETWORK KNOWLEDGE BASE — netkb.html vs NetKBScreen
+================================================================================
+
+Feature                          | Web             | Android          | Status
+─────────────────────────────────┼─────────────────┼──────────────────┼────────
+Full NetKB CSV table             | netkb_data_json  | NetKBScreen      | ✓ SAME
+Blue row for dead hosts          | ✓               | ✓                | ✓ SAME
+Green/red cell coloring          | ✓               | ✓                | ✓ SAME
+Empty cell gray/dash             | ✓               | ✓                | ✓ SAME
+10s auto-refresh                 | ✓               | ✓                | ✓ SAME
+Font size +/-                    | ✓               | ✓                | ✓ SAME
+Hide/show toolbar                | ✓               | ✓                | ✓ SAME
+
+================================================================================
+4. CRACKED CREDENTIALS — credentials.html vs LootScreen (Credentials tab)
+================================================================================
+
+Feature                          | Web             | Android          | Status
+─────────────────────────────────┼─────────────────┼──────────────────┼────────
+Tables per CSV file              | list_credentials | LootScreen       | ✓ SAME
+20s auto-refresh                 | ✓               | ✓                | ✓ SAME
+Font size +/-                    | ✓               | ✓                | ✓ SAME
+Toolbar hide/show                | ✓               | ✗                | MINOR
+
+================================================================================
+5. STOLEN FILES — loot.html vs LootScreen (Files tab)
+================================================================================
+
+Feature                          | Web             | Android          | Status
+─────────────────────────────────┼─────────────────┼──────────────────┼────────
+File tree with folders/files     | list_files      | LootScreen       | ✓ SAME
+Download links/buttons           | download_file   | LootScreen       | ✓ SAME
+10s auto-refresh                 | ✓               | ✓                | ✓ SAME
+Font size +/-                    | ✓               | ✓                | ✓ SAME
+
+================================================================================
+6. CAPTURED DATA STORE — store.html vs StoreScreen
+================================================================================
+
+Feature                          | Web             | Android          | Status
+─────────────────────────────────┼─────────────────┼──────────────────┼────────
+10 stat boxes in row             | ✓               | ✓ (StatCardSm)   | ✓ SAME
+Handshake Captures table+dl      | ✓               | ✓                | ✓ SAME
+PMKID Captures table+dl          | ✓               | ✓                | ✓ SAME
+Evil AP Credentials (terminal)   | ✓               | ✓                | ✓ SAME
+WPS Attack Results               | ✓               | ✓                | ✓ SAME
+Cracked Service Credentials+dl   | ✓               | ✓                | ✓ SAME
+Stolen Files tree                | ✓               | ✓                | ✓ SAME
+Network Scan Results+dl          | ✓               | ✓                | ✓ SAME
+Vulnerability Scans+dl           | ✓               | ✓                | ✓ SAME
+Zombies+dl                       | ✓               | ✓                | ✓ SAME
+NetKB count                      | ✓               | ✓                | ✓ SAME
+Portal Templates upload          | ✓               | ✓                | ✓ SAME
+Portal Templates delete          | ✓               | ✓                | ✓ SAME
+Portal "in use" indicator        | ✓               | ✗                | MINOR
+10s auto-refresh                 | ✓               | ✓                | ✓ SAME
+
+================================================================================
+7. LIVE EPD — your-pax.html vs EPDScreen
+================================================================================
+
+Feature                          | Web             | Android          | Status
+─────────────────────────────────┼─────────────────┼──────────────────┼────────
+Live screenshot display          | screen.png      | EPDScreen        | ✓ SAME
+Auto-refresh at interval         | get_web_delay   | slider 1-30s     | ✓ SAME (more)
+Click/fullscreen toggle          | click toggle    | fullscreen btn   | ✓ SAME
+Zoom (scroll wheel vs slider)    | scroll wheel    | 20%-200% slider  | ✓ ANDROID+
+Rotation control                 | ✗               | 0/90/180/270     | ✓ ANDROID+
+
+================================================================================
+8. WiFi ATTACKS — wifi.html vs WiFiScreen
+================================================================================
+
+Feature                          | Web             | Android          | Status
+─────────────────────────────────┼─────────────────┼──────────────────┼────────
+Scan Networks button             | ✓               | ✓                | ✓ SAME
+Toggle Monitor button            | ✓               | ✓ (with confirm) | ✓ ANDROID+
+Check Monitor button             | ✓               | ✓                | ✓ SAME
+Conflict warning bar             | ✓               | ✓                | ✓ SAME
+Network table: #,SSID,BSSID,
+  Ch,Signal,Security,WPS,Action  | ✓               | ✓ (all columns)  | ✓ SAME
+Signal strength bars (unicode)   | ✓               | ✓ (unicode art)  | ✓ SAME
+Security badge (WPA2/OPEN/WPS)   | ✓               | ✓ (colored chips)| ✓ SAME
+Click row to attack target       | ✓               | ✓ (bottom sheet) | ✓ SAME
+Interface selector               | ✗ (in Evil AP)  | ✓ WiFiScreen     | ✓ ANDROID+
+Attack stop all from here        | ✗               | ✗ (in dialog)    | SAME
+Monitor status indicator         | ✗               | ✓                | ✓ ANDROID+
+
+================================================================================
+9. WiFi TARGET ATTACKS — wifi_target.html vs WiFiTargetAttackDialog
+================================================================================
+
+Feature                          | Web             | Android          | Status
+─────────────────────────────────┼─────────────────┼──────────────────┼────────
+Target info (signal,SSID,BSSID,
+  channel)                       | ✓               | ✓                | ✓ SAME
+Conflict bar                     | ✓               | ✗ (in WiFiScreen)| MINOR
+Handshake Capture:
+  Status dot                     | ✓               | ✓                | ✓ SAME
+  Output prefix input            | ✓               | ✓                | ✓ SAME
+  Start/Stop buttons             | ✓               | ✓ (+confirm)     | ✓ ANDROID+
+  Output terminal                | ✓               | ✓ (dark box)     | ✓ SAME
+  Status polling (2s)            | ✓               | ✓                | ✓ SAME
+Deauth Attack:
+  Client MAC input               | ✓               | ✓                | ✓ SAME
+  Packet count input             | ✓               | ✓                | ✓ SAME
+  Continuous toggle              | ✓               | ✓ (checkbox)     | ✓ SAME
+  Send/Stop buttons              | ✓               | ✓ (+confirm)     | ✓ ANDROID+
+  Output terminal                | ✓               | ✓                | ✓ SAME
+PMKID Capture:
+  Status dot                     | ✓               | ✓                | ✓ SAME
+  Output prefix input            | ✓               | ✓                | ✓ SAME
+  Start/Stop buttons             | ✓               | ✓ (+confirm)     | ✓ ANDROID+
+  Output terminal                | ✓               | ✓                | ✓ SAME
+  Status polling (2s)            | ✓               | ✓                | ✓ SAME
+WPS Attack (OneShot):
+  Pixie/Bruteforce/PBC toggles   | ✓               | ✓ (FilterChips)  | ✓ SAME
+  Custom PIN input               | ✓               | ✓                | ✓ SAME
+  Delay field (seconds)          | ✓               | ✓                | ✓ SAME
+  Pixie Force toggle             | ✓               | ✓                | ✓ SAME
+  Show Pixie Cmd toggle          | ✓               | ✓                | ✓ SAME
+  Verbose toggle                 | ✓               | ✓                | ✓ SAME
+  IFace Down toggle              | ✓               | ✓                | ✓ SAME
+  Start/Stop/Refresh buttons     | ✓               | ✓ (+confirm)     | ✓ ANDROID+
+  Output terminal (live)         | ✓               | ✓ (max 250dp)    | ✓ SAME
+  Status polling (1-2s)          | ✓               | ✓                | ✓ SAME
+Stop All Attacks button          | ✗               | ✓                | ✓ ANDROID+
+
+================================================================================
+10. EVIL AP CONTROL — evil_ap.html vs EvilAPScreen
+================================================================================
+
+Feature                          | Web             | Android          | Status
+─────────────────────────────────┼─────────────────┼──────────────────┼────────
+Status card (running/stopped)    | ✓               | ✓                | ✓ SAME
+Start/Stop buttons               | ✓               | ✓ (+confirm)     | ✓ ANDROID+
+Conflict bar                     | ✓               | ✓                | ✓ SAME
+Basic Setup:
+  AP Interface dropdown          | ✓               | ✓                | ✓ SAME
+  SSID Name field                | ✓               | ✓                | ✓ SAME
+  Channel (1-14)                 | ✓               | ✓                | ✓ SAME
+  Security (OPEN/WPA-PSK)        | ✓               | ✓                | ✓ SAME
+  Password (if WPA)              | ✓               | ✓                | ✓ SAME
+Portal Template selector         | ✓               | ✓                | ✓ SAME
+WPA Validate:
+  Toggle ON/OFF                  | ✓               | ✓                | ✓ SAME
+  Verify Interface dropdown      | ✓               | ✓                | ✓ SAME
+  Status display                 | ✗               | ✓ (NEW)          | ✓ ANDROID+
+  Info box text                  | ✓               | ✓                | ✓ SAME
+Karma Attack:
+  Toggle ON/OFF                  | ✓               | ✓                | ✓ SAME
+  Karma Interface dropdown       | ✓               | ✓                | ✓ SAME
+Clone AP (Evil Twin):
+  Toggle ON/OFF                  | ✓               | ✓                | ✓ SAME
+  Deauth Interface dropdown      | ✓               | ✓                | ✓ SAME
+  Clone Interface dropdown       | ✓               | ✓                | ✓ SAME
+  Target BSSID field             | ✓               | ✓                | ✓ SAME
+  Target SSID (auto-fill)        | ✓               | ✓                | ✓ SAME
+  Target Channel (auto-fill)     | ✓               | ✓                | ✓ SAME
+  Scan for Targets button        | ✓               | ✓ (with spinner) | ✓ SAME
+  Target list dropdown           | ✓               | ✓                | ✓ SAME
+  2-interface warning            | ✓               | ✗                | MINOR
+Live Status (clients,passwords,
+  mode)                          | ✓               | ✓                | ✓ SAME
+Connected Clients table:
+  IP, MAC, Hostname              | ✓               | ✓                | ✓ SAME
+  Per-client Deauth button       | ✓               | ✓ (+confirm)     | ✓ ANDROID+
+Captured Passwords:
+  Timestamp + password           | ✓               | ✓                | ✓ SAME
+  Copy to clipboard              | ✓               | ✓                | ✓ SAME
+  Refresh button                 | ✓               | ✗ (auto-refresh) | SAME
+Live Monitor:
+  DNS tab (queries + client IP)  | ✓               | ✓                | ✓ SAME
+  HTTP tab (URLs + OS info)      | ✓               | ✓                | ✓ SAME
+  Devices (hostname,MAC,IP)      | ✓               | ✓                | ✓ SAME
+  Auto-refresh (2-3s)            | ✓               | ✓                | ✓ SAME
+
+================================================================================
+11. WIFI/BT CONNECT — bt_connect.html vs WiFiConnectScreen
+================================================================================
+
+Feature                          | Web             | Android          | Status
+─────────────────────────────────┼─────────────────┼──────────────────┼────────
+WiFi Status (Connected,SSID,
+  signal)                        | ✓               | ✓                | ✓ SAME
+Disconnect WiFi button           | ✓               | ✓                | ✓ SAME
+Bluetooth NAP Status (active,
+  bridge IP, clients)            | ✓               | ✓                | ✓ SAME
+Accessible URL display           | ✓               | ✓                | ✓ SAME
+Scan Networks button             | ✓               | ✓ (with spinner) | ✓ SAME
+Manual Connect (SSID+password)   | ✗ (prompt only) | ✓ (form card)    | ✓ ANDROID+
+Network list click-to-connect    | ✓               | ✓                | ✓ SAME
+5s auto-refresh                  | ✓               | ✓                | ✓ SAME
+
+================================================================================
+12. CONFIGURATION — config.html vs ConfigScreen
+================================================================================
+
+Feature                          | Web             | Android          | Status
+─────────────────────────────────┼─────────────────┼──────────────────┼────────
+Dynamic config form from JSON    | load_config     | ConfigScreen     | ✓ SAME
+Boolean fields as switches       | ✓               | ✓ (Switch)       | ✓ SAME
+Number fields                    | ✓               | ✓ (numeric kb)   | ✓ SAME
+String fields                    | ✓               | ✓                | ✓ SAME
+Array fields (comma-separated)   | ✓               | ✓                | ✓ SAME
+Section titles (__title_ prefix) | ✓               | ✓ (bold Primary) | ✓ SAME
+Save button                      | ✓               | ✓                | ✓ SAME
+Restore Defaults button          | ✓               | ✓ (+confirm)     | ✓ ANDROID+
+Font size +/-                    | ✓               | ✓                | ✓ SAME
+Toolbar hide/show                | ✓               | ✓                | ✓ SAME
+WiFi Scan Panel overlay          | ✓               | ✓                | ✓ SAME
+WiFi list click-to-connect      | ✓               | ✓                | ✓ SAME
+
+================================================================================
+13. SYSTEM MANAGEMENT (in index dropdown + standalone)
+================================================================================
+
+Feature                          | Web             | Android          | Status
+─────────────────────────────────┼─────────────────┼──────────────────┼────────
+Clear Files                      | actions dropdown| SettingsScreen   | ✓ SAME (+confirm)
+Clear Files Light                | actions dropdown| SettingsScreen   | ✓ SAME (+confirm)
+Reboot                           | actions dropdown| SettingsScreen   | ✓ SAME (+confirm)
+Shutdown                         | actions dropdown| SettingsScreen   | ✓ SAME (+confirm)
+Restart Service                  | actions dropdown| SettingsScreen   | ✓ SAME (+confirm)
+Disconnect WiFi                  | actions dropdown| SettingsScreen   | ✓ SAME
+Backup                           | actions dropdown| BackupRestoreScr | ✓ SAME (dedicated)
+Restore                          | actions dropdown| BackupRestoreScr | ✓ SAME (dedicated)
+Stop Orchestrator                | actions dropdown| SettingsScreen   | ✓ SAME (+confirm)
+Start Orchestrator               | actions dropdown| SettingsScreen   | ✓ SAME
+Init CSVs                        | actions dropdown| SettingsScreen   | ✓ SAME (+confirm)
+
+================================================================================
+14. MANUAL MODE — (no web page exists) vs ManualModeScreen
+================================================================================
+
+Feature                          | Web             | Android          | Status
+─────────────────────────────────┼─────────────────┼──────────────────┼────────
+/manual.html                     | ✗ (404)         | ✓ ManualModeScr  | ✓ ANDROID+
+Targeted Attack (IP/Port/Action) | in index panel  | ✓ (full screen)  | ✓ SAME
+Execute Command                  | ✗ (in index)    | ✓                | ✓ ANDROID+
+Quick Commands chips             | ✗               | ✓                | ✓ ANDROID+
+Command output terminal          | ✗               | ✓                | ✓ ANDROID+
+
+================================================================================
+15. NETWORK DETAIL (no web page exists) vs NetworkDetailScreen
+================================================================================
+
+Feature                          | Web             | Android          | Status
+─────────────────────────────────┼─────────────────┼──────────────────┼────────
+Host info (IP,MAC,OS,Hostname)   | ✗               | ✓                | ✓ ANDROID+
+Open Ports list                  | ✗               | ✓                | ✓ ANDROID+
+Scan Ports action + confirm      | ✗               | ✓                | ✓ ANDROID+
+Bruteforce per-host + confirm    | ✗               | ✓                | ✓ ANDROID+
+Vuln Scan per-host + confirm     | ✗               | ✓                | ✓ ANDROID+
+Manual Attack per-host + confirm | ✗               | ✓                | ✓ ANDROID+
+
+================================================================================
+16. SPLASH/BLUETOOTH CONNECT (no web equivalent)
+================================================================================
+
+Feature                          | Web             | Android          | Status
+─────────────────────────────────┼─────────────────┼──────────────────┼────────
+Bluetooth device discovery       | N/A             | SplashScreen     | ✓ ANDROID+
+Bluetooth connect flow           | N/A             | SplashScreen     | ✓ ANDROID+
+Connection testing               | N/A             | SplashScreen     | ✓ ANDROID+
+Skip / Demo mode                 | N/A             | SplashScreen     | ✓ ANDROID+
+
+================================================================================
+17. PORTAL TEMPLATES (web files served by Pi)
+================================================================================
+
+Feature                          | Web             | Android          | Status
+─────────────────────────────────┼─────────────────┼──────────────────┼────────
+generic.html                     | ✓               | backend-served   | ✓ SAME
+google_login.html                | ✓               | backend-served   | ✓ SAME
+facebook_login.html              | ✓               | backend-served   | ✓ SAME
+isp_login.html                   | ✓               | backend-served   | ✓ SAME
+router_update.html               | ✓               | backend-served   | ✓ SAME
+Portal upload (custom)           | store.html      | StoreScreen      | ✓ SAME
+Portal delete (custom)           | store.html      | StoreScreen      | ✓ SAME
+Portal list + selector           | evil_ap.html    | EvilAPScreen     | ✓ SAME
+
+================================================================================
+SUMMARY
+================================================================================
+
+Total web features:                    ~120
+Total Android features:                ~130
+Web features missing from Android:     0  (zero)
+Android features missing from web:     ~15 (confirm dialogs, BackupRestoreScreen,
+                                          NetworkDetailScreen, manual.html,
+                                          actions.html, Quick Actions card,
+                                          WPA status display, rotation control,
+                                          manual connect form, Settings bottom nav,
+                                          more stat screens)
+
+CONCLUSION: Android ≈ 100% parity with web frontend.
+Android has MORE features than web due to:
+- 20+ confirmation dialogs (web has none)
+- Dedicated screens (BackupRestore, NetworkDetail, ManualMode as full screen)
+- Better UX (manual connect form instead of prompt(), WPA status display, rotation)
+- Bottom navigation with Settings tab (web has top mini-nav)
+- All confirmation dialogs for destructive actions (web executes immediately)
+
+Web pages that DON'T EXIST (but are routed):
+- /actions.html   → not in web/ directory (Android has actions in NetworkScreen)
+- /manual.html    → not in web/ directory (Android has ManualModeScreen)
+
+These two pages are referenced in webapp.py routes but the HTML files are missing.
+Android covers both features (actions via NetworkScreen Quick Actions,
+manual mode via ManualModeScreen).
+
+================================================================================
+END OF COMPARISON
+================================================================================

@@ -1,0 +1,107 @@
+[
+    {
+        "b_module": "captive_portal",
+        "b_class": "CaptivePortal",
+        "b_port": 0,
+        "b_status": "captive_portal",
+        "b_parent": null
+    },
+    {
+        "b_module": "evil_ap",
+        "b_class": "EvilAP",
+        "b_port": 0,
+        "b_status": "evil_ap",
+        "b_parent": null
+    },
+    {
+        "b_module": "ftp_connector",
+        "b_class": "FTPBruteforce",
+        "b_port": 21,
+        "b_status": "brute_force_ftp",
+        "b_parent": null
+    },
+    {
+        "b_module": "IDLE",
+        "b_class": "IDLE",
+        "b_port": null,
+        "b_status": "idle_action",
+        "b_parent": null
+    },
+    {
+        "b_module": "log_standalone",
+        "b_class": "LogStandalone",
+        "b_port": 0,
+        "b_status": "log_standalone",
+        "b_parent": null
+    },
+    {
+        "b_module": "log_standalone2",
+        "b_class": "LogStandalone2",
+        "b_port": 0,
+        "b_status": "log_standalone2",
+        "b_parent": null
+    },
+    {
+        "b_module": "nmap_vuln_scanner",
+        "b_class": "NmapVulnScanner",
+        "b_port": null,
+        "b_status": "vuln_scan",
+        "b_parent": null
+    },
+    {
+        "b_module": "oneshot",
+        "b_class": "OneShot",
+        "b_port": 0,
+        "b_status": "oneshot",
+        "b_parent": null
+    },
+    {
+        "b_module": "rdp_connector",
+        "b_class": "RDPBruteforce",
+        "b_port": 3389,
+        "b_status": "brute_force_rdp",
+        "b_parent": null
+    },
+    {
+        "b_module": "telnet_connector",
+        "b_class": "TelnetBruteforce",
+        "b_port": 23,
+        "b_status": "brute_force_telnet",
+        "b_parent": null
+    },
+    {
+        "b_module": "wifi_deauth",
+        "b_class": "WiFiDeauth",
+        "b_port": 0,
+        "b_status": "wifi_deauth",
+        "b_parent": null
+    },
+    {
+        "b_module": "wifi_handshake",
+        "b_class": "WiFiHandshake",
+        "b_port": 0,
+        "b_status": "wifi_handshake",
+        "b_parent": null
+    },
+    {
+        "b_module": "wifi_monitor",
+        "b_class": "WiFiMonitor",
+        "b_port": 0,
+        "b_status": "wifi_monitor",
+        "b_parent": null
+    },
+    {
+        "b_module": "wifi_oneshot",
+        "b_class": "WiFiOneShot",
+        "b_port": 0,
+        "b_status": "wifi_oneshot",
+        "b_parent": null
+    },
+    {
+        "b_module": "wifi_pmkid",
+        "b_class": "WiFiPMKID",
+        "b_port": 0,
+        "b_status": "wifi_pmkid",
+        "b_parent": null
+    }
+]

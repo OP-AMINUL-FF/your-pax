@@ -1,0 +1,5 @@
+-keep class com.yourpax.app.data.api.models.** { *; }
+-keepattributes Signature
+-keepattributes *Annotation*
+-dontwarn okhttp3.**
+-dontwarn retrofit2.**
