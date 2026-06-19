@@ -51,6 +51,10 @@ data class ScanTargetResult(
     @SerializedName("channel") val channel: String = ""
 )
 
+data class ScanTargetsResponse(
+    @SerializedName("networks") val networks: List<ScanTargetResult> = emptyList()
+)
+
 data class WebDelayResponse(
     @SerializedName("web_delay") val webDelay: Int = 5000
 )

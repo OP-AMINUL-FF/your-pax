@@ -34,11 +34,18 @@ class EvilAP:
         self.loot_monitor = None
         self.ssid = "FreeWiFi"
 
+    def _sanitize(self, value):
+        if not isinstance(value, str):
+            return str(value)
+        import re as _re
+        return _re.sub(r'[^\x20-\x7E]', '', value).replace('\n', '').replace('"', '').strip()
+
     def generate_hostapd_conf(self, ssid, channel=6, wpa_passphrase=None, karma=False):
+        safe_ssid = self._sanitize(ssid)
         config = (
             f"interface={self.interface}\n"
             f"driver=nl80211\n"
-            f"ssid={ssid}\n"
+            f"ssid={safe_ssid}\n"
             f"hw_mode=g\n"
             f"channel={channel}\n"
             f"macaddr_acl=0\n"
@@ -51,9 +58,10 @@ class EvilAP:
                 f"ap_isolate=0\n"
             )
         if wpa_passphrase:
+            safe_pass = self._sanitize(wpa_passphrase)
             config += (
                 f"wpa=2\n"
-                f"wpa_passphrase={wpa_passphrase}\n"
+                f"wpa_passphrase={safe_pass}\n"
                 f"wpa_key_mgmt=WPA-PSK\n"
                 f"wpa_pairwise=TKIP\n"
                 f"rsn_pairwise=CCMP\n"

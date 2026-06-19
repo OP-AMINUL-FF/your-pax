@@ -16,7 +16,7 @@ object NetworkUtils {
                     val addresses = networkInterface.inetAddresses
                     while (addresses.hasMoreElements()) {
                         val address = addresses.nextElement()
-                        if (!address.isLoopbackAddress && address is InetAddress) {
+                        if (!address.isLoopbackAddress) {
                             val ip = address.hostAddress ?: continue
                             if (ip.startsWith("192.168.")) return ip
                         }

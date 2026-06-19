@@ -99,9 +99,9 @@ class WiFiRepository {
         else throw Exception("Oneshot stop failed: ${response.code()}")
     }
 
-    suspend fun connectWifi(ssid: String, password: String): Result<ActionResponse> = runCatching {
+    suspend fun connectWifi(ssid: String, password: String, hidden: Boolean = false): Result<ActionResponse> = runCatching {
         if (ConnectionState.isDemoMode) return@runCatching DemoData.demoActionResponse
-        val response = api.connectWifi(mapOf("ssid" to ssid, "password" to password))
+        val response = api.connectWifi(mapOf("ssid" to ssid, "password" to password, "hidden" to hidden))
         if (response.isSuccessful) response.body()!!
         else throw Exception("WiFi connect failed: ${response.code()}")
     }

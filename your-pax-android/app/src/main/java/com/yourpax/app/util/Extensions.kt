@@ -1,12 +1,12 @@
 package com.yourpax.app.util
 
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 fun Long.formatTimestamp(): String {
-    val sdf = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
-    return sdf.format(Date(this))
+    val formatter = DateTimeFormatter.ofPattern("HH:mm:ss").withZone(ZoneId.systemDefault())
+    return formatter.format(Instant.ofEpochMilli(this))
 }
 
 fun Int.formatSignal(): String = when {

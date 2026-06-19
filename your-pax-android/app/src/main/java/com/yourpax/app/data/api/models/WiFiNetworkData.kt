@@ -7,8 +7,8 @@ data class WiFiNetwork(
     @SerializedName("ssid") val ssid: String = "",
     @SerializedName("channel") val channel: String = "",
     @SerializedName("signal") val signal: String = "",
-    @SerializedName("wpa") val wpa: String = "",
-    @SerializedName("wps") val wps: String = ""
+    @SerializedName("wpa") val wpa: Boolean? = null,
+    @SerializedName("wps") val wps: Boolean? = null
 )
 
 data class WiFiScanResponse(

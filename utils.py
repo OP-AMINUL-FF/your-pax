@@ -16,6 +16,7 @@ from html import escape
 from datetime import datetime
 from logger import Logger
 from urllib.parse import unquote
+import re
 
 
 
@@ -142,9 +143,9 @@ class WebUtils:
             log_data = ''.join(log_lines)
 
             handler.send_response(200)
-            handler.send_header("Content-type", "text/plain")
+            handler.send_header("Content-type", "application/json")
             handler.end_headers()
-            handler.wfile.write(log_data.encode('utf-8'))
+            handler.wfile.write(json.dumps({"logs": log_data}).encode('utf-8'))
         except BrokenPipeError:
             # Ignore broken pipe errors
             pass
@@ -199,7 +200,7 @@ class WebUtils:
             handler.send_response(200)
             handler.send_header("Content-type", "application/json")
             handler.end_headers()
-            handler.wfile.write(json.dumps({"status": "success", "url": f"/download_backup?filename={backup_filename}", "filename": backup_filename}).encode('utf-8'))
+            handler.wfile.write(json.dumps({"status": "success", "url": f"/download_backup?filename={backup_filename}", "filename": backup_filename, "message": "Backup created successfully"}).encode('utf-8'))
         except Exception as e:
             handler.send_response(500)
             handler.send_header("Content-type", "application/json")
@@ -483,8 +484,9 @@ class WebUtils:
             params = json.loads(post_data)
             ssid = params['ssid']
             password = params['password']
+            hidden = bool(params.get('hidden', False))
 
-            self.update_nmconnection(ssid, password)
+            self.update_nmconnection(ssid, password, hidden)
             connect_result = subprocess.Popen(['sudo', 'nmcli', 'connection', 'up', 'preconfigured'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
             stdout, stderr = connect_result.communicate()
             if connect_result.returncode != 0:
@@ -726,8 +728,16 @@ class WebUtils:
             handler.end_headers()
             handler.wfile.write(json.dumps({"error": "Internal error"}).encode('utf-8'))
 
-    def update_nmconnection(self, ssid, password):
+    def _sanitize_config_value(self, value):
+        if not isinstance(value, str):
+            return str(value)
+        return re.sub(r'[^\x20-\x7E]', '', value).replace('"', '\\"').replace('\n', '').strip()
+
+    def update_nmconnection(self, ssid, password, hidden=False):
         config_path = '/etc/NetworkManager/system-connections/preconfigured.nmconnection'
+        safe_ssid = self._sanitize_config_value(ssid)
+        safe_password = self._sanitize_config_value(password)
+        hidden_line = "\nhidden=true" if hidden else ""
         with open(config_path, 'w') as f:
             f.write(f"""
 [connection]
@@ -737,12 +747,12 @@ type=wifi
 autoconnect=true
 
 [wifi]
-ssid={ssid}
-mode=infrastructure
+ssid={safe_ssid}
+mode=infrastructure{hidden_line}
 
 [wifi-security]
 key-mgmt=wpa-psk
-psk={password}
+psk={safe_password}
 
 [ipv4]
 method=auto
@@ -1706,10 +1716,14 @@ method=auto
 
     def wpa_validate_status(self, handler):
         try:
+            status = "idle"
+            evil = getattr(self.shared_data, 'evil_ap_instance', None)
+            if evil and getattr(evil, 'running', False) and getattr(evil, 'wpa_validate_enabled', False):
+                status = "running"
             handler.send_response(200)
             handler.send_header("Content-type", "application/json")
             handler.end_headers()
-            handler.wfile.write(json.dumps({"status": "idle"}).encode('utf-8'))
+            handler.wfile.write(json.dumps({"status": status}).encode('utf-8'))
         except Exception as e:
             handler.send_response(500)
             handler.send_header("Content-type", "application/json")

@@ -60,7 +60,7 @@ interface YourPaxApiService {
     suspend fun listFiles(): Response<List<LootFile>>
 
     @GET("/get_logs")
-    suspend fun getLogs(): Response<LogResponse>
+    suspend fun getLogs(): Response<ResponseBody>
 
     @GET("/store_data")
     suspend fun getStoreData(): Response<StoreDataFull>
@@ -84,7 +84,7 @@ interface YourPaxApiService {
     suspend fun conflictStatus(): Response<ConflictStatus>
 
     @GET("/scan_targets")
-    suspend fun scanTargets(@Query("iface") iface: String = "wlan0"): Response<List<ScanTargetResult>>
+    suspend fun scanTargets(@Query("iface") iface: String = "wlan0"): Response<ScanTargetsResponse>
 
     @GET("/get_web_delay")
     suspend fun getWebDelay(): Response<WebDelayResponse>
@@ -144,7 +144,7 @@ interface YourPaxApiService {
     suspend fun stopEvilClone(): Response<ActionResponse>
 
     @POST("/connect_wifi")
-    suspend fun connectWifi(@Body params: Map<String, String>): Response<ActionResponse>
+    suspend fun connectWifi(@Body params: Map<String, @JvmSuppressWildcards Any>): Response<ActionResponse>
 
     @POST("/disconnect_wifi")
     suspend fun disconnectWifi(): Response<ActionResponse>

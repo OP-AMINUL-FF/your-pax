@@ -29,6 +29,7 @@ class BluetoothNAP:
         self.bnep_interfaces = set()
         self._bnep_lock = threading.Lock()
         self.mainloop = None
+        self.pairing_agent = None
         self.bridge_up = False
         self.dnsmasq_running = False
 
@@ -222,12 +223,49 @@ class BluetoothNAP:
             "alias": NAP_ALIAS
         }
 
+    def register_pairing_agent(self):
+        """Register a JustWorks BlueZ pairing agent so phones can pair
+        without a PIN/confirmation prompt on the Pi side.
+
+        Must run AFTER DBusGMainLoop(set_as_default=True) so agent callbacks
+        dispatch on the GLib mainloop. Failure here is non-fatal: the bridge
+        + NAP still work, the user just has to pair manually.
+        """
+        try:
+            import dbus
+            from bluez_pairing_agent import register_agent
+            self.pairing_agent = register_agent(dbus.SystemBus(), capability="NoInputNoOutput")
+            if self.pairing_agent is None:
+                logger.warning("Pairing agent not registered; manual pairing required.")
+            return self.pairing_agent is not None
+        except ImportError as e:
+            logger.warning(f"Pairing agent module unavailable; manual pairing required. ({e})")
+            self.pairing_agent = None
+            return False
+        except Exception as e:
+            logger.error(f"Failed to set up pairing agent: {e}")
+            self.pairing_agent = None
+            return False
+
     def run(self):
         """Main entry point - setup and start Bluetooth NAP."""
         self.running = True
         logger.info("Starting Bluetooth NAP...")
+        # IMPORTANT: DBusGMainLoop must be set as default BEFORE any
+        # dbus.SystemBus() connection is created, otherwise D-Bus signal
+        # callbacks (including our pairing agent) never dispatch on the
+        # GLib mainloop.
+        try:
+            from dbus.mainloop.glib import DBusGMainLoop
+            from gi.repository import GLib
+            DBusGMainLoop(set_as_default=True)
+            self.mainloop = GLib.MainLoop()
+        except ImportError:
+            logger.warning("GLib/D-Bus mainloop not available, running without event loop.")
+            self.mainloop = None
         try:
             self.setup_bluetooth()
+            self.register_pairing_agent()
             self.setup_bridge()
             self.start_dhcp()
             self.register_nap_service()
@@ -238,14 +276,6 @@ class BluetoothNAP:
         watcher = threading.Thread(target=self.watcher_thread, daemon=True)
         watcher.start()
         logger.info(f"Bluetooth NAP running at {BRIDGE_IP}:8000")
-        try:
-            from dbus.mainloop.glib import DBusGMainLoop
-            from gi.repository import GLib
-            DBusGMainLoop(set_as_default=True)
-            self.mainloop = GLib.MainLoop()
-        except ImportError:
-            logger.warning("GLib/D-Bus mainloop not available, running without event loop.")
-            self.mainloop = None
         if self.mainloop:
             try:
                 self.mainloop.run()

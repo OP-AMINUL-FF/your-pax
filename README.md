@@ -5,7 +5,7 @@
 </div>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-1.0.0_Alpha_2-00FF41?style=for-the-badge&labelColor=0D1117">
+  <img src="https://img.shields.io/badge/Version-1.1-Alpha-00FF41?style=for-the-badge&labelColor=0D1117">
   <img src="https://img.shields.io/badge/Python-3.x-3776AB?style=for-the-badge&logo=python&logoColor=white&labelColor=0D1117">
   <img src="https://img.shields.io/badge/Raspberry_Pi_Zero_2W-C51A4A?style=for-the-badge&logo=raspberrypi&logoColor=white&labelColor=0D1117">
   <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge&labelColor=0D1117">
@@ -59,6 +59,7 @@
 | 9 | **Bluetooth NAP** — phone connects via Bluetooth, no WiFi needed | ✅ |
 | 10 | **Manual trigger mode** — nothing runs without user command | ✅ |
 | 11 | **Display/Non-Display dual mode** — saves ~15-25MB RAM without e-paper | ✅ |
+| 12 | **Native Android app** — full control via Bluetooth PAN, 19 screens, no WiFi needed | ✅ |
 
 <br>
 
@@ -83,6 +84,7 @@
   <img src="https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white&labelColor=0D1117">
   <img src="https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white&labelColor=0D1117">
   <img src="https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black&labelColor=0D1117">
+  <img src="https://img.shields.io/badge/Kotlin-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white&labelColor=0D1117">
   <img src="https://img.shields.io/badge/Bash-4EAA25?style=for-the-badge&logo=gnubash&logoColor=white&labelColor=0D1117">
   <img src="https://img.shields.io/badge/Nmap-4682B4?style=for-the-badge&logo=nmap&logoColor=white&labelColor=0D1117">
   <img src="https://img.shields.io/badge/Raspberry_Pi-C51A4A?style=for-the-badge&logo=raspberrypi&logoColor=white&labelColor=0D1117">
@@ -224,6 +226,65 @@ Full-featured dark-themed web UI served on **port 8000** — accessible via **Bl
 | **Credentials** | Cracked passwords for all services |
 | **Loot** | File browser for stolen data |
 | **Store** | Loot storage with statistics, download links, and portal template upload/delete management |
+
+### 📱 Android App
+
+A full **native Android app** built with **Kotlin + Jetpack Compose** that turns your phone into a complete your-pax control surface — no laptop, no browser, **no WiFi required**. The phone talks to the device entirely over the **Bluetooth PAN (NAP)** connection, so it keeps working even while your-pax runs Wi-Fi attacks, monitor mode, or an Evil AP.
+
+#### How It Works
+
+The app does **not** use any hidden Bluetooth API — the connection is a standard, user-driven PAN that stays portable across Android 13/14:
+
+1. **Discovery** — `SplashScreen` scans for nearby Bluetooth devices and filters for the device advertising the name `your-pax`.
+2. **Pair** — `BluetoothConnector.pairDevice()` calls `BluetoothDevice.createBond()` and waits for `ACTION_BOND_STATE_CHANGED` → `BOND_BONDED`.
+3. **Enable Internet access** — the user flips **Settings → Bluetooth → your-pax → "Internet access" ON** (Android requirement; cannot be done silently).
+4. **Wait for IP** — `BluetoothConnector.awaitPanIp()` polls the phone's `bnep`/`pan` interface until an IP is assigned by the device's DHCP server.
+5. **Talk to firmware** — `RetrofitProvider` points OkHttp/Retrofit at `http://192.168.4.1:8000` (the your-pax web server) and every screen reads/writes state through typed Retrofit endpoints.
+6. **CSRF token** — on connect the app fetches a CSRF token and an OkHttp interceptor auto-injects `Authorization: Bearer <token>` + `X-CSRF-Token: <token>` on every request.
+
+#### Architecture
+
+```
+UI (Compose)          Repositories (MVVM)         Firmware API            Device
+─────────────         ──────────────────          ────────────            ──────
+ui/screens   ───────► data/repository      ─────► data/api (Retrofit) ──► webapp.py :8000
+(19 screens)          Network / WiFi /            YourPaxApiService        over Bluetooth PAN
+                      EvilAp / Loot /             CsrfTokenManager         (192.168.4.1)
+                      Bluetooth / Config /
+                      System
+                                                    
+data/bluetooth ────── BluetoothConnector (pair + awaitPanIp) ── Bluetooth NAP ──► bt-nap.service
+```
+
+- **MVVM + Repository** pattern — screens observe repository state, repositories wrap the Retrofit service.
+- **19 screens** covering dashboard, network, Wi-Fi attacks, Evil AP, loot, store, NetKB, config, backup, manual mode, live EPD, and logs.
+- **Repository map**: `NetworkRepository`, `WiFiRepository`, `EvilApRepository`, `LootRepository`, `BluetoothRepository`, `ConfigRepository`, `SystemRepository`.
+- **Dark Material 3** design (modern, not cyberpunk), auto-polling for attack status (handshake/PMKID/WPS), 20+ confirmation dialogs, copy-to-clipboard for captured credentials.
+
+#### Android vs Web Feature Parity
+
+| Category | Web UI | Android App |
+|----------|:------:|:-----------:|
+| Bluetooth Connect | — | ✅ |
+| Dashboard + Stats | ✅ | ✅ |
+| Network Scan + Detail | ✅ | ✅ (+ detail screen) |
+| NetKB | ✅ | ✅ |
+| Credentials + Stolen Files | ✅ | ✅ |
+| Store (loot + portal mgmt) | ✅ | ✅ |
+| WiFi Scan + Attacks | ✅ | ✅ |
+| Evil AP Full Control | ✅ | ✅ |
+| WiFi Connect | ✅ | ✅ |
+| Config Editor | ✅ | ✅ |
+| Console Logs + Live EPD | ✅ | ✅ |
+| Backup / Restore | ✅ | ✅ |
+| Manual Mode (targeted attack) | — | ✅ |
+| Confirmation Dialogs | — | ✅ |
+
+The app exposes **~130 features vs ~120 web features** — Android has MORE.
+
+#### Get the App
+
+Download the prebuilt **`your-pax-v1.1-alpha.apk`** from [Releases](https://github.com/OP-AMINUL-FF/your-pax/releases) (sideload on Android 8.0+ / minSdk 26). Build from source with `gradlew assembleRelease` (JDK 17) inside `your-pax-android/`.
 
 ###  Game-like Stats
 

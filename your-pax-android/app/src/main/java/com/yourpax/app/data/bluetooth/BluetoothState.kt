@@ -6,6 +6,8 @@ sealed class BluetoothConnectionState {
     data object PermissionGranted : BluetoothConnectionState()
     data object BluetoothOff : BluetoothConnectionState()
     data object Scanning : BluetoothConnectionState()
+    data object Pairing : BluetoothConnectionState()
+    data class AwaitingPan(val deviceName: String) : BluetoothConnectionState()
     data object Connecting : BluetoothConnectionState()
     data object TestingApi : BluetoothConnectionState()
     data class Connected(val ip: String, val port: Int = 8000) : BluetoothConnectionState()

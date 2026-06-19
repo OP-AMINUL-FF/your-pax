@@ -103,8 +103,7 @@ class NmapVulnScanner:
             self.save_results(row["MAC Address"], ip, scan_result)
             return 'success'
         else:
-            return 'success' # considering failed as success as we just need to scan vulnerabilities once
-            # return 'failed'
+            return 'failed'
 
     def parse_vulnerabilities(self, scan_result):
         """

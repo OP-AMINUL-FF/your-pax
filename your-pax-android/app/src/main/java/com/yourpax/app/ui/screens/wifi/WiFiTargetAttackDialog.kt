@@ -1,26 +1,61 @@
 package com.yourpax.app.ui.screens.wifi
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Block
+import androidx.compose.material.icons.filled.Key
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.VpnKey
+import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.yourpax.app.data.api.models.WiFiNetwork
 import com.yourpax.app.data.repository.WiFiRepository
-import com.yourpax.app.ui.components.*
-import com.yourpax.app.ui.theme.*
+import com.yourpax.app.ui.components.DotState
+import com.yourpax.app.ui.components.StatusDot
+import com.yourpax.app.ui.theme.rememberAppColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -49,6 +84,7 @@ fun WiFiTargetAttackDialog(
     var deauthClient by remember { mutableStateOf("ff:ff:ff:ff:ff:ff") }
     var deauthCount by remember { mutableStateOf("10") }
     var deauthContinuous by remember { mutableStateOf(false) }
+    var deauthChannel by remember { mutableStateOf(network.channel) }
     var wpsPixie by remember { mutableStateOf(true) }
     var wpsBrute by remember { mutableStateOf(false) }
     var wpsPbc by remember { mutableStateOf(false) }
@@ -61,6 +97,7 @@ fun WiFiTargetAttackDialog(
     var pendingAttackConfirm by remember { mutableStateOf<AttackType?>(null) }
     var showStopAllConfirm by remember { mutableStateOf(false) }
     val networkRepo = remember { com.yourpax.app.data.repository.NetworkRepository() }
+    val appColors = rememberAppColors()
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -68,11 +105,20 @@ fun WiFiTargetAttackDialog(
     ) {
         Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).verticalScroll(rememberScrollState())) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Wifi, contentDescription = null, tint = Primary, modifier = Modifier.size(32.dp))
+                Icon(Icons.Default.Wifi, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(32.dp))
                 Spacer(Modifier.width(12.dp))
                 Column {
                     Text(network.ssid.ifEmpty { "<Hidden>" }, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    Text("${network.bssid} \u00b7 Ch ${network.channel} \u00b7 ${network.signal}dBm", style = MaterialTheme.typography.bodySmall, color = SubtleText)
+                    val sigVal = network.signal.toIntOrNull() ?: -100
+                    val sigColor = when {
+                        sigVal >= -50 -> appColors.success
+                        sigVal >= -70 -> appColors.warning
+                        else -> MaterialTheme.colorScheme.error
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("${network.bssid} \u00b7 Ch ${network.channel} \u00b7 ", style = MaterialTheme.typography.bodySmall, color = appColors.subtleText)
+                        Text("${network.signal}dBm", style = MaterialTheme.typography.bodySmall, color = sigColor)
+                    }
                 }
             }
 
@@ -88,11 +134,11 @@ fun WiFiTargetAttackDialog(
             Spacer(Modifier.height(16.dp))
 
             when (selectedAttack) {
-                AttackType.HANDSHAKE -> HandshakeCard(network, repo, scope, hsRunning, hsOutput, hsPrefix, onConfirmStart={ pendingAttackConfirm = AttackType.HANDSHAKE }, onHsRunning={hsRunning=it}, onHsOutput={hsOutput=it}, onHsPrefix={hsPrefix=it}, onStatus=onStatus)
-                AttackType.DEAUTH -> DeauthCard(network, repo, scope, deauthOutput, showDeauthOutput, deauthClient, deauthCount, deauthContinuous, onConfirmStart={ pendingAttackConfirm = AttackType.DEAUTH }, onDeauthOutput={deauthOutput=it}, onShowDeauthOutput={showDeauthOutput=it}, onDeauthClient={deauthClient=it}, onDeauthCount={deauthCount=it}, onDeauthContinuous={deauthContinuous=it}, onStatus=onStatus)
-                AttackType.PMKID -> PmkidCard(network, repo, scope, pmkidRunning, pmkidOutput, pmkidPrefix, onConfirmStart={ pendingAttackConfirm = AttackType.PMKID }, onPmkidRunning={pmkidRunning=it}, onPmkidOutput={pmkidOutput=it}, onPmkidPrefix={pmkidPrefix=it}, onStatus=onStatus)
-                AttackType.WPS -> WpsCard(network, repo, scope, wpsRunning, wpsOutput, wpsPixie, wpsBrute, wpsPbc, wpsPin, wpsDelay, wpsForce, wpsShowCmd, wpsVerbose, wpsIfaceDown, onConfirmStart={ pendingAttackConfirm = AttackType.WPS }, onWpsRunning={wpsRunning=it}, onWpsOutput={wpsOutput=it}, onWpsPixie={wpsPixie=it}, onWpsBrute={wpsBrute=it}, onWpsPbc={wpsPbc=it}, onWpsPin={wpsPin=it}, onWpsDelay={wpsDelay=it}, onWpsForce={wpsForce=it}, onWpsShowCmd={wpsShowCmd=it}, onWpsVerbose={wpsVerbose=it}, onWpsIfaceDown={wpsIfaceDown=it}, onStatus=onStatus)
-                null -> Box(Modifier.fillMaxWidth().padding(vertical = 32.dp), contentAlignment = Alignment.Center) { Text("Select an attack type above", color = SubtleText) }
+                AttackType.HANDSHAKE -> HandshakeCard(repo, scope, hsRunning, hsOutput, hsPrefix, onConfirmStart={ pendingAttackConfirm = AttackType.HANDSHAKE }, onHsRunning={hsRunning=it}, onHsOutput={hsOutput=it}, onHsPrefix={hsPrefix=it}, onStatus=onStatus)
+                AttackType.DEAUTH -> DeauthCard(network, repo, scope, deauthOutput, showDeauthOutput, deauthClient, deauthCount, deauthContinuous, deauthChannel, onConfirmStart={ pendingAttackConfirm = AttackType.DEAUTH }, onDeauthOutput={deauthOutput=it}, onShowDeauthOutput={showDeauthOutput=it}, onDeauthClient={deauthClient=it}, onDeauthCount={deauthCount=it}, onDeauthContinuous={deauthContinuous=it}, onDeauthChannel={deauthChannel=it}, onStatus=onStatus)
+                AttackType.PMKID -> PmkidCard(repo, scope, pmkidRunning, pmkidOutput, pmkidPrefix, onConfirmStart={ pendingAttackConfirm = AttackType.PMKID }, onPmkidRunning={pmkidRunning=it}, onPmkidOutput={pmkidOutput=it}, onPmkidPrefix={pmkidPrefix=it}, onStatus=onStatus)
+                AttackType.WPS -> WpsCard(repo, scope, wpsRunning, wpsOutput, wpsPixie, wpsBrute, wpsPbc, wpsPin, wpsDelay, wpsForce, wpsShowCmd, wpsVerbose, wpsIfaceDown, onConfirmStart={ pendingAttackConfirm = AttackType.WPS }, onWpsRunning={wpsRunning=it}, onWpsOutput={wpsOutput=it}, onWpsPixie={wpsPixie=it}, onWpsBrute={wpsBrute=it}, onWpsPbc={wpsPbc=it}, onWpsPin={wpsPin=it}, onWpsDelay={wpsDelay=it}, onWpsForce={wpsForce=it}, onWpsShowCmd={wpsShowCmd=it}, onWpsVerbose={wpsVerbose=it}, onWpsIfaceDown={wpsIfaceDown=it}, onStatus=onStatus)
+                null -> Box(Modifier.fillMaxWidth().padding(vertical = 32.dp), contentAlignment = Alignment.Center) { Text("Select an attack type above", color = appColors.subtleText) }
             }
 
             Spacer(Modifier.height(16.dp))
@@ -103,8 +149,8 @@ fun WiFiTargetAttackDialog(
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 OutlinedButton(
                     onClick = { showStopAllConfirm = true },
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Error)
+                    shape = MaterialTheme.shapes.small,
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
                     Icon(Icons.Default.Stop, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(Modifier.width(4.dp))
@@ -161,7 +207,7 @@ fun WiFiTargetAttackDialog(
             onDismissRequest = { pendingAttackConfirm = null },
             title = { Text("Send Deauth Packets?") },
             text = { Text("Send ${if (deauthContinuous) "continuous" else deauthCount} deauth packets to ${network.bssid}? Clients will temporarily lose connection.") },
-            confirmButton = { TextButton(onClick = { pendingAttackConfirm = null; scope.launch { val count = if (deauthContinuous) 0 else (deauthCount.toIntOrNull() ?: 10); val r = repo.deauth(network.bssid, deauthClient, count, network.channel.toIntOrNull() ?: 1); if (r.isSuccess) { deauthOutput = "Deauth sent: $count packets\n"; showDeauthOutput = true; onStatus("Deauth sent") } else { onStatus(r.exceptionOrNull()?.message ?: "Failed") } } }) { Text("Send", color = Error) } },
+            confirmButton = { TextButton(onClick = { pendingAttackConfirm = null; scope.launch { val count = if (deauthContinuous) 0 else (deauthCount.toIntOrNull() ?: 10); val r = repo.deauth(network.bssid, deauthClient, count, deauthChannel.toIntOrNull() ?: 1); if (r.isSuccess) { deauthOutput = "Deauth sent: $count packets\n"; showDeauthOutput = true; onStatus("Deauth sent") } else { onStatus(r.exceptionOrNull()?.message ?: "Failed") } } }) { Text("Send", color = MaterialTheme.colorScheme.error) } },
             dismissButton = { TextButton(onClick = { pendingAttackConfirm = null }) { Text("Cancel") } }
         )
         AttackType.PMKID -> AlertDialog(
@@ -186,40 +232,32 @@ fun WiFiTargetAttackDialog(
             onDismissRequest = { showStopAllConfirm = false },
             title = { Text("Stop All Attacks?") },
             text = { Text("Stop all running WiFi attacks including handshake capture, PMKID capture, WPS attack, and deauth?") },
-            confirmButton = { TextButton(onClick = { showStopAllConfirm = false; scope.launch { networkRepo.stopAll().onSuccess { onStatus("All attacks stopped"); hsRunning = false; pmkidRunning = false; wpsRunning = false }.onFailure { onStatus("Stop all failed: ${it.message}") } } }) { Text("Stop All", color = Error) } },
+            confirmButton = { TextButton(onClick = { showStopAllConfirm = false; scope.launch { networkRepo.stopAll().onSuccess { onStatus("All attacks stopped"); hsRunning = false; pmkidRunning = false; wpsRunning = false }.onFailure { onStatus("Stop all failed: ${it.message}") } } }) { Text("Stop All", color = MaterialTheme.colorScheme.error) } },
             dismissButton = { TextButton(onClick = { showStopAllConfirm = false }) { Text("Cancel") } }
         )
     }
 }
 
 @Composable
-private fun StatusDot(state: String) {
-    val color = when (state) {
-        "on" -> Success; "busy" -> Warning
-        else -> Color(0xFF444444)
-    }
-    Box(Modifier.size(8.dp).background(color, RoundedCornerShape(50)))
-}
-
-@Composable
-private fun HandshakeCard(network: WiFiNetwork, repo: WiFiRepository, scope: kotlinx.coroutines.CoroutineScope, hsRunning: Boolean, hsOutput: String, hsPrefix: String, onConfirmStart: () -> Unit = {}, onHsRunning: (Boolean) -> Unit, onHsOutput: (String) -> Unit, onHsPrefix: (String) -> Unit, onStatus: (String) -> Unit) {
-    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), border = CardDefaults.outlinedCardBorder().copy(width = 0.dp)) {
+private fun HandshakeCard(repo: WiFiRepository, scope: kotlinx.coroutines.CoroutineScope, hsRunning: Boolean, hsOutput: String, hsPrefix: String, onConfirmStart: () -> Unit = {}, onHsRunning: (Boolean) -> Unit, onHsOutput: (String) -> Unit, onHsPrefix: (String) -> Unit, onStatus: (String) -> Unit) {
+    val appColors = rememberAppColors()
+    Surface(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, color = appColors.surfaceContainerLow, tonalElevation = 0.dp) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                StatusDot(if (hsRunning) "busy" else "off")
+                StatusDot(if (hsRunning) DotState.Active else DotState.Inactive)
                 Text("Handshake Capture", fontWeight = FontWeight.SemiBold)
             }
-            Text("Capture WPA/WPA2 4-way handshake by listening on the channel", style = MaterialTheme.typography.bodySmall, color = SubtleText)
+            Text("Capture WPA/WPA2 4-way handshake by listening on the channel", style = MaterialTheme.typography.bodySmall, color = appColors.subtleText)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
                 OutlinedTextField(value = hsPrefix, onValueChange = onHsPrefix, label = { Text("Output prefix") }, placeholder = { Text("auto") }, singleLine = true, modifier = Modifier.weight(1f))
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Button(onClick = onConfirmStart, enabled = !hsRunning, shape = RoundedCornerShape(8.dp)) { Text("Start Capture") }
-                    OutlinedButton(onClick = { scope.launch { repo.stopHandshake(); onHsRunning(false); onHsOutput(""); onStatus("Handshake stopped") } }, enabled = hsRunning, shape = RoundedCornerShape(8.dp)) { Text("Stop") }
+                    Button(onClick = onConfirmStart, enabled = !hsRunning, shape = MaterialTheme.shapes.small) { Text("Start Capture") }
+                    OutlinedButton(onClick = { scope.launch { repo.stopHandshake(); onHsRunning(false); onHsOutput(""); onStatus("Handshake stopped") } }, enabled = hsRunning, shape = MaterialTheme.shapes.small) { Text("Stop") }
                 }
             }
             if (hsOutput.isNotEmpty()) {
-                Surface(color = Color(0xFF0D0D0D), shape = RoundedCornerShape(4.dp), modifier = Modifier.fillMaxWidth().heightIn(max = 150.dp)) {
-                    Text(hsOutput, modifier = Modifier.padding(10.dp), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = Success)
+                Surface(color = appColors.terminalBackground, shape = MaterialTheme.shapes.extraSmall, tonalElevation = 0.dp, modifier = Modifier.fillMaxWidth().heightIn(max = 150.dp)) {
+                    Text(hsOutput, modifier = Modifier.padding(10.dp), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = appColors.terminalText)
                 }
             }
         }
@@ -227,29 +265,31 @@ private fun HandshakeCard(network: WiFiNetwork, repo: WiFiRepository, scope: kot
 }
 
 @Composable
-private fun DeauthCard(network: WiFiNetwork, repo: WiFiRepository, scope: kotlinx.coroutines.CoroutineScope, deauthOutput: String, showDeauthOutput: Boolean, deauthClient: String, deauthCount: String, deauthContinuous: Boolean, onConfirmStart: () -> Unit = {}, onDeauthOutput: (String) -> Unit, onShowDeauthOutput: (Boolean) -> Unit, onDeauthClient: (String) -> Unit, onDeauthCount: (String) -> Unit, onDeauthContinuous: (Boolean) -> Unit, onStatus: (String) -> Unit) {
-    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+private fun DeauthCard(network: WiFiNetwork, repo: WiFiRepository, scope: kotlinx.coroutines.CoroutineScope, deauthOutput: String, showDeauthOutput: Boolean, deauthClient: String, deauthCount: String, deauthContinuous: Boolean, deauthChannel: String, onConfirmStart: () -> Unit = {}, onDeauthOutput: (String) -> Unit, onShowDeauthOutput: (Boolean) -> Unit, onDeauthClient: (String) -> Unit, onDeauthCount: (String) -> Unit, onDeauthContinuous: (Boolean) -> Unit, onDeauthChannel: (String) -> Unit, onStatus: (String) -> Unit) {
+    val appColors = rememberAppColors()
+    Surface(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, color = appColors.surfaceContainerLow, tonalElevation = 0.dp) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                StatusDot("off")
+                StatusDot(if (showDeauthOutput) DotState.Active else DotState.Inactive)
                 Text("Deauth Attack", fontWeight = FontWeight.SemiBold)
             }
-            Text("Send deauth packets to force clients to reconnect and capture handshake", style = MaterialTheme.typography.bodySmall, color = SubtleText)
+            Text("Send deauth packets to force clients to reconnect and capture handshake", style = MaterialTheme.typography.bodySmall, color = appColors.subtleText)
             OutlinedTextField(value = deauthClient, onValueChange = onDeauthClient, label = { Text("Client MAC (FF:FF:FF:FF:FF:FF = broadcast)") }, singleLine = true, modifier = Modifier.fillMaxWidth())
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(value = deauthCount, onValueChange = onDeauthCount, label = { Text("Packet Count (0 = continuous)") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
+                OutlinedTextField(value = deauthChannel, onValueChange = onDeauthChannel, label = { Text("Channel") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.weight(1f))
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Checkbox(checked = deauthContinuous, onCheckedChange = onDeauthContinuous)
                 Text("Continuous", style = MaterialTheme.typography.bodyMedium)
             }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onConfirmStart, shape = RoundedCornerShape(8.dp), colors = ButtonDefaults.buttonColors(containerColor = Error)) { Text("Send Deauth") }
-                OutlinedButton(onClick = { scope.launch { repo.deauth(network.bssid, "ff:ff:ff:ff:ff:ff", 0, 0); onDeauthOutput("Stopped\n"); onShowDeauthOutput(true); onStatus("Deauth stopped") } }, shape = RoundedCornerShape(8.dp)) { Text("Stop") }
+                Button(onClick = onConfirmStart, shape = MaterialTheme.shapes.small, colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)) { Text("Send Deauth") }
+                OutlinedButton(onClick = { scope.launch { repo.deauth(network.bssid, "ff:ff:ff:ff:ff:ff", 0, deauthChannel.toIntOrNull() ?: 1).onSuccess { onDeauthOutput("Stop signal sent\n"); onShowDeauthOutput(true); onStatus("Deauth stop sent") }.onFailure { onStatus("Failed: ${it.message}") } } }, shape = MaterialTheme.shapes.small) { Text("Stop") }
             }
             if (showDeauthOutput && deauthOutput.isNotEmpty()) {
-                Surface(color = Color(0xFF0D0D0D), shape = RoundedCornerShape(4.dp), modifier = Modifier.fillMaxWidth().heightIn(max = 100.dp)) {
-                    Text(deauthOutput, modifier = Modifier.padding(10.dp), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = Error)
+                Surface(color = appColors.terminalBackground, shape = MaterialTheme.shapes.extraSmall, tonalElevation = 0.dp, modifier = Modifier.fillMaxWidth().heightIn(max = 100.dp)) {
+                    Text(deauthOutput, modifier = Modifier.padding(10.dp), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = MaterialTheme.colorScheme.error)
                 }
             }
         }
@@ -257,24 +297,25 @@ private fun DeauthCard(network: WiFiNetwork, repo: WiFiRepository, scope: kotlin
 }
 
 @Composable
-private fun PmkidCard(network: WiFiNetwork, repo: WiFiRepository, scope: kotlinx.coroutines.CoroutineScope, pmkidRunning: Boolean, pmkidOutput: String, pmkidPrefix: String, onConfirmStart: () -> Unit = {}, onPmkidRunning: (Boolean) -> Unit, onPmkidOutput: (String) -> Unit, onPmkidPrefix: (String) -> Unit, onStatus: (String) -> Unit) {
-    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+private fun PmkidCard(repo: WiFiRepository, scope: kotlinx.coroutines.CoroutineScope, pmkidRunning: Boolean, pmkidOutput: String, pmkidPrefix: String, onConfirmStart: () -> Unit = {}, onPmkidRunning: (Boolean) -> Unit, onPmkidOutput: (String) -> Unit, onPmkidPrefix: (String) -> Unit, onStatus: (String) -> Unit) {
+    val appColors = rememberAppColors()
+    Surface(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, color = appColors.surfaceContainerLow, tonalElevation = 0.dp) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                StatusDot(if (pmkidRunning) "busy" else "off")
+                StatusDot(if (pmkidRunning) DotState.Active else DotState.Inactive)
                 Text("PMKID Capture (Association)", fontWeight = FontWeight.SemiBold)
             }
-            Text("Send fake association frames to capture PMKID hash from AP", style = MaterialTheme.typography.bodySmall, color = SubtleText)
+            Text("Send fake association frames to capture PMKID hash from AP", style = MaterialTheme.typography.bodySmall, color = appColors.subtleText)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Bottom) {
                 OutlinedTextField(value = pmkidPrefix, onValueChange = onPmkidPrefix, label = { Text("Output prefix") }, placeholder = { Text("auto") }, singleLine = true, modifier = Modifier.weight(1f))
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Button(onClick = onConfirmStart, enabled = !pmkidRunning, shape = RoundedCornerShape(8.dp)) { Text("Start Capture") }
-                    OutlinedButton(onClick = { scope.launch { repo.stopPmkid(); onPmkidRunning(false); onPmkidOutput(""); onStatus("PMKID stopped") } }, enabled = pmkidRunning, shape = RoundedCornerShape(8.dp)) { Text("Stop") }
+                    Button(onClick = onConfirmStart, enabled = !pmkidRunning, shape = MaterialTheme.shapes.small) { Text("Start Capture") }
+                    OutlinedButton(onClick = { scope.launch { repo.stopPmkid(); onPmkidRunning(false); onPmkidOutput(""); onStatus("PMKID stopped") } }, enabled = pmkidRunning, shape = MaterialTheme.shapes.small) { Text("Stop") }
                 }
             }
             if (pmkidOutput.isNotEmpty()) {
-                Surface(color = Color(0xFF0D0D0D), shape = RoundedCornerShape(4.dp), modifier = Modifier.fillMaxWidth().heightIn(max = 150.dp)) {
-                    Text(pmkidOutput, modifier = Modifier.padding(10.dp), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = Success)
+                Surface(color = appColors.terminalBackground, shape = MaterialTheme.shapes.extraSmall, tonalElevation = 0.dp, modifier = Modifier.fillMaxWidth().heightIn(max = 150.dp)) {
+                    Text(pmkidOutput, modifier = Modifier.padding(10.dp), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = appColors.terminalText)
                 }
             }
         }
@@ -283,29 +324,30 @@ private fun PmkidCard(network: WiFiNetwork, repo: WiFiRepository, scope: kotlinx
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun WpsCard(network: WiFiNetwork, repo: WiFiRepository, scope: kotlinx.coroutines.CoroutineScope, wpsRunning: Boolean, wpsOutput: String, wpsPixie: Boolean, wpsBrute: Boolean, wpsPbc: Boolean, wpsPin: String, wpsDelay: String, wpsForce: Boolean, wpsShowCmd: Boolean, wpsVerbose: Boolean, wpsIfaceDown: Boolean, onConfirmStart: () -> Unit = {}, onWpsRunning: (Boolean) -> Unit, onWpsOutput: (String) -> Unit, onWpsPixie: (Boolean) -> Unit, onWpsBrute: (Boolean) -> Unit, onWpsPbc: (Boolean) -> Unit, onWpsPin: (String) -> Unit, onWpsDelay: (String) -> Unit, onWpsForce: (Boolean) -> Unit, onWpsShowCmd: (Boolean) -> Unit, onWpsVerbose: (Boolean) -> Unit, onWpsIfaceDown: (Boolean) -> Unit, onStatus: (String) -> Unit) {
-    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+private fun WpsCard(repo: WiFiRepository, scope: kotlinx.coroutines.CoroutineScope, wpsRunning: Boolean, wpsOutput: String, wpsPixie: Boolean, wpsBrute: Boolean, wpsPbc: Boolean, wpsPin: String, wpsDelay: String, wpsForce: Boolean, wpsShowCmd: Boolean, wpsVerbose: Boolean, wpsIfaceDown: Boolean, onConfirmStart: () -> Unit = {}, onWpsRunning: (Boolean) -> Unit, onWpsOutput: (String) -> Unit, onWpsPixie: (Boolean) -> Unit, onWpsBrute: (Boolean) -> Unit, onWpsPbc: (Boolean) -> Unit, onWpsPin: (String) -> Unit, onWpsDelay: (String) -> Unit, onWpsForce: (Boolean) -> Unit, onWpsShowCmd: (Boolean) -> Unit, onWpsVerbose: (Boolean) -> Unit, onWpsIfaceDown: (Boolean) -> Unit, onStatus: (String) -> Unit) {
+    val appColors = rememberAppColors()
+    Surface(Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, color = appColors.surfaceContainerLow, tonalElevation = 0.dp) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                StatusDot(if (wpsRunning) "busy" else "off")
+                StatusDot(if (wpsRunning) DotState.Active else DotState.Inactive)
                 Text("WPS Attacks (OneShot)", fontWeight = FontWeight.SemiBold)
             }
-            Text("WPS PIN recovery via Pixie Dust, bruteforce, or PBC. All options from OneShot.", style = MaterialTheme.typography.bodySmall, color = SubtleText)
+            Text("WPS PIN recovery via Pixie Dust, bruteforce, or PBC. All options from OneShot.", style = MaterialTheme.typography.bodySmall, color = appColors.subtleText)
 
-            Text("Attack Type", style = MaterialTheme.typography.labelMedium, color = SubtleText)
+            Text("Attack Type", style = MaterialTheme.typography.labelMedium, color = appColors.subtleText)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(selected = wpsPixie, onClick = { onWpsPixie(!wpsPixie) }, label = { Text("Pixie Dust") })
                 FilterChip(selected = wpsBrute, onClick = { onWpsBrute(!wpsBrute) }, label = { Text("Bruteforce") })
                 FilterChip(selected = wpsPbc, onClick = { onWpsPbc(!wpsPbc) }, label = { Text("PBC") })
             }
 
-            Text("PIN & Timing", style = MaterialTheme.typography.labelMedium, color = SubtleText)
+            Text("PIN & Timing", style = MaterialTheme.typography.labelMedium, color = appColors.subtleText)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedTextField(value = wpsPin, onValueChange = onWpsPin, label = { Text("Custom PIN") }, placeholder = { Text("12345678") }, singleLine = true, modifier = Modifier.weight(1f))
                 OutlinedTextField(value = wpsDelay, onValueChange = onWpsDelay, label = { Text("Delay (s)") }, placeholder = { Text("0") }, singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.width(100.dp))
             }
 
-            Text("Advanced", style = MaterialTheme.typography.labelMedium, color = SubtleText)
+            Text("Advanced", style = MaterialTheme.typography.labelMedium, color = appColors.subtleText)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(selected = wpsForce, onClick = { onWpsForce(!wpsForce) }, label = { Text("Pixie Force") })
                 FilterChip(selected = wpsShowCmd, onClick = { onWpsShowCmd(!wpsShowCmd) }, label = { Text("Show Pixie Cmd") })
@@ -314,20 +356,20 @@ private fun WpsCard(network: WiFiNetwork, repo: WiFiRepository, scope: kotlinx.c
             }
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Button(onClick = onConfirmStart, enabled = !wpsRunning, shape = RoundedCornerShape(8.dp)) { Text("Start WPS Attack") }
-                OutlinedButton(onClick = { scope.launch { repo.stopOneshot(); onWpsRunning(false); onWpsOutput("Stopped by user\n"); onStatus("WPS stopped") } }, enabled = wpsRunning, shape = RoundedCornerShape(8.dp)) { Text("Stop") }
+                Button(onClick = onConfirmStart, enabled = !wpsRunning, shape = MaterialTheme.shapes.small) { Text("Start WPS Attack") }
+                OutlinedButton(onClick = { scope.launch { repo.stopOneshot(); onWpsRunning(false); onWpsOutput("Stopped by user\n"); onStatus("WPS stopped") } }, enabled = wpsRunning, shape = MaterialTheme.shapes.small) { Text("Stop") }
                 OutlinedButton(onClick = {
                     scope.launch {
                         val s = repo.getOneshotStatus().getOrNull()
                         if (s != null) onWpsOutput(s.output.joinToString("\n"))
                         onStatus("Output refreshed")
                     }
-                }, enabled = true, shape = RoundedCornerShape(8.dp)) { Text("Refresh Output") }
+                }, enabled = true, shape = MaterialTheme.shapes.small) { Text("Refresh Output") }
             }
 
             if (wpsOutput.isNotEmpty()) {
-                Surface(color = Color(0xFF0D0D0D), shape = RoundedCornerShape(4.dp), modifier = Modifier.fillMaxWidth().heightIn(max = 250.dp)) {
-                    Text(wpsOutput, modifier = Modifier.padding(10.dp), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = Success)
+                Surface(color = appColors.terminalBackground, shape = MaterialTheme.shapes.extraSmall, tonalElevation = 0.dp, modifier = Modifier.fillMaxWidth().heightIn(max = 250.dp)) {
+                    Text(wpsOutput, modifier = Modifier.padding(10.dp), style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, color = appColors.terminalText)
                 }
             }
         }

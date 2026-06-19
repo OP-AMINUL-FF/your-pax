@@ -46,7 +46,7 @@ class EvilApRepository {
     suspend fun scanTargets(iface: String = "wlan0"): Result<List<ScanTargetResult>> = runCatching {
         if (ConnectionState.isDemoMode) return@runCatching DemoData.demoScanTargets
         val response = api.scanTargets(iface)
-        if (response.isSuccessful) response.body()!!
+        if (response.isSuccessful) response.body()!!.networks
         else throw Exception("Failed to scan targets: ${response.code()}")
     }
 

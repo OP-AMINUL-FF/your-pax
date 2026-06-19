@@ -46,7 +46,7 @@ class LootRepository {
     suspend fun getLogs(): Result<LogResponse> = runCatching {
         if (ConnectionState.isDemoMode) return@runCatching DemoData.demoLogResponse
         val response = api.getLogs()
-        if (response.isSuccessful) response.body()!!
-        else throw Exception("Failed to get logs: ${response.code()}")
+        val text = if (response.isSuccessful) response.body()!!.string() else throw Exception("Failed to get logs: ${response.code()}")
+        LogResponse(logs = text)
     }
 }

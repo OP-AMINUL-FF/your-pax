@@ -9,6 +9,7 @@
 - [Prerequisites](#-prerequisites)
 - [Quick Install](#-quick-install)
 - [Manual Install](#-manual-install)
+- [Android App](#-android-app)
 - [License](#-license)
 
 Use Raspberry Pi Imager to install your OS
@@ -461,6 +462,30 @@ Set the static IP address on your Windows PC:
 - **Subnet Mask**: `255.255.255.0`
 - **Default Gateway**: `172.20.2.1`
 - **DNS Servers**: `8.8.8.8`, `8.8.4.4`
+
+---
+
+## 📱 Android App
+
+The your-pax **Android app** lets you control the device straight from your phone over **Bluetooth** — no laptop, no browser, and **no WiFi connection needed**. It is the recommended way to use your-pax in the field.
+
+### Get the APK
+
+1. On your phone, open the [Releases page](https://github.com/OP-AMINUL-FF/your-pax/releases) and download **`your-pax-v1.1-alpha.apk`**.
+2. Allow installs from the browser/unknown sources when Android prompts you.
+3. Install the APK (requires **Android 8.0+ / minSdk 26**).
+
+### Connect to your-pax
+
+1. Power on the your-pax device (Bluetooth NAP advertises as **`your-pax`**).
+2. Open the app — `SplashScreen` scans for nearby Bluetooth devices.
+3. Select **`your-pax`** → the app pairs automatically.
+4. When prompted, go to **Android Settings → Bluetooth → your-pax → enable "Internet access"** (this is an Android requirement and cannot be skipped).
+5. The app waits for the PAN IP, fetches the CSRF token, and lands you on the **Home** screen.
+
+Everything — dashboard, network scan, Wi-Fi attacks, Evil AP, loot, store, config, backup, manual mode, live EPD, logs — is now reachable from your phone over the Bluetooth PAN at `http://192.168.4.1:8000`.
+
+> **Build from source (optional):** inside `your-pax-android/`, run `gradlew assembleRelease` with **JDK 17** and an Android SDK installed. The APK is output to `app/build/outputs/apk/release/`.
 
 ---
 

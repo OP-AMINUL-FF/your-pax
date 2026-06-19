@@ -59,12 +59,12 @@ object DemoData {
     )
 
     val demoNetworks = listOf(
-        WiFiNetwork(bssid = "AA:BB:CC:DD:EE:01", ssid = "HomeWiFi", channel = "6", signal = "-45", wpa = "WPA2", wps = "No"),
-        WiFiNetwork(bssid = "AA:BB:CC:DD:EE:02", ssid = "NeighborNet", channel = "1", signal = "-67", wpa = "WPA2", wps = "Yes"),
-        WiFiNetwork(bssid = "AA:BB:CC:DD:EE:03", ssid = "CoffeeShop", channel = "11", signal = "-72", wpa = "WPA3", wps = "No"),
-        WiFiNetwork(bssid = "AA:BB:CC:DD:EE:04", ssid = "", channel = "3", signal = "-80", wpa = "WPA2", wps = "No"),
-        WiFiNetwork(bssid = "AA:BB:CC:DD:EE:05", ssid = "Office-Guest", channel = "6", signal = "-55", wpa = "WPA2", wps = "No"),
-        WiFiNetwork(bssid = "AA:BB:CC:DD:EE:06", ssid = "IoT_Network", channel = "1", signal = "-88", wpa = "WPA", wps = "Yes")
+        WiFiNetwork(bssid = "AA:BB:CC:DD:EE:01", ssid = "HomeWiFi", channel = "6", signal = "-45", wpa = true, wps = false),
+        WiFiNetwork(bssid = "AA:BB:CC:DD:EE:02", ssid = "NeighborNet", channel = "1", signal = "-67", wpa = true, wps = true),
+        WiFiNetwork(bssid = "AA:BB:CC:DD:EE:03", ssid = "CoffeeShop", channel = "11", signal = "-72", wpa = true, wps = false),
+        WiFiNetwork(bssid = "AA:BB:CC:DD:EE:04", ssid = "", channel = "3", signal = "-80", wpa = true, wps = false),
+        WiFiNetwork(bssid = "AA:BB:CC:DD:EE:05", ssid = "Office-Guest", channel = "6", signal = "-55", wpa = true, wps = false),
+        WiFiNetwork(bssid = "AA:BB:CC:DD:EE:06", ssid = "IoT_Network", channel = "1", signal = "-88", wpa = true, wps = true)
     )
 
     val demoScanResponse = NetworkScanResponse(
@@ -104,13 +104,26 @@ object DemoData {
     )
 
     val demoConfig = ConfigData(
-        manualMode = false, webServer = true, debugMode = true,
+        manualMode = false, webServer = true, webIncrement = false, debugMode = true,
+        scanVulnRunning = false, retrySuccessActions = false, retryFailedActions = true,
+        blacklistCheck = true, displayingCsv = true,
+        logDebug = true, logInfo = true, logWarning = true, logError = true, logCritical = true,
+        startupDelay = 10, webDelay = 2, screenDelay = 1,
+        commentDelayMin = 15, commentDelayMax = 30, liveStatusDelay = 8,
+        imageDisplayDelayMin = 2, imageDisplayDelayMax = 8,
         scanInterval = 180, scanVulnInterval = 900,
+        failedRetryDelay = 600, successRetryDelay = 900,
+        hasDisplay = true, refWidth = 122, refHeight = 250, epdType = "epd2in13_V4",
         wifiInterface = "wlan0", monitorInterface = "wlan0mon",
-        evilApSsid = "FreePublicWiFi", evilApChannel = 6,
+        evilApSsid = "FreePublicWiFi", evilApChannel = 6, evilApInterface = "wlan0", evilApFakeauthInterval = 30,
         portList = listOf(22, 80, 443, 8080, 3306),
-        ipBlacklist = emptyList(), macBlacklist = emptyList(),
-        startupDelay = 10, nmapAggressivity = "-T4",
+        macBlacklist = emptyList(), ipBlacklist = emptyList(),
+        stealFileNames = listOf("ssh.csv", "hack.txt"),
+        stealFileExtensions = listOf(".your-pax", ".hack", ".flag"),
+        bluetoothNapSsid = "your-pax", bluetoothNapBridgeIp = "192.168.4.1",
+        nmapAggressivity = "-T4",
+        portStart = 1, portEnd = 2,
+        timeWaitSmb = 0, timeWaitSsh = 0, timeWaitTelnet = 0, timeWaitFtp = 0, timeWaitSql = 0, timeWaitRdp = 0,
         enableMonitorMode = true, evilApRunning = false
     )
 

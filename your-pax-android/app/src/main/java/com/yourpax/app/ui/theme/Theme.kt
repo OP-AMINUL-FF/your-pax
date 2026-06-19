@@ -12,27 +12,61 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val LightColorScheme = lightColorScheme(
-    primary = Primary,
-    onPrimary = OnPrimary,
-    secondary = Secondary,
-    background = Background,
-    surface = Surface,
-    onBackground = OnBackground,
-    onSurface = OnSurface,
-    error = Error,
-    outline = DividerColor
+    primary = PrimaryLight,
+    onPrimary = OnPrimaryLight,
+    primaryContainer = PrimaryVariantLight,
+    onPrimaryContainer = OnPrimaryLight,
+    secondary = SecondaryLight,
+    onSecondary = OnSecondaryLight,
+    secondaryContainer = SecondaryVariantLight,
+    onSecondaryContainer = OnSecondaryLight,
+    tertiary = TertiaryLight,
+    onTertiary = OnTertiaryLight,
+    background = BackgroundLight,
+    onBackground = OnBackgroundLight,
+    surface = SurfaceLight,
+    onSurface = OnSurfaceLight,
+    surfaceVariant = SurfaceVariantLight,
+    onSurfaceVariant = OnSurfaceVariantLight,
+    error = ErrorLight,
+    onError = OnPrimaryLight,
+    errorContainer = ErrorContainerLight,
+    onErrorContainer = ErrorLight,
+    outline = OutlineLight,
+    outlineVariant = OnSurfaceVariantLight,
+    surfaceTint = PrimaryLight,
+    inverseSurface = BackgroundDark,
+    inverseOnSurface = BackgroundLight,
+    inversePrimary = PrimaryDark,
 )
 
 private val DarkColorScheme = darkColorScheme(
-    primary = PrimaryLight,
-    onPrimary = OnPrimary,
-    secondary = Secondary,
+    primary = PrimaryDark,
+    onPrimary = OnPrimaryDark,
+    primaryContainer = PrimaryVariantDark,
+    onPrimaryContainer = PrimaryDark,
+    secondary = SecondaryDark,
+    onSecondary = OnSecondaryDark,
+    secondaryContainer = SecondaryVariantDark,
+    onSecondaryContainer = SecondaryDark,
+    tertiary = TertiaryDark,
+    onTertiary = OnTertiaryDark,
     background = BackgroundDark,
-    surface = SurfaceDark,
     onBackground = OnBackgroundDark,
+    surface = SurfaceDark,
     onSurface = OnSurfaceDark,
-    error = Error,
-    outline = DividerColorDark
+    surfaceVariant = SurfaceVariantDark,
+    onSurfaceVariant = OnSurfaceVariantDark,
+    error = ErrorDark,
+    onError = OnPrimaryDark,
+    errorContainer = ErrorContainerDark,
+    onErrorContainer = ErrorDark,
+    outline = OutlineDark,
+    outlineVariant = OnSurfaceVariantDark,
+    surfaceTint = PrimaryDark,
+    inverseSurface = BackgroundLight,
+    inverseOnSurface = BackgroundDark,
+    inversePrimary = PrimaryLight,
 )
 
 @Composable
@@ -46,6 +80,7 @@ fun YourPaxTheme(
     if (!view.isInEditMode) {
         SideEffect {
             val window = (view.context as Activity).window
+            @Suppress("DEPRECATION")
             window.statusBarColor = colorScheme.background.toArgb()
             WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
         }

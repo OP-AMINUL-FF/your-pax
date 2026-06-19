@@ -26,14 +26,22 @@ class WPAValidator:
         except Exception as e:
             return -1, "", str(e)
 
+    def _sanitize(self, value):
+        if not isinstance(value, str):
+            return str(value)
+        import re as _re
+        return _re.sub(r'[^\x20-\x7E]', '', value).replace('"', '\\"').replace('\n', '').strip()
+
     def validate(self, ssid, password, interface="wlan0", timeout=10):
         if not ssid or not password:
             return {"success": False, "error": "Missing SSID or password"}
 
+        safe_ssid = self._sanitize(ssid)
+        safe_password = self._sanitize(password)
         tmp_conf = os.path.join(tempfile.gettempdir(), f"wpa_validate_{int(time.time())}.conf")
         try:
             with open(tmp_conf, "w") as f:
-                f.write(f'network={{\n\tssid="{ssid}"\n\tpsk="{password}"\n}}\n')
+                f.write(f'network={{\n\tssid="{safe_ssid}"\n\tpsk="{safe_password}"\n}}\n')
 
             self._run_cmd(["sudo", "wpa_cli", "-i", interface, "terminate"], timeout=3)
             time.sleep(0.5)

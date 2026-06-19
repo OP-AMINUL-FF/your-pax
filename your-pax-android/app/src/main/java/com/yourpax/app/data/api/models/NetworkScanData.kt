@@ -14,6 +14,6 @@ data class NetKBResponse(
 
 data class NetKBMetaResponse(
     @SerializedName("ips") val ips: List<String> = emptyList(),
-    @SerializedName("ports") val ports: Map<String, List<Int>> = emptyMap(),
+    @SerializedName("ports") val ports: Map<String, List<String>> = emptyMap(),
     @SerializedName("actions") val actions: List<String> = emptyList()
 )

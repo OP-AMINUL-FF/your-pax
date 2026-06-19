@@ -116,6 +116,34 @@ your-pax/
     └── waveshare_epd/
 ```
 
+### 📱 your-pax-android (Native Android App)
+
+```
+your-pax-android/
+├── build.gradle.kts                 # App module config (versionCode 2 / versionName 1.1-alpha)
+├── settings.gradle.kts
+├── gradle/wrapper/                  # Gradle wrapper
+└── app/
+    ├── build.gradle.kts
+    ├── proguard-rules.pro
+    └── src/main/
+        ├── AndroidManifest.xml      # Permissions: Bluetooth, INTERNET, location; cleartext HTTP to :8000
+        └── java/com/yourpax/app/
+            ├── MainActivity.kt      # Single-activity host → NavGraph (Compose)
+            ├── YourPaxApp.kt        # Application class
+            ├── util/                # Constants (192.168.4.1:8000, BT name, UUIDs), NetworkUtils (PAN IP)
+            ├── data/
+            │   ├── api/             # RetrofitProvider, YourPaxApiService, CsrfTokenManager, JSON models
+            │   ├── repository/      # Network, WiFi, EvilAp, Loot, Bluetooth, Config, System repos
+            │   ├── bluetooth/       # BluetoothScanner, BluetoothConnector (pair + awaitPanIp), BluetoothState
+            │   └── demo/            # Demo data + connection state (offline preview)
+            └── ui/
+                ├── theme/           # Color / Type / Shape / Theme (dark Material 3)
+                ├── components/      # Reusable Compose widgets (StatCard, TerminalConsole, dialogs, ...)
+                ├── navigation/      # NavGraph, Screen routes, AppDrawer, BottomNavBar
+                └── screens/         # 19 screens (Splash, Home, Network, WiFi, EvilAP, Loot, Store, ...)
+```
+
 ### ⚓ Core Files
 
 #### your-pax.py
@@ -157,6 +185,61 @@ Contains utility functions used throughout the project.
 #### webapp.py
 
 Sets up and runs a web server to provide a web interface for changing settings, monitoring and interacting with your-pax.
+
+### 📱 Android App Architecture
+
+The **your-pax Android app** (`your-pax-android/`) is a native **Kotlin + Jetpack Compose** client that mirrors the full web UI — and adds a few screens the web UI doesn't have (Manual Mode, Network Detail). It talks to the device **entirely over Bluetooth PAN**, so it keeps working while your-pax runs Wi-Fi attacks or an Evil AP.
+
+#### Layered design (MVVM + Repository)
+
+```
+┌──────────────────────────────────────────────────────────────────────┐
+│  ui/screens   (Jetpack Compose, 19 screens, stateless views)         │
+│       ▲ observes  ▼ calls                                            │
+│  data/repository  (Network / WiFi / EvilAp / Loot / Bluetooth /      │
+│                    Config / System — domain logic + caching)         │
+│       ▲ observes  ▼ calls                                            │
+│  data/api      (Retrofit → YourPaxApiService, CsrfTokenManager)      │
+│       ▼ HTTP to http://192.168.4.1:8000  (your-pax webapp.py)        │
+│                                                                      │
+│  data/bluetooth (BluetoothScanner / BluetoothConnector)              │
+│       ▼ Bluetooth NAP → bt-nap.service on the device                 │
+└──────────────────────────────────────────────────────────────────────┘
+```
+
+- **Presentation** — `ui/screens/*` are pure Compose; each subscribes to its repository via ViewModels / `lifecycle-runtime-compose`. No business logic in composables.
+- **Domain/data** — `data/repository/*` wrap the typed Retrofit service, exposing suspend functions and observable state to the UI. Repositories are the single source of truth (Network, WiFi, EvilAp, Loot, Bluetooth, Config, System).
+- **Networking** — `RetrofitProvider` builds one OkHttp client pointed at `http://192.168.4.1:8000`. An interceptor auto-injects `Authorization: Bearer <token>` + `X-CSRF-Token: <token>`; the token is fetched dynamically by `CsrfTokenManager` right after the Bluetooth connection comes up. The base URL can be swapped at runtime via `RetrofitProvider.updateBaseUrl()`.
+- **Bluetooth** — no hidden `BluetoothPan` reflection (keeps it portable on Android 13/14). `BluetoothScanner` discovers devices named `your-pax`; `BluetoothConnector.pairDevice()` bonds via `createBond()`, then the **user** enables "Internet access" in Bluetooth settings, and `awaitPanIp()` polls the phone's `bnep`/`pan` interface until DHCP assigns an IP.
+
+#### Connection lifecycle (`SplashScreen`)
+
+1. **Scan** — discover nearby Bluetooth devices, filter for the `your-pax` name.
+2. **Pair** — `createBond()` → wait for `BOND_BONDED`.
+3. **PAN** — prompt the user to flip Settings → Bluetooth → your-pax → "Internet access" ON.
+4. **IP** — `awaitPanIp()` polls until the PAN interface gets `192.168.4.x`.
+5. **Auth** — fetch CSRF token from the firmware; OkHttp interceptor caches it.
+6. **Ready** — navigate to `HomeScreen`; every screen now hits the firmware over PAN.
+
+#### Key constants (`util/Constants.kt`)
+
+| Constant | Value | Meaning |
+|----------|-------|---------|
+| `DEFAULT_IP` | `192.168.4.1` | your-pax bridge IP on the BT NAP |
+| `DEFAULT_PORT` | `8000` | firmware web server port |
+| `YOUR_PAX_BT_NAME` | `your-pax` | Bluetooth advertised name to match |
+| `BT_PAN_UUID` | `00001116-...` | NAP service UUID |
+
+#### Build & run
+
+Requirements: **JDK 17**, Android SDK (compileSdk 34), minSdk 26 (Android 8.0+).
+
+```bash
+cd your-pax-android
+./gradlew assembleRelease          # APK → app/build/outputs/apk/release/
+```
+
+Install the APK on a phone, pair it with the your-pax device over Bluetooth, enable "Internet access", and the app connects automatically.
 
 ### ▶️ Actions
 
@@ -349,6 +432,8 @@ In my journey to make your-pax work with the different screen versions, I strugg
   - Configuration management.
   - Viewing results. (Credentials and files)
   - System control.
+
+> The same interface (and more) is available as a **native Android app** over Bluetooth PAN — see the **Android App Architecture** section above.
 
 ## 🧭 Project Roadmap
 
