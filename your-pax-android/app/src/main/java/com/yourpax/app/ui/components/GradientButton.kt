@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -17,42 +16,35 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.yourpax.app.ui.theme.GradientEnd
-import com.yourpax.app.ui.theme.GradientStart
+import com.yourpax.app.ui.theme.rememberAppColors
 
 @Composable
 fun GradientButton(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true
+    text: String, onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true
 ) {
+    val appColors = rememberAppColors()
     Button(
         onClick = onClick,
         modifier = modifier.fillMaxWidth().height(48.dp),
         enabled = enabled,
-        shape = RoundedCornerShape(24.dp),
+        shape = MaterialTheme.shapes.medium,
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent,
-            disabledContainerColor = Color.Gray.copy(alpha = 0.3f)
+            disabledContainerColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
         )
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .clip(RoundedCornerShape(24.dp))
+                .clip(MaterialTheme.shapes.medium)
                 .background(
                     brush = Brush.horizontalGradient(
-                        colors = listOf(GradientStart, GradientEnd)
+                        colors = listOf(appColors.gradientStart, appColors.gradientEnd)
                     )
                 ),
             contentAlignment = Alignment.Center
         ) {
-            Text(
-                text = text,
-                style = MaterialTheme.typography.labelLarge,
-                color = Color.White
-            )
+            Text(text = text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onPrimary)
         }
     }
 }
