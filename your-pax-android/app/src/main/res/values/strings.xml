@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">your-pax</string>
+    <string name="connect_via_bluetooth">Connect via Bluetooth</string>
+    <string name="skip_for_now">Skip for now</string>
+    <string name="searching_device">Searching for your-pax device…</string>
+    <string name="device_found">your-pax found! Connecting…</string>
+    <string name="connection_established">Connected to your-pax</string>
+    <string name="connection_failed">Connection failed</string>
+    <string name="enable_bluetooth">Enable Bluetooth</string>
+    <string name="enable_bluetooth_desc">your-pax needs Bluetooth to connect to your device.</string>
+    <string name="allow">Allow</string>
+    <string name="cancel">Cancel</string>
+    <string name="retry">Retry</string>
+</resources>

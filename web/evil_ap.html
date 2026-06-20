@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>your-pax - Evil AP</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#0a0a0a;color:#fff;padding:20px}
+h1{color:#ff4444;font-size:20px;margin-bottom:15px;border-bottom:1px solid #333;padding-bottom:8px}
+h2{color:#ff8888;font-size:15px;margin:12px 0 8px}
+h3{color:#ffaa66;font-size:13px;margin:8px 0 4px}
+.card{background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:15px;margin-bottom:12px}
+label{display:block;margin:6px 0 3px;color:#aaa;font-size:12px}
+input,select{width:100%;padding:7px;background:#2a2a2a;border:1px solid #444;border-radius:4px;color:#fff;font-size:13px}
+input:focus,select:focus{outline:0;border-color:#e99f00}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>div{flex:1;min-width:160px}
+button{padding:7px 14px;border:none;border-radius:4px;cursor:pointer;font-size:12px;margin:3px}
+.btn-green{background:#00cc66;color:#fff}.btn-green:hover{background:#00aa55}
+.btn-red{background:#cc3333;color:#fff}.btn-red:hover{background:#aa2222}
+.btn-blue{background:#0066cc;color:#fff}.btn-blue:hover{background:#0055aa}
+.btn-orange{background:#cc6600;color:#fff}.btn-orange:hover{background:#aa5500}
+.btn-gray{background:#444;color:#ccc}.btn-gray:hover{background:#555}
+table{width:100%;border-collapse:collapse;font-size:12px;margin-top:6px}
+th{background:#222;color:#aaa;padding:6px;text-align:left;border-bottom:1px solid #333;font-size:11px}
+td{padding:5px 6px;border-bottom:1px solid #222;color:#ccc}
+tr:hover td{background:#222}
+.toggle-row{display:flex;align-items:center;gap:8px;margin:6px 0;flex-wrap:wrap}
+.toggle-btn{padding:4px 14px;border:1px solid #555;border-radius:4px;cursor:pointer;font-size:12px;background:#333;color:#aaa}
+.toggle-btn.active{background:#00cc66;color:#fff;border-color:#00cc66}
+.toggle-btn.inactive{background:#333;color:#666}
+.toggle-extra{margin:4px 0 4px 20px;padding:6px 10px;background:#111;border-left:2px solid #e99f00;border-radius:0 4px 4px 0;display:none}
+.status-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px}
+.status-dot.on{background:#00cc66;box-shadow:0 0 6px #00cc66}
+.status-dot.off{background:#cc3333}
+.tabs{display:flex;gap:2px;margin:8px 0}
+.tab{padding:5px 12px;background:#222;border:1px solid #333;border-radius:4px 4px 0 0;cursor:pointer;font-size:11px;color:#888}
+.tab.active{background:#333;color:#fff;border-color:#555;border-bottom-color:#333}
+.tab-content{display:none;background:#111;border:1px solid #333;border-radius:0 4px 4px 4px;padding:8px;font-size:11px;max-height:150px;overflow-y:auto}
+.tab-content.active{display:block}
+.nav{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap}
+.nav a{color:#888;text-decoration:none;padding:5px 10px;border-radius:4px;font-size:13px}
+.nav a:hover,.nav a.active{color:#fff;background:#333}
+#conflictBar{display:none;background:#330000;border:1px solid #660000;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#ff6666}
+.info-box{background:#002200;border:1px solid #006600;border-radius:4px;padding:6px 10px;font-size:11px;color:#8f8;margin:4px 0}
+.warn-box{background:#332200;border:1px solid #664400;border-radius:4px;padding:6px 10px;font-size:11px;color:#ff8;margin:4px 0}
+.err-box{background:#330000;border:1px solid #660000;border-radius:4px;padding:6px 10px;font-size:11px;color:#f88;margin:4px 0}
+.cred-entry{padding:3px 0;border-bottom:1px solid #222;font-size:12px;color:#ff6666}
+.copy-btn{padding:2px 8px;background:#444;color:#fff;border:0;border-radius:3px;cursor:pointer;font-size:10px;margin-left:6px}
+.clip-data{display:inline;padding:2px 6px;background:#222;border-radius:3px;color:#ff6666;font-family:monospace;font-size:12px}
+</style>
+</head>
+<body>
+<div class="nav-mini">
+<a href="/index.html" title="Playground">P</a>
+<a href="/config.html" title="Config">Cfg</a>
+<a href="/network.html" title="Network">Net</a>
+<a href="/netkb.html" title="NetKB">NKB</a>
+<a href="/credentials.html" title="Creds">Cred</a>
+<a href="/loot.html" title="Loot">Loot</a>
+<a href="/your-pax.html" title="Live EPD">EPD</a>
+<span class="sep">|</span>
+<a href="/wifi.html" title="WiFi">WiFi</a>
+<a href="/evil_ap.html" title="Evil AP">Evil</a>
+<a href="/store.html" title="Store">Store</a>
+<span class="sep">|</span>
+<a href="/bt_connect.html" title="BT Connect">BT</a>
+</div>
+<div class="nav">
+<a href="index.html">Dashboard</a>
+<a href="wifi.html">Wi-Fi Attacks</a>
+<a href="evil_ap.html" class="active">Evil AP</a>
+<a href="store.html" style="margin-left:auto;color:#ffcc00;font-weight:bold">Store</a>
+<a href="config.html">Config</a>
+</div>
+
+<div id="conflictBar"></div>
+
+<h1>Evil AP Control Panel</h1>
+
+<div class="card">
+<div class="row">
+<div><span id="statusDot" class="status-dot off"></span> <span id="statusText">Stopped</span></div>
+<div style="text-align:right">
+<button class="btn-green" onclick="startAP()">&#9654; START</button>
+<button class="btn-red" onclick="stopAP()">&#9632; STOP</button>
+<button class="btn-blue" onclick="refreshAll()">Refresh</button>
+</div>
+</div>
+</div>
+
+<div class="card">
+<h2>Basic Setup</h2>
+<div class="row">
+<div>
+<label>AP Interface</label>
+<select id="apInterface"></select>
+<label>SSID Name</label>
+<input type="text" id="apSSID" value="FreeWiFi" placeholder="Network name">
+</div>
+<div>
+<label>Channel (1-14)</label>
+<input type="number" id="apChannel" value="6" min="1" max="14">
+<label>Security</label>
+<select id="apSecurity"><option value="open">OPEN</option><option value="wpa">WPA-PSK</option></select>
+<label>Password (if WPA)</label>
+<input type="text" id="apPassword" placeholder="Leave empty for open">
+</div>
+</div>
+</div>
+
+<div class="card">
+<h2>Portal Template</h2>
+<div class="row">
+<div>
+<label>Select Portal Page</label>
+<select id="portalSelect" onchange="savePortalPref()"></select>
+</div>
+</div>
+<div class="info-box">Portal files are managed from <a href="store.html" style="color:#8f8">Storage page</a> — upload your own .html there.</div>
+</div>
+
+<div class="card">
+<h2>WPA Validate</h2>
+<div class="toggle-row">
+<span id="wpaToggle" class="toggle-btn inactive" onclick="toggleFeature('wpa')">NO</span>
+<span style="font-size:12px;color:#aaa">Verify password by connecting to real AP</span>
+</div>
+<div class="toggle-extra" id="wpaExtra">
+<label>Verify Interface</label>
+<select id="wpaInterface"></select>
+<div id="wpaInfo" class="info-box">Same as AP IF → AP stops during verification. Fail → auto-restart.</div>
+</div>
+</div>
+
+<div class="card">
+<h2>Karma Attack</h2>
+<div class="toggle-row">
+<span id="karmaToggle" class="toggle-btn inactive" onclick="toggleFeature('karma')">NO</span>
+<span style="font-size:12px;color:#aaa">Respond to all probe requests</span>
+</div>
+<div class="toggle-extra" id="karmaExtra">
+<label>Karma Interface</label>
+<select id="karmaInterface"></select>
+</div>
+</div>
+
+<div class="card">
+<h2>Clone AP (Evil Twin)</h2>
+<div class="toggle-row">
+<span id="cloneToggle" class="toggle-btn inactive" onclick="toggleFeature('clone')">NO</span>
+<span style="font-size:12px;color:#aaa">Dual-IF: deauth original + clone SSID/BSSID</span>
+</div>
+<div class="toggle-extra" id="cloneExtra">
+<div class="row">
+<div>
+<label>Deauth Interface</label>
+<select id="deauthInterface"></select>
+<label>Clone Interface</label>
+<select id="cloneInterface"></select>
+</div>
+<div>
+<label>Target BSSID</label>
+<input type="text" id="targetBSSID" placeholder="AA:BB:CC:DD:EE:FF">
+<label>Target SSID (auto-fill)</label>
+<input type="text" id="targetSSID" placeholder="Same as SSID if blank">
+</div>
+</div>
+<button class="btn-blue" onclick="scanTargets()" style="margin-top:6px">&#8981; Scan for Targets</button>
+<label style="margin-top:6px">Select Target</label>
+<select id="targetSelect" onchange="selectTarget()">
+<option value="">-- Scan to populate --</option>
+</select>
+<div class="warn-box">&#9888; Requires 2 Wi-Fi interfaces (built-in + USB dongle)</div>
+</div>
+</div>
+
+<div class="card" id="statusCards" style="display:none">
+<h2>Live Status</h2>
+<div class="row">
+<div><strong>Clients:</strong> <span id="liveClients">0</span></div>
+<div><strong>Passwords:</strong> <span id="livePasswords">0</span></div>
+<div><strong>Mode:</strong> <span id="liveMode">Basic</span></div>
+</div>
+</div>
+
+<div class="card">
+<h2>Connected Clients</h2>
+<div style="max-height:150px;overflow-y:auto">
+<table><thead><tr><th>IP</th><th>MAC</th><th>Hostname</th><th>Action</th></tr></thead>
+<tbody id="clientsTable"><tr><td colspan="4" style="color:#666;text-align:center">No clients connected</td></tr></tbody>
+</table>
+</div>
+</div>
+
+<div class="card">
+<h2>Captured Passwords <button class="btn-orange" onclick="refreshCreds()" style="float:right;padding:3px 10px">Refresh</button></h2>
+<div id="credsList" style="max-height:150px;overflow-y:auto"><i style="color:#666">No credentials captured yet</i></div>
+</div>
+
+<div class="card">
+<h2>Live Monitor</h2>
+<div class="tabs">
+<span class="tab active" onclick="switchTab('dns',this)">DNS</span>
+<span class="tab" onclick="switchTab('http',this)">HTTP</span>
+<span class="tab" onclick="switchTab('devices',this)">Devices</span>
+</div>
+<div class="tab-content active" id="tabDns"><i style="color:#666">No DNS queries yet</i></div>
+<div class="tab-content" id="tabHttp"><i style="color:#666">No HTTP requests yet</i></div>
+<div class="tab-content" id="tabDevices"><i style="color:#666">No devices detected yet</i></div>
+</div>
+
+<script>
+var state = { wpa: false, karma: false, clone: false };
+var pollTimers = [];
+
+function escapeHtml(str) {
+    var d = document.createElement('div');
+    d.appendChild(document.createTextNode(str || ''));
+    return d.innerHTML;
+}
+
+function qs(id) { return document.getElementById(id); }
+
+function showConflict(msg) {
+    var bar = qs('conflictBar');
+    if(msg) { bar.textContent = msg; bar.style.display = 'block'; }
+    else { bar.style.display = 'none'; }
+}
+
+function toggleFeature(name) {
+    state[name] = !state[name];
+    var btn = qs(name + 'Toggle');
+    var extra = qs(name + 'Extra');
+    btn.textContent = state[name] ? 'YES' : 'NO';
+    btn.className = 'toggle-btn ' + (state[name] ? 'active' : 'inactive');
+    extra.style.display = state[name] ? 'block' : 'none';
+}
+
+function loadInterfaces() {
+    fetch('/list_interfaces').then(function(r){return r.json()}).then(function(ifaces){
+        var selIds = ['apInterface','wpaInterface','karmaInterface','deauthInterface','cloneInterface'];
+        selIds.forEach(function(id){
+            var sel = qs(id);
+            if(!sel) return;
+            sel.innerHTML = ifaces.map(function(iface){return '<option value="'+escapeHtml(iface)+'">'+escapeHtml(iface)+'</option>'}).join('');
+        });
+        fetch('/load_config').then(function(r){return r.json()}).then(function(cfg){
+            var saved = cfg.evil_ap_interface;
+            if(saved && ifaces.includes(saved)) qs('apInterface').value = saved;
+        });
+    });
+}
+
+function loadPortals() {
+    fetch('/portal_list').then(function(r){return r.json()}).then(function(d){
+        var sel = qs('portalSelect');
+        if(d.portals && d.portals.length) {
+            sel.innerHTML = d.portals.map(function(p){return '<option value="'+escapeHtml(p.name)+'">'+escapeHtml(p.name)+'</option>'}).join('');
+        }
+    });
+}
+
+function savePortalPref() {
+    try { localStorage.setItem('portal_pref', qs('portalSelect').value); } catch(e){}
+}
+
+function scanTargets() {
+    var sel = qs('targetSelect');
+    sel.innerHTML = '<option value="">Scanning...</option>';
+    var iface = qs('deauthInterface').value || 'wlan0';
+    fetch('/scan_targets?iface='+encodeURIComponent(iface)).then(function(r){return r.json()}).then(function(d){
+        if(d.networks && d.networks.length) {
+            sel.innerHTML = d.networks.map(function(n){
+                var label = (n.ssid||'[Hidden]') + ' (' + (n.bssid||'??') + ') ch' + (n.channel||'?');
+                return '<option value="'+escapeHtml(n.bssid||'')+'" data-ssid="'+escapeHtml(n.ssid||'')+'" data-ch="'+(n.channel||'')+'">'+escapeHtml(label)+'</option>';
+            }).join('');
+            sel.innerHTML = '<option value="">-- Select target --</option>' + sel.innerHTML;
+        } else {
+            sel.innerHTML = '<option value="">No networks found</option>';
+        }
+    }).catch(function(){
+        sel.innerHTML = '<option value="">Scan failed</option>';
+    });
+}
+
+function selectTarget() {
+    var sel = qs('targetSelect');
+    var opt = sel.options[sel.selectedIndex];
+    if(opt && opt.value) {
+        qs('targetBSSID').value = opt.value;
+        var ssid = opt.getAttribute('data-ssid') || '';
+        var ch = opt.getAttribute('data-ch') || '';
+        if(ssid) qs('targetSSID').value = ssid;
+        if(ch) qs('apChannel').value = ch;
+    }
+}
+
+function startAP() {
+    var data = {
+        interface: qs('apInterface').value,
+        ssid: qs('apSSID').value || 'FreeWiFi',
+        channel: parseInt(qs('apChannel').value) || 6,
+        password: qs('apSecurity').value == 'wpa' ? (qs('apPassword').value || null) : null,
+        portal: qs('portalSelect').value || 'generic.html',
+        wpa_validate: state.wpa,
+        wpa_interface: qs('wpaInterface').value || qs('apInterface').value,
+        karma: state.karma,
+        karma_interface: qs('karmaInterface').value || qs('apInterface').value,
+        clone: state.clone,
+        deauth_interface: qs('deauthInterface').value || 'wlan1',
+        clone_interface: qs('cloneInterface').value || qs('apInterface').value,
+        target_bssid: qs('targetBSSID').value || '',
+        target_ssid: qs('targetSSID').value || qs('apSSID').value || '',
+        target_channel: parseInt(qs('apChannel').value) || 6
+    };
+    showConflict('');
+    var btn = event && event.target ? event.target : qs('btnStart');
+    var orig = btn ? btn.textContent : '';
+    if(btn) btn.textContent = 'Starting...';
+    fetch('/start_evil_ap', {method:'POST', body:JSON.stringify(data)}).then(function(r){return r.json()}).then(function(r){
+        if(r.status == 'success') {
+            refreshAll();
+            startPolling();
+        } else {
+            alert('Error: ' + (r.message || 'Failed to start'));
+        }
+        if(btn) btn.textContent = orig;
+    }).catch(function(e){
+        alert('Error: '+e.message);
+        if(btn) btn.textContent = orig;
+    });
+}
+
+function stopAP() {
+    fetch('/stop_evil_ap', {method:'POST'}).then(function(r){return r.json()}).then(function(){
+        var extra = qs('cloneExtra');
+        if(extra.style.display == 'block') fetch('/stop_evil_clone', {method:'POST'});
+        stopPolling();
+        refreshAll();
+    }).catch(function(){});
+}
+
+function refreshStatus() {
+    fetch('/evil_ap_status').then(function(r){return r.json()}).then(function(s){
+        var dot = qs('statusDot');
+        var text = qs('statusText');
+        var cards = qs('statusCards');
+        if(s.running) {
+            dot.className = 'status-dot on';
+            text.textContent = 'Running';
+            text.style.color = '#0f0';
+            cards.style.display = 'block';
+        } else {
+            dot.className = 'status-dot off';
+            text.textContent = 'Stopped';
+            text.style.color = '#f00';
+            cards.style.display = 'none';
+        }
+    });
+}
+
+function refreshClients() {
+    fetch('/evil_clients').then(function(r){return r.json()}).then(function(d){
+        var tbody = qs('clientsTable');
+        if(d.clients && d.clients.length) {
+            tbody.innerHTML = d.clients.map(function(c){
+                var name = c.hostname || c.name || 'Unknown';
+                return '<tr><td>'+escapeHtml(c.ip)+'</td><td>'+escapeHtml(c.mac)+'</td><td>'+escapeHtml(name)+'</td><td><button class="btn-red" style="padding:2px 6px;font-size:10px" onclick="deauthClient(\''+escapeHtml(c.mac)+'\')">Deauth</button></td></tr>';
+            }).join('');
+        } else {
+            tbody.innerHTML = '<tr><td colspan="4" style="color:#666;text-align:center">No clients connected</td></tr>';
+        }
+        qs('liveClients').textContent = d.clients ? d.clients.length : '0';
+    });
+}
+
+function deauthClient(mac) {
+    fetch('/deauth_attack', {method:'POST',body:JSON.stringify({bssid:mac,count:5})});
+}
+
+function refreshCreds() {
+    fetch('/store_data').then(function(r){return r.json()}).then(function(d){
+        var div = qs('credsList');
+        if(d.creds_evil && d.creds_evil.length) {
+            div.innerHTML = '';
+            d.creds_evil.forEach(function(c){
+                var e = document.createElement('div');
+                e.className = 'cred-entry';
+                var time = c.time || '';
+                var pass = c.password || '';
+                var copyBtn = '<button class="copy-btn" onclick="copyPass(\''+escapeHtml(pass).replace(/'/g,"\\'")+'\')">Copy</button>';
+                e.innerHTML = '<span style="color:#888;font-size:10px">'+escapeHtml(time)+'</span> <span class="clip-data">'+escapeHtml(pass)+'</span> '+copyBtn;
+                div.appendChild(e);
+            });
+        } else {
+            div.innerHTML = '<i style="color:#666">No credentials captured yet</i>';
+        }
+        qs('livePasswords').textContent = d.creds_evil ? d.creds_evil.length : '0';
+    });
+}
+
+function copyPass(pass) {
+    var ta = document.createElement('textarea');
+    ta.value = pass;
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch(e){}
+    document.body.removeChild(ta);
+}
+
+function refreshLoot() {
+    fetch('/loot_monitor_data').then(function(r){return r.json()}).then(function(d){
+        if(d.dns && d.dns.length) {
+            qs('tabDns').innerHTML = d.dns.slice(-20).map(function(x){
+                return '<div>'+escapeHtml(x.domain)+' <span style="color:#666">from '+escapeHtml(x.client)+'</span></div>';
+            }).join('');
+        }
+        if(d.http && d.http.length) {
+            qs('tabHttp').innerHTML = d.http.slice(-20).map(function(x){
+                return '<div>'+escapeHtml(x.url)+' <span style="color:#666">('+escapeHtml(x.os)+')</span></div>';
+            }).join('');
+        }
+        if(d.devices && d.devices.length) {
+            qs('tabDevices').innerHTML = d.devices.slice(-20).map(function(x){
+                return '<div>'+escapeHtml(x.hostname||'?')+' <span style="color:#666">('+escapeHtml(x.mac)+')</span> — '+escapeHtml(x.ip)+'</div>';
+            }).join('');
+        }
+    });
+}
+
+function checkConflicts() {
+    fetch('/conflict_status').then(function(r){return r.json()}).then(function(s){
+        var warnings = [];
+        if(s.monitor_mode) warnings.push('Monitor mode active');
+        if(s.oneshot_running) warnings.push('WPS attack running');
+        if(s.handshake_running || s.pmkid_running) warnings.push('Monitor attack active');
+        showConflict(warnings.length ? '\u26A0 Conflict — ' + warnings.join(', ') + '. Stop them first.' : '');
+    });
+}
+
+function switchTab(name, el) {
+    document.querySelectorAll('.tab').forEach(function(t){t.className='tab'});
+    el.className='tab active';
+    document.querySelectorAll('.tab-content').forEach(function(t){t.className='tab-content'});
+    qs('tab'+name.charAt(0).toUpperCase()+name.slice(1)).className='tab-content active';
+}
+
+function refreshAll() {
+    refreshStatus();
+    refreshClients();
+    refreshCreds();
+    refreshLoot();
+    checkConflicts();
+}
+
+function startPolling() {
+    stopPolling();
+    pollTimers.push(setInterval(refreshStatus, 3000));
+    pollTimers.push(setInterval(refreshClients, 3000));
+    pollTimers.push(setInterval(refreshCreds, 5000));
+    pollTimers.push(setInterval(refreshLoot, 2000));
+}
+
+function stopPolling() {
+    pollTimers.forEach(function(t){clearInterval(t)});
+    pollTimers = [];
+}
+
+loadInterfaces();
+loadPortals();
+refreshAll();
+setInterval(checkConflicts, 5000);
+</script>
+</body>
+</html>

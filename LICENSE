@@ -1,0 +1,134 @@
+MIT License
+============
+
+Copyright (c) 2024-2026 OP AMINUL FF
+
+Project: your-pax — Autonomous Cyberdeck & Offensive Security Tool
+Author : OP AMINUL FF
+Contact: your-pax@outlook.com
+Website: https://github.com/OP-AMINUL-FF/your-pax
+
+---
+
+### 1. License Grant
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+**The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.**
+
+---
+
+### 2. Disclaimer of Warranty
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NONINFRINGEMENT. IN NO EVENT
+SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+OTHER DEALINGS IN THE SOFTWARE.
+
+---
+
+### 3. Limitation of Liability
+
+To the maximum extent permitted by applicable law, in no event shall the
+authors or copyright holders be liable for any special, incidental, indirect,
+or consequential damages whatsoever (including, but not limited to, damages
+for loss of profits, loss of data, business interruption, or loss of
+reputation) arising out of the use or inability to use the Software, even if
+advised of the possibility of such damage.
+
+---
+
+### 4. Lawful Use Only
+
+This Software is designed and intended for legitimate security testing,
+educational purposes, and authorized penetration testing only. The user
+acknowledges and agrees that:
+
+  a) They shall comply with all applicable local, national, and international
+     laws and regulations governing the use of this Software.
+
+  b) They shall obtain explicit written authorization before testing or
+     deploying this Software on any systems, networks, or devices they do
+     not own or have explicit permission to test.
+
+  c) Any unauthorized or unlawful use of this Software is strictly prohibited
+     and is the sole responsibility of the user.
+
+  d) The authors and copyright holders expressly disclaim any and all
+     liability arising from unauthorized or unlawful use of this Software.
+
+---
+
+### 5. Third-Party Components
+
+This Software may incorporate or be distributed with third-party libraries,
+tools, and components, each of which may be subject to its own license terms.
+A list of third-party dependencies and their respective licenses is maintained
+in the project documentation. The inclusion of any third-party component does
+not imply endorsement by the authors of this Software.
+
+---
+
+### 6. Export Control
+
+This Software may be subject to export control laws and regulations of
+various jurisdictions. The user agrees to comply with all applicable export
+and re-export control laws, including but not limited to the U.S. Export
+Administration Regulations and sanctions programs. By using this Software,
+the user represents and warrants that they are not located in, under the
+control of, or a national or resident of any embargoed country or
+restricted party.
+
+---
+
+### 7. Trademark Notice
+
+The names "your-pax", "OP AMINUL FF", and associated logos are trademarks
+of OP AMINUL FF. This License does not grant any rights to use these names
+or logos without prior written consent. All other trademarks mentioned
+in the Software are the property of their respective owners.
+
+---
+
+### 8. Governing Law
+
+This License shall be governed by and construed in accordance with the laws
+of the jurisdiction of the author's residence, without regard to its conflict
+of law principles. Any legal action or proceeding arising out of or relating
+to this License shall be brought exclusively in the competent courts of that
+jurisdiction.
+
+---
+
+### 9. Severability
+
+If any provision of this License is held to be unenforceable or invalid
+under applicable law, the remaining provisions shall continue in full force
+and effect. The unenforceable provision shall be reformed to the minimum
+extent necessary to make it enforceable, or if that is not possible, it
+shall be severed from this License.
+
+---
+
+### 10. Entire Agreement
+
+This License constitutes the entire agreement between the parties with
+respect to the Software and supersedes all prior or contemporaneous
+understandings, agreements, representations, and warranties, whether
+written or oral, relating to the Software.
+
+---
+
+```
+your-pax (C) 2024-2026 OP AMINUL FF
+Licensed under the MIT License — see above for full terms.
+```

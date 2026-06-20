@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>your-pax - Target Attacks</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#0a0a0a;color:#fff;padding:20px;font-size:13px}
+h1{font-size:18px;margin-bottom:4px}
+h2{font-size:14px;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.card{background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:15px;margin-bottom:12px}
+.card.attack{border-left:3px solid #00cc66}
+.card.attack.wps{border-left-color:#ff6600}
+.card.attack.deauth{border-left-color:#cc3333}
+.card.attack.handshake{border-left-color:#0066cc}
+.card.attack.pmkid{border-left-color:#cc6600}
+button{padding:7px 14px;border:none;border-radius:4px;cursor:pointer;font-size:12px;margin:3px;white-space:nowrap}
+.btn-green{background:#00cc66;color:#fff}.btn-red{background:#cc3333;color:#fff}
+.btn-blue{background:#0066cc;color:#fff}.btn-orange{background:#cc6600;color:#fff}
+.btn-sm{padding:4px 8px;font-size:11px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.col{flex:1;min-width:140px}
+label{display:block;margin:5px 0 2px;color:#999;font-size:11px}
+input,select{width:100%;padding:6px 8px;background:#2a2a2a;border:1px solid #444;border-radius:3px;color:#fff;font-size:12px}
+input[type=checkbox]{width:auto;margin-right:4px}
+.switch{position:relative;display:inline-block;width:36px;height:20px;vertical-align:middle;margin:0 4px}
+.switch input{opacity:0;width:0;height:0}
+.slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:#555;transition:.3s;border-radius:20px}
+.slider:before{position:absolute;content:"";height:14px;width:14px;left:3px;bottom:3px;background:#fff;transition:.3s;border-radius:50%}
+input:checked+.slider{background:#00cc66}
+input:checked+.slider:before{transform:translateX(16px)}
+pre{background:#0d0d0d;padding:10px;border-radius:4px;font-size:11px;color:#0f0;max-height:250px;overflow-y:auto;margin-top:6px;font-family:Consolas,monospace;line-height:1.4}
+.badge{padding:2px 6px;border-radius:3px;font-size:10px}
+.badge-bssid{background:#333;color:#aaa;font-family:monospace}
+.badge-open{background:#006633;color:#fff}.badge-wpa2{background:#004488;color:#fff}
+.badge-wps{background:#ff6600;color:#fff}
+.nav{display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.nav a{color:#888;text-decoration:none;padding:5px 10px;border-radius:4px;font-size:13px}
+.nav a:hover,.nav a.active{color:#fff;background:#333}
+#targetInfo{display:flex;gap:15px;flex-wrap:wrap;align-items:center;margin-bottom:12px;padding:10px 15px;background:#111;border-radius:8px;border:1px solid #333}
+#targetInfo .sig{font-size:18px;font-weight:bold}
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+.status-dot.on{background:#00cc66;box-shadow:0 0 6px #00cc66}
+.status-dot.off{background:#444}
+.status-dot.busy{background:#ffcc00;box-shadow:0 0 6px #ffcc00}
+.opt-group{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:4px 0}
+.opt-group label{display:inline;margin:0}
+hr{border:none;border-top:1px solid #333;margin:10px 0}
+.section-title{color:#888;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin:12px 0 6px}
+</style>
+</head>
+<body>
+<div class="nav-mini">
+<a href="/index.html" title="Playground">P</a>
+<a href="/config.html" title="Config">Cfg</a>
+<a href="/network.html" title="Network">Net</a>
+<a href="/netkb.html" title="NetKB">NKB</a>
+<a href="/credentials.html" title="Creds">Cred</a>
+<a href="/loot.html" title="Loot">Loot</a>
+<a href="/your-pax.html" title="Live EPD">EPD</a>
+<span class="sep">|</span>
+<a href="/wifi.html" title="WiFi">WiFi</a>
+<a href="/evil_ap.html" title="Evil AP">Evil</a>
+<a href="/store.html" title="Store">Store</a>
+<span class="sep">|</span>
+<a href="/bt_connect.html" title="BT Connect">BT</a>
+</div>
+<div class="nav">
+<a href="index.html">Dashboard</a>
+<a href="wifi.html">&larr; Networks</a>
+<a href="evil_ap.html">Evil AP</a>
+<a href="store.html" style="margin-left:auto;color:#ffcc00;font-weight:bold">Store</a>
+</div>
+
+<div id="conflictBar" style="display:none;background:#330000;border:1px solid #660000;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#ff6666"></div>
+<div id="targetInfo">
+<div><span class="sig" id="tSignal">-0</span><span style="color:#666;font-size:11px"> dBm</span></div>
+<div><span id="tSSID" style="font-size:16px;font-weight:bold"></span><br><span class="badge badge-bssid" id="tBSSID"></span></div>
+<div style="color:#888;font-size:12px">Channel <span id="tChannel"></span></div>
+</div>
+
+<div class="card attack handshake">
+<h2><span class="status-dot off" id="hsDot"></span> Handshake Capture</h2>
+<p style="color:#888;font-size:11px;margin-bottom:8px">Capture WPA/WPA2 4-way handshake by listening on the channel</p>
+<div class="row">
+<div class="col"><label>Output prefix</label><input type="text" id="hsPrefix" placeholder="auto"></div>
+<div class="col" style="display:flex;align-items:end;gap:4px">
+<button class="btn-green" id="hsStart" onclick="startHandshake()">Start Capture</button>
+<button class="btn-red" id="hsStop" onclick="stopHandshake()" style="display:none">Stop</button>
+</div>
+</div>
+<pre id="hsOutput"><i style="color:#666">Not capturing</i></pre>
+</div>
+
+<div class="card attack deauth">
+<h2><span class="status-dot off" id="deauthDot"></span> Deauth Attack</h2>
+<p style="color:#888;font-size:11px;margin-bottom:8px">Send deauth packets to force clients to reconnect and capture handshake</p>
+<div class="row">
+<div class="col"><label>Client MAC (FF:FF:FF:FF:FF:FF = broadcast)</label><input type="text" id="deauthClient" value="ff:ff:ff:ff:ff:ff"></div>
+<div class="col"><label>Packet Count (0 = continuous)</label><input type="number" id="deauthCount" value="10" min="0" max="10000"></div>
+</div>
+<div class="row" style="margin-top:6px">
+<div class="col">
+<label class="switch" style="margin-right:20px">Continuous <input type="checkbox" id="deauthContinuous"><span class="slider"></span></label>
+</div>
+<div class="col" style="display:flex;align-items:end">
+<button class="btn-red" onclick="sendDeauth()">Send Deauth</button>
+<button class="btn-orange" onclick="stopDeauth()">Stop</button>
+</div>
+</div>
+<pre id="deauthOutput" style="display:none"></pre>
+</div>
+
+<div class="card attack pmkid">
+<h2><span class="status-dot off" id="pmkidDot"></span> PMKID Capture (Association)</h2>
+<p style="color:#888;font-size:11px;margin-bottom:8px">Send fake association frames to capture PMKID hash from AP</p>
+<div class="row">
+<div class="col"><label>Output prefix</label><input type="text" id="pmkidPrefix" placeholder="auto"></div>
+<div class="col" style="display:flex;align-items:end;gap:4px">
+<button class="btn-green" id="pmkidStart" onclick="startPMKID()">Start Capture</button>
+<button class="btn-red" id="pmkidStop" onclick="stopPMKID()" style="display:none">Stop</button>
+</div>
+</div>
+<pre id="pmkidOutput"><i style="color:#666">Not capturing</i></pre>
+</div>
+
+<div class="card attack wps">
+<h2><span class="status-dot off" id="wpsDot"></span> WPS Attacks (OneShot)</h2>
+<p style="color:#888;font-size:11px;margin-bottom:8px">WPS PIN recovery via Pixie Dust, bruteforce, or PBC. All options from OneShot.</p>
+
+<div class="section-title">Attack Type</div>
+<div class="opt-group">
+<label class="switch">Pixie Dust <input type="checkbox" id="wpsPixie" checked><span class="slider"></span></label>
+<label class="switch">Bruteforce <input type="checkbox" id="wpsBrute"><span class="slider"></span></label>
+<label class="switch">PBC <input type="checkbox" id="wpsPBC"><span class="slider"></span></label>
+</div>
+
+<div class="section-title">PIN & Timing</div>
+<div class="row">
+<div class="col"><label>Custom PIN (optional)</label><input type="text" id="wpsPin" placeholder="12345678"></div>
+<div class="col"><label>Delay (seconds)</label><input type="number" id="wpsDelay" value="0" step="0.1" min="0" max="60"></div>
+</div>
+
+<div class="section-title">Advanced</div>
+<div class="opt-group">
+<label class="switch">Pixie Force <input type="checkbox" id="wpsForce"><span class="slider"></span></label>
+<label class="switch">Show Pixie Cmd <input type="checkbox" id="wpsShowCmd"><span class="slider"></span></label>
+<label class="switch">Verbose <input type="checkbox" id="wpsVerbose"><span class="slider"></span></label>
+<label class="switch">IFace Down <input type="checkbox" id="wpsIfaceDown" checked><span class="slider"></span></label>
+</div>
+
+<div style="margin-top:8px">
+<button class="btn-green" onclick="startWPS()">Start WPS Attack</button>
+<button class="btn-red" onclick="stopWPS()">Stop</button>
+<button class="btn-blue" onclick="refreshWPS()">Refresh Output</button>
+</div>
+<pre id="wpsOutput"><i style="color:#666">Ready</i></pre>
+</div>
+
+<script>
+function showConflict(msg) {
+    const bar = document.getElementById('conflictBar');
+    if(msg) { bar.textContent = msg; bar.style.display = 'block'; }
+    else { bar.style.display = 'none'; }
+}
+function checkConflicts(callback) {
+    fetch('/conflict_status').then(r=>r.json()).then(s=>{
+        const warnings = [];
+        if(s.evil_ap_running) warnings.push('Evil AP is running');
+        if(s.monitor_mode) warnings.push('Monitor mode is active');
+        if(s.handshake_running) warnings.push('Handshake capture is running');
+        if(s.pmkid_running) warnings.push('PMKID capture is running');
+        if(s.oneshot_running) warnings.push('WPS attack is running');
+        showConflict(warnings.length ? '⚠ Active: ' + warnings.join(', ') : '');
+        if(callback) callback(s);
+    }).catch(()=>{ if(callback) callback({}); });
+}
+checkConflicts();
+setInterval(()=>checkConflicts(), 5000);
+
+const params = new URLSearchParams(window.location.search);
+const BSSID = params.get('bssid') || '';
+const SSID = params.get('ssid') || 'Unknown';
+const CHANNEL = params.get('channel') || '1';
+const SIGNAL = params.get('signal') || '0';
+
+document.getElementById('tSSID').textContent = SSID;
+document.getElementById('tBSSID').textContent = BSSID;
+document.getElementById('tChannel').textContent = CHANNEL;
+document.getElementById('tSignal').textContent = SIGNAL;
+
+const sig = parseInt(SIGNAL);
+document.getElementById('tSignal').style.color = sig > -50 ? '#0f0' : sig > -70 ? '#ff0' : '#f66';
+
+function setDot(id, state) {
+    const dot = document.getElementById(id);
+    dot.className = 'status-dot ' + state;
+}
+
+function setOutput(id, text) {
+    document.getElementById(id).textContent = text;
+}
+
+function appendOutput(id, text) {
+    const el = document.getElementById(id);
+    el.textContent += text + '\n';
+    el.scrollTop = el.scrollHeight;
+}
+
+// === Handshake Capture ===
+let hsPoll = null;
+function startHandshake() {
+    setDot('hsDot', 'busy');
+    document.getElementById('hsStart').style.display = 'none';
+    document.getElementById('hsStop').style.display = 'inline-block';
+    const prefix = document.getElementById('hsPrefix').value || null;
+    fetch('/handshake_start', {method:'POST', body:JSON.stringify({bssid:BSSID, channel:CHANNEL, prefix})})
+    .then(r=>r.json()).then(r=>{
+        if(r.status=='success') {
+            setOutput('hsOutput', 'Capturing...\n');
+            hsPoll = setInterval(()=>{
+                fetch('/handshake_status').then(r=>r.json()).then(s=>{
+                    if(!s.running) {
+                        clearInterval(hsPoll);
+                        setDot('hsDot', 'off');
+                        document.getElementById('hsStart').style.display = 'inline-block';
+                        document.getElementById('hsStop').style.display = 'none';
+                        setOutput('hsOutput', 'Capture stopped. Files: ' + (s.files||'none'));
+                    }
+                });
+            }, 2000);
+        } else {
+            setDot('hsDot', 'off');
+            document.getElementById('hsStart').style.display = 'inline-block';
+            document.getElementById('hsStop').style.display = 'none';
+            setOutput('hsOutput', 'Error: ' + (r.message||'unknown'));
+        }
+    });
+}
+
+function stopHandshake() {
+    fetch('/handshake_stop', {method:'POST'});
+    if(hsPoll) clearInterval(hsPoll);
+    setDot('hsDot', 'off');
+    document.getElementById('hsStart').style.display = 'inline-block';
+    document.getElementById('hsStop').style.display = 'none';
+}
+
+// === Deauth ===
+let deauthRunning = false;
+function sendDeauth() {
+    const client = document.getElementById('deauthClient').value || 'ff:ff:ff:ff:ff:ff';
+    const count = parseInt(document.getElementById('deauthCount').value) || 10;
+    const continuous = document.getElementById('deauthContinuous').checked;
+    const finalCount = continuous ? 0 : count;
+    setDot('deauthDot', 'busy');
+    fetch('/deauth_attack', {method:'POST', body:JSON.stringify({
+        bssid: BSSID, client, count: finalCount, channel: parseInt(CHANNEL)
+    })}).then(r=>r.json()).then(r=>{
+        setDot('deauthDot', r.status=='success' ? 'on' : 'off');
+        document.getElementById('deauthOutput').style.display = 'block';
+        setOutput('deauthOutput', r.status=='success' ? 'Deauth sent: '+finalCount+' packets' : 'Failed: '+r.message);
+        if(!continuous) setTimeout(()=>setDot('deauthDot','off'), 3000);
+    });
+}
+
+function stopDeauth() {
+    fetch('/deauth_attack', {method:'POST', body:JSON.stringify({bssid:BSSID,count:0,client:'ff:ff:ff:ff:ff:ff'})});
+    setDot('deauthDot', 'off');
+}
+
+// === PMKID ===
+let pmkidPoll = null;
+function startPMKID() {
+    setDot('pmkidDot', 'busy');
+    document.getElementById('pmkidStart').style.display = 'none';
+    document.getElementById('pmkidStop').style.display = 'inline-block';
+    const prefix = document.getElementById('pmkidPrefix').value || null;
+    fetch('/pmkid_start', {method:'POST', body:JSON.stringify({bssid:BSSID, channel:CHANNEL, prefix})})
+    .then(r=>r.json()).then(r=>{
+        if(r.status=='success') {
+            setOutput('pmkidOutput', 'Capturing PMKID with fakeauth...\n');
+            pmkidPoll = setInterval(()=>{
+                fetch('/pmkid_status').then(r=>r.json()).then(s=>{
+                    if(!s.running) {
+                        clearInterval(pmkidPoll);
+                        setDot('pmkidDot', 'off');
+                        document.getElementById('pmkidStart').style.display = 'inline-block';
+                        document.getElementById('pmkidStop').style.display = 'none';
+                    }
+                });
+            }, 2000);
+        } else {
+            setDot('pmkidDot', 'off');
+            document.getElementById('pmkidStart').style.display = 'inline-block';
+            document.getElementById('pmkidStop').style.display = 'none';
+            setOutput('pmkidOutput', 'Error: ' + (r.message||'unknown'));
+        }
+    });
+}
+
+function stopPMKID() {
+    fetch('/pmkid_stop', {method:'POST'});
+    if(pmkidPoll) clearInterval(pmkidPoll);
+    setDot('pmkidDot', 'off');
+    document.getElementById('pmkidStart').style.display = 'inline-block';
+    document.getElementById('pmkidStop').style.display = 'none';
+}
+
+// === WPS ===
+let wpsPoll = null;
+function startWPS() {
+    const data = {
+        bssid: BSSID,
+        pixie: document.getElementById('wpsPixie').checked,
+        bruteforce: document.getElementById('wpsBrute').checked,
+        pbc: document.getElementById('wpsPBC').checked,
+        pin: document.getElementById('wpsPin').value || null,
+        delay: parseFloat(document.getElementById('wpsDelay').value) || null,
+        pixie_force: document.getElementById('wpsForce').checked,
+        show_pixie_cmd: document.getElementById('wpsShowCmd').checked,
+        verbose: document.getElementById('wpsVerbose').checked,
+        iface_down: document.getElementById('wpsIfaceDown').checked
+    };
+    setDot('wpsDot', 'busy');
+    setOutput('wpsOutput', 'Starting OneShot...\n');
+    fetch('/oneshot', {method:'POST', body:JSON.stringify(data)}).then(r=>r.json()).then(r=>{
+        if(r.status=='success') {
+            wpsPoll = setInterval(()=>{
+                fetch('/oneshot_status').then(r=>r.json()).then(s=>{
+                    const out = document.getElementById('wpsOutput');
+                    if(s.output && s.output.length) {
+                        out.textContent = s.output.join('\n');
+                        out.scrollTop = out.scrollHeight;
+                    }
+                    if(!s.running) {
+                        clearInterval(wpsPoll);
+                        setDot('wpsDot', 'off');
+                        out.textContent += '\n--- Attack Finished ---\n';
+                    }
+                });
+            }, 1000);
+        } else {
+            setDot('wpsDot', 'off');
+            setOutput('wpsOutput', 'Error: ' + (r.message||'unknown'));
+        }
+    });
+}
+
+function stopWPS() {
+    fetch('/oneshot_stop', {method:'POST'});
+    if(wpsPoll) clearInterval(wpsPoll);
+    setDot('wpsDot', 'off');
+    setOutput('wpsOutput', 'Stopped by user');
+}
+
+function refreshWPS() {
+    fetch('/oneshot_status').then(r=>r.json()).then(s=>{
+        if(s.output) document.getElementById('wpsOutput').textContent = s.output.join('\n');
+    });
+}
+</script>
+</body>
+</html>

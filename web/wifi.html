@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>your-pax - Wi-Fi Attacks</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#0a0a0a;color:#fff;padding:20px;font-size:13px}
+h1{color:#00ff88;font-size:20px;margin-bottom:15px;border-bottom:1px solid #333;padding-bottom:8px}
+h2{color:#00ccff;font-size:16px;margin:15px 0 10px}
+.card{background:#1a1a1a;border:1px solid #333;border-radius:8px;padding:15px;margin-bottom:15px}
+button{padding:8px 16px;border:none;border-radius:4px;cursor:pointer;font-size:13px;margin:4px;white-space:nowrap}
+.btn-green{background:#00cc66;color:#fff}.btn-red{background:#cc3333;color:#fff}
+.btn-blue{background:#0066cc;color:#fff}.btn-orange{background:#cc6600;color:#fff}
+.btn-sm{padding:5px 10px;font-size:11px}
+input,select{width:100%;padding:8px;background:#2a2a2a;border:1px solid #444;border-radius:4px;color:#fff;font-size:13px}
+table{width:100%;border-collapse:collapse;margin-top:8px;font-size:12px}
+th,td{padding:7px 8px;text-align:left;border-bottom:1px solid #222}
+th{background:#222;color:#00ccff;position:sticky;top:0;font-size:11px;text-transform:uppercase}
+tr{cursor:pointer}tr:hover{background:#2a2a2a;outline:1px solid #00ccff}
+.badge{padding:2px 6px;border-radius:3px;font-size:10px;font-weight:bold}
+.badge-wpa2{background:#004488;color:#fff}.badge-wpa{background:#224466;color:#fff}
+.badge-wep{background:#884400;color:#fff}.badge-open{background:#006633;color:#fff}
+.badge-wps{background:#ff6600;color:#fff}.badge-locked{background:#cc0000;color:#fff}
+.nav{display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap}
+.nav a{color:#888;text-decoration:none;padding:5px 10px;border-radius:4px;font-size:13px}
+.nav a:hover,.nav a.active{color:#fff;background:#333}
+.toolbar{display:flex;gap:8px;margin-bottom:15px;flex-wrap:wrap;align-items:center}
+#netCount{color:#888;font-size:12px}
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px}
+.status-dot.on{background:#00cc66}.status-dot.off{background:#cc3333}
+th:nth-child(1){width:30px}th:nth-child(4){width:70px}
+</style>
+</head>
+<body>
+<div class="nav-mini">
+<a href="/index.html" title="Playground">P</a>
+<a href="/config.html" title="Config">Cfg</a>
+<a href="/network.html" title="Network">Net</a>
+<a href="/netkb.html" title="NetKB">NKB</a>
+<a href="/credentials.html" title="Creds">Cred</a>
+<a href="/loot.html" title="Loot">Loot</a>
+<a href="/your-pax.html" title="Live EPD">EPD</a>
+<span class="sep">|</span>
+<a href="/wifi.html" title="WiFi">WiFi</a>
+<a href="/evil_ap.html" title="Evil AP">Evil</a>
+<a href="/store.html" title="Store">Store</a>
+<span class="sep">|</span>
+<a href="/bt_connect.html" title="BT Connect">BT</a>
+</div>
+<div class="nav">
+<a href="index.html">Dashboard</a>
+<a href="wifi.html" class="active">Wi-Fi Attacks</a>
+<a href="evil_ap.html">Evil AP</a>
+<a href="store.html" style="margin-left:auto;color:#ffcc00;font-weight:bold">Store</a>
+<a href="config.html">Config</a>
+</div>
+
+<h1>Wi-Fi Attacks</h1>
+
+<div class="toolbar">
+<button class="btn-green" onclick="scanNetworks()">Scan Networks</button>
+<button class="btn-orange" onclick="toggleMonitor()">Toggle Monitor</button>
+<button class="btn-blue" onclick="checkMonitor()">Check Monitor</button>
+<span id="monStatus"><span class="status-dot off"></span>Monitor</span>
+<span id="netCount">(0 networks)</span>
+</div>
+<div id="conflictBar" style="display:none;background:#330000;border:1px solid #660000;border-radius:4px;padding:8px 12px;margin-bottom:10px;font-size:12px;color:#ff6666"></div>
+
+<div class="card">
+<h2>Available Networks</h2>
+<div style="max-height:500px;overflow-y:auto">
+<table><thead><tr>
+<th>#</th><th>SSID</th><th>BSSID</th><th>Ch</th><th>Signal</th><th>Security</th><th>WPS</th><th>Action</th>
+</tr></thead>
+<tbody id="netTableBody">
+<tr><td colspan="8" style="text-align:center;color:#666;padding:30px">Click "Scan Networks" to discover Wi-Fi networks<br>Select a target to launch attacks</td></tr>
+</tbody></table>
+</div>
+</div>
+
+<script>
+function escapeHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+function showConflict(msg) {
+    const bar = document.getElementById('conflictBar');
+    if(msg) { bar.textContent = msg; bar.style.display = 'block'; }
+    else { bar.style.display = 'none'; }
+}
+function checkConflicts(callback) {
+    fetch('/conflict_status').then(r=>r.json()).then(s=>{
+        const warnings = [];
+        if(s.evil_ap_running) warnings.push('Evil AP is running');
+        if(s.monitor_mode && !s.handshake_running && !s.pmkid_running) warnings.push('Monitor mode is active (Wi-Fi scan needs managed mode)');
+        if(s.oneshot_running) warnings.push('WPS attack is running');
+        showConflict(warnings.length ? '⚠ Conflict: ' + warnings.join(', ') : '');
+        if(callback) callback(s);
+    }).catch(()=>{ if(callback) callback({}); });
+}
+function scanNetworks() {
+    var tbody = document.getElementById('netTableBody');
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#ff0;padding:20px">Scanning...</td></tr>';
+    fetch('/wifi_scan_advanced').then(function(r){
+        if(r.status == 409) return r.json().then(function(d){ tbody.innerHTML = '<tr><td colspan="8" style="color:#f66;padding:20px">'+escapeHtml(d.error)+'</td></tr>'; });
+        return r.json();
+    }).then(function(networks){
+        tbody.innerHTML = '';
+        var seen = {};
+        var idx = 0;
+        networks.forEach(function(n){
+            var key = (n.bssid||'') + (n.ssid||'');
+            if (seen[key] || !key) return;
+            seen[key] = true;
+            if (!n.bssid && !n.ssid) return;
+            idx++;
+            var sig = parseInt(n.signal) || -100;
+            var sigColor = sig > -50 ? '#0f0' : sig > -70 ? '#ff0' : '#f66';
+            var bars = sig > -50 ? '\u2582\u2584\u2586\u2588' : sig > -60 ? '\u2582\u2584\u2586' : sig > -70 ? '\u2582\u2584' : '\u2582';
+            var ssid = n.ssid ? escapeHtml(n.ssid) : '<i style="color:#666">Hidden</i>';
+            var sec = n.wpa ? '<span class="badge badge-wpa2">WPA2</span>' : '<span class="badge badge-open">OPEN</span>';
+            var wps = n.wps ? '<span class="badge badge-wps">WPS</span>' : '-';
+            var bssid = escapeHtml(n.bssid || '??:??:??:??:??:??');
+            var ch = escapeHtml(n.channel || '?');
+            var sigDisp = escapeHtml(n.signal || '?');
+            var row = document.createElement('tr');
+            row.addEventListener('click', function() {
+                selectTarget(
+                    encodeURIComponent(n.bssid || ''),
+                    encodeURIComponent(n.ssid || ''),
+                    encodeURIComponent(n.channel || ''),
+                    encodeURIComponent(n.signal || '0')
+                );
+            });
+            row.innerHTML = '<td style="color:#666">' + idx + '</td>' +
+                '<td><strong>' + ssid + '</strong></td>' +
+                '<td style="font-size:11px;color:#888">' + bssid + '</td>' +
+                '<td>' + ch + '</td>' +
+                '<td style="color:' + sigColor + ';font-size:13px">' + bars + ' ' + sigDisp + '</td>' +
+                '<td>' + sec + '</td>' +
+                '<td>' + wps + '</td>' +
+                '<td><button class="btn-sm btn-blue" data-bssid="' + encodeURIComponent(n.bssid || '') + '" data-ssid="' + encodeURIComponent(n.ssid || '') + '" data-channel="' + encodeURIComponent(n.channel || '') + '" data-signal="' + encodeURIComponent(n.signal || '0') + '">Attack</button></td>';
+            row.querySelector('button').addEventListener('click', function(e) {
+                e.stopPropagation();
+                selectTarget(this.dataset.bssid, this.dataset.ssid, this.dataset.channel, this.dataset.signal);
+            });
+            tbody.appendChild(row);
+        });
+        if (idx === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#666;padding:20px">No networks found. Try scanning again.</td></tr>';
+        }
+        document.getElementById('netCount').textContent = '(' + idx + ' networks)';
+    }).catch(function(e){
+        document.getElementById('netTableBody').innerHTML = '<tr><td colspan="8" style="color:#f00;padding:20px">Error: ' + escapeHtml(e.message) + '</td></tr>';
+    });
+}
+
+function selectTarget(bssid, ssid, channel, signal) {
+    window.location.href = `wifi_target.html?bssid=${encodeURIComponent(bssid)}&ssid=${encodeURIComponent(ssid)}&channel=${encodeURIComponent(channel)}&signal=${encodeURIComponent(signal)}`;
+}
+
+function toggleMonitor() {
+    fetch('/load_config').then(r=>r.json()).then(cfg=>{
+        const current = cfg.enable_monitor_mode === true;
+        fetch('/save_config', {method:'POST', body:JSON.stringify({enable_monitor_mode: !current})})
+            .then(()=>{
+                const on = !current;
+                document.getElementById('monStatus').textContent = on ? 'Monitor' : 'Monitor';
+                document.querySelector('#monStatus .status-dot').className = 'status-dot ' + (on ? 'on' : 'off');
+                if (!on) {
+                    document.getElementById('netTableBody').innerHTML = '<tr><td colspan="8" style="text-align:center;color:#666;padding:20px">Monitor mode off</td></tr>';
+                }
+            });
+    });
+}
+
+function checkMonitor() {
+    fetch('/evil_ap_status').then(()=>{
+        document.getElementById('monStatus').textContent = 'Monitor OK';
+        document.querySelector('#monStatus .status-dot').className = 'status-dot on';
+    }).catch(()=>{
+        document.getElementById('monStatus').textContent = 'Monitor Off';
+        document.querySelector('#monStatus .status-dot').className = 'status-dot off';
+    });
+}
+</script>
+</body>
+</html>
