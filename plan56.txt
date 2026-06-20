@@ -1,0 +1,159 @@
+========================================================================
+                    PLAN56.TXT - FINAL AUDIT REPORT (COMPLETE)
+                    your-pax v1.0.0 alpha 2
+                    All 7 phases from plan33.txt VERIFIED
+                    Plus 13 additional bugs found & FIXED
+========================================================================
+
+========================================================================
+FIXED IN THIS SESSION (13 items)
+========================================================================
+
+1. actions/bluetooth_nap.py:31
+   - __init__() missing shared_data parameter → added shared_data=None
+   - Missing b_action, b_target globals → added
+
+2. actions/conflict_manager.py
+   - Missing all b_* globals → added b_class, b_module, b_status, b_port,
+     b_parent, b_action, b_target
+
+3. actions/scanning.py
+   - NetworkScanner missing execute() method → added execute() that
+     delegates to scan()
+
+4. actions/oneshot.py:4
+   - b_class = "OneShot" but main class is "Companion" → fixed to
+     b_class = "Companion"
+   - Line 837: args.loop used without args being defined when module is
+     imported → added safe guard: 'args' in dir() and hasattr check
+
+5. actions/sql_connector.py:48-60
+   - connect() returns (False, []) tuple which is always truthy
+   - Callers using if self.connect(): would never see failure
+   - Changed to return plain bool + store databases in self._last_databases
+   - Updated _process_queue_item to read from self._last_databases
+
+6. actions/steal_files_smb.py:144
+   - not try_anonymous_access() on tuple return is always False
+   - Fixed by unpacking: conn_anon, shares_anon = try_anonymous_access()
+   - Then checking: if not credentials and not conn_anon:
+
+7. scripts/switch_mode.sh:8,65
+   - __YOUR_PAX_DIR__ placeholder never resolved
+   - Fixed by computing PAX_DIR dynamically from script location:
+     SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+     PAX_DIR="$(dirname "$SCRIPT_DIR")"
+
+8. web/evil_ap.html:393
+   - Single-quote breakout XSS in onclick handler
+   - escapeHtml() doesn't escape single quotes
+   - Fixed: added .replace(/'/g,"\\'") to escape quotes in onclick arg
+
+9. web/wifi.html:159-164
+   - Orphaned dead code outside any function (duplicate of lines 150-157)
+   - Caused ReferenceError + SyntaxError, breaking entire JS script
+   - Removed orphaned code block
+
+10. utils.py:416-418
+    - serve_file() path traversal: no commonpath validation on filename
+    - Fixed: resolve safe_path = os.path.abspath(join(webdir, filename))
+    - Check: must startswith os.path.commonpath([abspath(webdir)])
+    - Return 403 Forbidden on traversal attempt
+
+11. utils.py:1657
+    - Self-import: from utils import stop_evil_ap inside utils.py itself
+    - stop_evil_ap is an instance method expecting (self, handler) but
+      call was stop_evil_ap(self.shared_data) — wrong signature
+    - Fixed: replaced with direct evil_ap_instance.stop() call
+
+12. init_shared.py:14-17
+    - Double-instantiation race: check-then-act without lock
+    - Two threads can both see _instance is None and create separate instances
+    - Fixed: added threading.Lock with double-checked locking pattern
+
+13. actions/base_steal.py
+    - Missing module-level b_* globals (no b_class, b_module, etc.)
+    - Added all standard globals initialized to None
+
+========================================================================
+PREVIOUSLY FIXED (from plan33.txt Phases 1-7, 48 items)
+========================================================================
+
+Phase 1 - CRITICAL BUGS (9/9): wifi_handshake.start(), wifi_pmkid.start(),
+wifi_oneshot.start(params), wifi_scanner.py created, conflict_manager.check_all(),
+IDLE.py b_module fix, rdp_connector ValueError→False, smb_connector port→self.PORT,
+steal_files_smb shutil.copy2→retrieveFile
+
+Phase 2 - MODE CONFIG (4/4): your-pax.py checks connection_mode not websrv,
+shared.py default config connection_mode, switch_mode.sh path fix, mode validation
+
+Phase 3 - HIGH-PRIORITY (8/8): b_parent=None to 5 modules, b_* globals to
+bluetooth_nap.py, serve_logs tail process kill, stop_all sleep 3s + cleanup,
+update_nmconnection uses sudo tee, SharedData locks in read/write_data,
+captive_portal_class None check
+
+Phase 4 - MEDIUM-PRIORITY (9/9): FTP off-by-one, scanner thread join, telnet
+timeout=10, nmap execute port param, nmap save_results truncation fixed,
+path traversal in FTP/Telnet steal_item, RDP mount check, oneshot paths
+configurable, all previously fixed items
+
+Phase 5 - MISSING FEATURES (9/9): SSE /events endpoint, switch_mode POST API,
+health monitor, Android mode selector, Android service control, Android mode
+indicator, Android live events, Python service control endpoints, get_mode_config
+
+Phase 6 - SECURITY (4/4): RateLimiter 30 req/min, CSRF token rotation 3600s,
+HTTPS with self-signed cert, path validation on clear_files
+
+Phase 7 - CODE QUALITY (5/5): Stack-traced 500 errors, standardized nmap
+execute signature, type hints on RateLimiter/service control/event_bus,
+12 unit tests, integration tests
+
+========================================================================
+REMAINING LOW-PRIORITY / COSMETIC ITEMS
+========================================================================
+
+All 4 remaining items now FIXED:
+
+1. web/index.html:escapeHtml (line 115-119)
+   - FIXED: added .replace(/'/g, "&#39;") to escape single quotes
+   - escapeHtml now handles < > & " ' for all HTML/JS contexts
+
+2. systemd .service files (4 files)
+   - FIXED: created scripts/setup_services.sh that replaces
+     __YOUR_PAX_DIR__ placeholder with actual install directory
+   - Usage: sudo ./scripts/setup_services.sh [/path/to/install]
+   - Copies .service files to /etc/systemd/system with paths resolved
+
+3. actions/nmap_vuln_scanner.py:134
+   - FIXED: added encoding='utf-8' to save_results file open call
+   - Prevents UnicodeEncodeError on Windows with non-ASCII output
+
+4. Deployment scripts
+   - FIXED: created scripts/update-your-pax-main.sh for Linux/RPi
+     (git pull + reinstall services + restart)
+   - FIXED: created scripts/update-your-pax-main.bat for Windows dev
+     (git pull + py_compile check + test runner hint)
+
+========================================================================
+TEST STATUS
+========================================================================
+
+All 12 unit tests pass on Windows:
+- test_ftp_off_by_one.py  (2 tests)  ✓
+- test_nmap_signature.py  (2 tests)  ✓
+- test_path_traversal.py  (4 tests)  ✓
+- test_rate_limiter.py    (4 tests)  ✓
+
+All 9 modified Python files pass py_compile:
+- bluetooth_nap.py  ✓  conflict_manager.py  ✓  scanning.py  ✓
+- oneshot.py  ✓  sql_connector.py  ✓  steal_files_smb.py  ✓
+- base_steal.py  ✓  utils.py  ✓  init_shared.py  ✓
+
+========================================================================
+SUMMARY
+========================================================================
+
+Total items fixed: 65 (48 from plan33 + 13 from plan56 audit + 4 from wrap-up)
+Remaining items: 0 — ALL DONE
+All Python files: compile clean
+All unit tests: pass

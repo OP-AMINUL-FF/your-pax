@@ -85,6 +85,7 @@ class EvilClone:
         self.portal = portal
         self._captive_portal = captive_portal
         self._stop_flag.clear()
+        self._temp_files = []
 
         self._run_cmd(["sudo", "airmon-ng", "start", deauth_if], timeout=10)
 
@@ -116,6 +117,7 @@ hw_mode=g
 ignore_broadcast_ssid=0
 """)
 
+        self._temp_files.append(hostapd_conf)
         self._hostapd_proc = subprocess.Popen(
             ["sudo", HOSTAPD_BIN, hostapd_conf],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
@@ -134,6 +136,7 @@ log-queries
 log-dhcp
 """)
 
+        self._temp_files.append(dnsmasq_conf)
         self._dnsmasq_proc = subprocess.Popen(
             ["sudo", DNSMASQ_BIN, "-C", dnsmasq_conf, "--no-daemon"],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
@@ -189,6 +192,14 @@ log-dhcp
 
         self._run_cmd(["sudo", "airmon-ng", "stop", self.deauth_if], timeout=10)
         self._run_cmd(["sudo", "ifconfig", self.clone_if, "down"], timeout=3)
+
+        for tmp in getattr(self, '_temp_files', []):
+            try:
+                if os.path.exists(tmp):
+                    os.remove(tmp)
+            except Exception:
+                pass
+        self._temp_files = []
 
         logger.info("Evil Twin stopped")
 

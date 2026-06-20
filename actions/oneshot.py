@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-b_class = "OneShot"
+b_class = "Companion"
 b_module = "oneshot"
 b_status = "oneshot"
 b_port = 0
@@ -834,7 +834,7 @@ class Companion:
             with open(filename, 'w') as file:
                 file.write(self.bruteforce.mask)
             print('[i] Session saved in {}'.format(filename))
-            if args.loop:
+            if 'args' in dir() and hasattr(args, 'loop') and args.loop:
                 raise KeyboardInterrupt
 
     def __print_with_indicators(self, level, msg):

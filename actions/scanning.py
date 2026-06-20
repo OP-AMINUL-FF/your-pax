@@ -14,6 +14,7 @@ from datetime import datetime
 from getmac import get_mac_address as gma
 from shared import SharedData
 from logger import Logger
+from event_bus import broadcast_event
 import ipaddress
 import nmap
 
@@ -363,11 +364,23 @@ class NetworkScanner:
 
             # Use nmap to scan for live hosts
             self.outer_instance.nm.scan(hosts=str(self.network), arguments='-sn')
-            for host in self.outer_instance.nm.all_hosts():
+            all_hosts = self.outer_instance.nm.all_hosts()
+            self.total_ips = len(all_hosts)
+            broadcast_event("network_scan_progress", {
+                "percentage": 0,
+                "current_target": str(self.network),
+                "hosts_found_so_far": 0,
+                "total_hosts": self.total_ips,
+                "status": "started"
+            })
+            threads = []
+            for host in all_hosts:
                 t = threading.Thread(target=self.scan_host, args=(host,))
                 t.start()
+                threads.append(t)
 
-            time.sleep(5)
+            for t in threads:
+                t.join(timeout=30)
             self.outer_instance.sort_and_write_csv(self.csv_scan_file)
 
         def scan_host(self, ip):
@@ -388,6 +401,12 @@ class NetworkScanner:
             except Exception as e:
                 self.outer_instance.logger.error(f"Error getting MAC address or writing to file for IP {ip}: {e}")
             self.progress += 1
+            if self.progress % 5 == 0 or self.progress == self.total_ips:
+                broadcast_event("network_scan_progress", {
+                    "percentage": round((self.progress / max(self.total_ips, 1)) * 100, 1),
+                    "current_target": ip,
+                    "hosts_found_so_far": len(self.ip_hostname_list) if hasattr(self, 'ip_hostname_list') else 0
+                })
             time.sleep(0.1)  # Adding a small delay to avoid overwhelming the network
 
         def get_progress(self):
@@ -574,6 +593,11 @@ class NetworkScanner:
             self.thread = threading.Thread(target=self.scan)
             self.thread.start()
             logger.info("NetworkScanner started.")
+
+    def execute(self, ip=None, port=None, row=None, status_key=None):
+        """Interface-compatible execute method that delegates to scan()."""
+        self.scan()
+        return 'success'
 
     def stop(self):
         """

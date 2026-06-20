@@ -11,6 +11,7 @@ b_class = "WPAValidator"
 b_module = "wpa_validator"
 b_status = "wpa_validator"
 b_port = 0
+b_parent = None
 
 
 class WPAValidator:

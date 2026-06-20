@@ -135,6 +135,10 @@ class EvilAP:
                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
             )
 
+            if self.shared_data.captive_portal_class is None:
+                logger.error("captive_portal_class is None — cannot start portal")
+                self.stop()
+                return False
             new_portal = self.shared_data.captive_portal_class(self.shared_data)
             new_portal.start(
                 port=80, portal_template=portal_template,

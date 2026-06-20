@@ -13,6 +13,13 @@ import threading
 from logger import Logger
 
 logger = Logger(name="bluetooth_nap.py", level=logging.DEBUG)
+b_class = "BluetoothNAP"
+b_module = "bluetooth_nap"
+b_status = "bluetooth_nap"
+b_port = 0
+b_parent = None
+b_action = None
+b_target = None
 
 BRIDGE_IP = "192.168.4.1"
 BRIDGE_NETMASK = "24"
@@ -23,7 +30,7 @@ NAP_ALIAS = "your-pax"
 NAP_UUID = "00001116-0000-1000-8000-00805F9B34FB"  # NAP Profile UUID
 
 class BluetoothNAP:
-    def __init__(self):
+    def __init__(self, shared_data=None):
         self.running = False
         self.dnsmasq_pid = None
         self.bnep_interfaces = set()

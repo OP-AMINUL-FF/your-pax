@@ -40,6 +40,7 @@ class StealDataSQL(BaseSteal):
             db_part = f"/{database}" if database else ""
             connection_str = f"mysql+pymysql://{username}:{password}@{ip}:3306{db_part}"
             engine = create_engine(connection_str, connect_args={"connect_timeout": 10})
+            self.connected = True
             self.sql_connected = True
             logger.info(f"Connected to {ip} via SQL with username {username}" + (f" to database {database}" if database else ""))
             return engine

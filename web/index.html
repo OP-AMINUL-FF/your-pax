@@ -75,6 +75,8 @@
         <span id="btClientsDisplay" style="color:#ffaa00;font-size:14px;">Clients: 0</span>
         <span style="color:#888;margin:0 10px;">|</span>
         <span id="wifiConnectionDisplay" style="color:#ff4444;font-size:14px;">WiFi: Not Connected</span>
+        <span style="color:#888;margin:0 10px;">|</span>
+        <span id="modeDisplay" style="color:#aa66ff;font-size:14px;">Mode: --</span>
     </div>
 
     <div class="console-toolbar">
@@ -113,7 +115,7 @@
         function escapeHtml(str) {
             var div = document.createElement('div');
             div.appendChild(document.createTextNode(str));
-            return div.innerHTML;
+            return div.innerHTML.replace(/'/g, "&#39;");
         }
 
         document.addEventListener('DOMContentLoaded', () => {

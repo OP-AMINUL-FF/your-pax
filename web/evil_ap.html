@@ -390,7 +390,7 @@ function refreshCreds() {
                 e.className = 'cred-entry';
                 var time = c.time || '';
                 var pass = c.password || '';
-                var copyBtn = '<button class="copy-btn" onclick="copyPass(\''+escapeHtml(pass)+'\')">Copy</button>';
+                var copyBtn = '<button class="copy-btn" onclick="copyPass(\''+escapeHtml(pass).replace(/'/g,"\\'")+'\')">Copy</button>';
                 e.innerHTML = '<span style="color:#888;font-size:10px">'+escapeHtml(time)+'</span> <span class="clip-data">'+escapeHtml(pass)+'</span> '+copyBtn;
                 div.appendChild(e);
             });

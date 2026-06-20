@@ -90,7 +90,7 @@ class NmapVulnScanner:
 
         return combined_result if success else None
 
-    def execute(self, ip, row, status_key):
+    def execute(self, ip, row, status_key, port=""):
         """
         Executes the vulnerability scan for a given IP and row data.
         """
@@ -131,12 +131,7 @@ class NmapVulnScanner:
             os.makedirs(result_dir, exist_ok=True)
             result_file = os.path.join(result_dir, f"{sanitized_mac_address}_{ip}_vuln_scan.txt")
             
-            # Open the file in write mode to clear its contents if it exists, then close it
-            if os.path.exists(result_file):
-                open(result_file, 'w').close()
-            
-            # Write the new scan result to the file
-            with open(result_file, 'w') as file:
+            with open(result_file, 'w', encoding='utf-8') as file:
                 file.write(scan_result)
             
             logger.info(f"Results saved to {result_file}")

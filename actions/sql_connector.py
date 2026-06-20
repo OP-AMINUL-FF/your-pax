@@ -54,15 +54,18 @@ class SQLConnector(BaseConnector):
             conn.close()
             logger.info(f"Successfully connected to {ip} with user {user}")
             logger.info(f"Available databases: {', '.join(databases)}")
-            return True, databases
+            self._last_databases = databases
+            return True
         except pymysql.Error as e:
             logger.error(f"Failed to connect to {ip} with user {user}: {e}")
-            return False, []
+            self._last_databases = []
+            return False
 
     def _process_queue_item(self, item, success_flag):
         ip, user, password, mac, hostname, port = item
-        success, databases = self.connect(ip, user, password)
+        success = self.connect(ip, user, password)
         if success:
+            databases = getattr(self, '_last_databases', [])
             with self.lock:
                 for db in databases:
                     self.results.append([ip, user, password, port, db])

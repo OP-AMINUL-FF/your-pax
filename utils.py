@@ -4,6 +4,7 @@ import json
 import subprocess
 import os
 import json
+import http.server
 import csv
 import zipfile
 import uuid
@@ -12,6 +13,7 @@ import io
 import glob
 import logging
 import time
+import threading
 from html import escape
 from datetime import datetime
 from logger import Logger
@@ -23,12 +25,61 @@ import re
 logger = Logger(name="utils.py", level=logging.DEBUG)
 
 
+class RateLimiter:
+    """Simple per-IP rate limiter using token bucket."""
+
+    def __init__(self, max_requests: int = 30, window: int = 60) -> None:
+        self.max_requests: int = max_requests
+        self.window: int = window
+        self._buckets: dict[str, list[float | int]] = {}
+        self._lock: threading.Lock = threading.Lock()
+
+    def is_allowed(self, ip: str) -> bool:
+        now: float = time.time()
+        with self._lock:
+            bucket = self._buckets.get(ip)
+            if bucket is None:
+                self._buckets[ip] = [now, 1]
+                return True
+            last, count = bucket
+            if now - last > self.window:
+                self._buckets[ip] = [now, 1]
+                return True
+            if count >= self.max_requests:
+                return False
+            self._buckets[ip][1] = count + 1
+            return True
+
+    def cleanup(self):
+        now = time.time()
+        with self._lock:
+            dead = [ip for ip, (t, _) in self._buckets.items() if now - t > self.window * 2]
+            for ip in dead:
+                del self._buckets[ip]
+
+
+rate_limiter = RateLimiter()
+
+
+def _validate_clear_pattern(pattern):
+    """Ensure the glob pattern only matches within the project directory (path traversal prevention)."""
+    bad = ['..', '~', '/root', '/etc', '/var', '/home', '/bin', '/usr', '/boot']
+    for b in bad:
+        if b in pattern.replace('\\', '/'):
+            raise ValueError(f"Blocked path pattern: {pattern}")
+    return True
+
+
+logger = Logger(name="utils.py", level=logging.DEBUG)
+
+
 class WebUtils:
     def __init__(self, shared_data, logger):
         self.shared_data = shared_data
         self.logger = logger
-        self.actions = None  # List that contains all actions
-        self.standalone_actions = None  # List that contains all standalone actions
+        self.actions = None
+        self.standalone_actions = None
+        self._tail_process = None
 
     def load_actions(self):
         """Load all actions from the actions file"""
@@ -128,8 +179,13 @@ class WebUtils:
             if not os.path.exists(log_file_path):
                 log_files = glob.glob(os.path.join(self.shared_data.currentdir, 'data', 'logs', '*'))
                 if log_files:
+                    if self._tail_process:
+                        try:
+                            self._tail_process.kill()
+                        except Exception:
+                            pass
                     with open(log_file_path, 'w') as lf:
-                        subprocess.Popen(['sudo', 'tail', '-f'] + log_files, stdout=lf, stderr=subprocess.DEVNULL)
+                        self._tail_process = subprocess.Popen(['sudo', 'tail', '-f'] + log_files, stdout=lf, stderr=subprocess.DEVNULL)
 
             with open(log_file_path, 'r') as log_file:
                 log_lines = log_file.readlines()
@@ -359,7 +415,12 @@ class WebUtils:
 
     def serve_file(self, handler, filename):
         try:
-            with open(os.path.join(self.shared_data.webdir, filename), 'r', encoding='utf-8') as file:
+            safe_path = os.path.abspath(os.path.join(self.shared_data.webdir, filename))
+            if not safe_path.startswith(os.path.commonpath([os.path.abspath(self.shared_data.webdir)])):
+                handler.send_response(403)
+                handler.end_headers()
+                return
+            with open(safe_path, 'r', encoding='utf-8') as file:
                 content = file.read()
                 content = content.replace('{{ web_delay }}', str(self.shared_data.web_delay * 1000))
                 handler.send_response(200)
@@ -531,18 +592,50 @@ class WebUtils:
             handler.end_headers()
             handler.wfile.write(json.dumps({"status": "error", "message": "Internal error"}).encode('utf-8'))
 
+    def switch_mode(self, handler: http.server.BaseHTTPRequestHandler) -> None:
+        try:
+            content_length = int(handler.headers['Content-Length'])
+            post_data = json.loads(handler.rfile.read(content_length))
+            mode = post_data.get('mode', '')
+            if mode not in ('web_only', 'app_only', 'web_app'):
+                handler.send_response(400)
+                handler.send_header("Content-type", "application/json")
+                handler.end_headers()
+                handler.wfile.write(json.dumps({"status": "error", "message": f"Invalid mode: {mode}. Use web_only, app_only, or web_app"}).encode('utf-8'))
+                return
+            self.shared_data.config["connection_mode"] = mode
+            self.shared_data.save_config()
+            script = os.path.join(self.shared_data.currentdir, 'scripts', 'switch_mode.sh')
+            result = subprocess.run(['sudo', script, mode], capture_output=True, text=True, timeout=30)
+            if result.returncode == 0:
+                handler.send_response(200)
+                handler.send_header("Content-type", "application/json")
+                handler.end_headers()
+                handler.wfile.write(json.dumps({"status": "success", "message": f"Mode switched to {mode}", "output": result.stdout}).encode('utf-8'))
+            else:
+                handler.send_response(500)
+                handler.send_header("Content-type", "application/json")
+                handler.end_headers()
+                handler.wfile.write(json.dumps({"status": "error", "message": f"Switch failed: {result.stderr}"}).encode('utf-8'))
+        except Exception as e:
+            handler.send_response(500)
+            handler.send_header("Content-type", "application/json")
+            handler.end_headers()
+            handler.wfile.write(json.dumps({"status": "error", "message": f"Switch mode failed: {str(e)}"}).encode('utf-8'))
+
     def clear_files(self, handler):
         try:
             patterns = [
                 'config/*.json', 'data/*.csv', 'data/*.log', 'backup/backups/*',
                 'backup/uploads/*', 'data/output/data_stolen/*', 'data/output/crackedpwd/*',
-                'config/*', 'data/output/scan_results/*', '__pycache__',
+                'data/output/scan_results/*', '__pycache__',
                 'config/__pycache__', 'data/__pycache__', 'actions/__pycache__',
                 'resources/__pycache__', 'web/__pycache__', '*.log',
                 'resources/waveshare_epd/__pycache__', 'data/logs/*',
                 'data/output/vulnerabilities/*', 'data/logs/*'
             ]
             for pattern in patterns:
+                _validate_clear_pattern(pattern)
                 matches = glob.glob(pattern)
                 if matches:
                     subprocess.Popen(['sudo', 'rm', '-rf'] + matches, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True).communicate()
@@ -551,6 +644,11 @@ class WebUtils:
             handler.send_header("Content-type", "application/json")
             handler.end_headers()
             handler.wfile.write(json.dumps({"status": "success", "message": "Files cleared successfully"}).encode('utf-8'))
+        except ValueError as e:
+            handler.send_response(400)
+            handler.send_header("Content-type", "application/json")
+            handler.end_headers()
+            handler.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
         except Exception as e:
             handler.send_response(500)
             handler.send_header("Content-type", "application/json")
@@ -567,6 +665,7 @@ class WebUtils:
                 'data/logs/*', 'data/output/vulnerabilities/*', 'data/logs/*'
             ]
             for pattern in patterns:
+                _validate_clear_pattern(pattern)
                 matches = glob.glob(pattern)
                 if matches:
                     subprocess.Popen(['sudo', 'rm', '-rf'] + matches, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True).communicate()
@@ -738,9 +837,7 @@ class WebUtils:
         safe_ssid = self._sanitize_config_value(ssid)
         safe_password = self._sanitize_config_value(password)
         hidden_line = "\nhidden=true" if hidden else ""
-        with open(config_path, 'w') as f:
-            f.write(f"""
-[connection]
+        content = f"""[connection]
 id=preconfigured
 uuid={uuid.uuid4()}
 type=wifi
@@ -759,7 +856,9 @@ method=auto
 
 [ipv6]
 method=auto
-""")
+"""
+        proc = subprocess.Popen(['sudo', 'tee', config_path], stdin=subprocess.PIPE, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        proc.communicate(input=content.encode())
         subprocess.Popen(['sudo', 'chmod', '600', config_path]).communicate()
         subprocess.Popen(['sudo', 'nmcli', 'connection', 'reload']).communicate()
 
@@ -1539,7 +1638,32 @@ method=auto
             self.shared_data.manual_vulnscan_trigger.clear()
             self.shared_data.manual_steal_trigger.clear()
             self.shared_data.orchestrator_should_exit = True
-            time.sleep(0.5)
+            time.sleep(3)
+            if hasattr(self.shared_data, 'handshake_instance') and self.shared_data.handshake_instance:
+                try:
+                    self.shared_data.handshake_instance.stop()
+                except Exception:
+                    pass
+                self.shared_data.handshake_instance = None
+            if hasattr(self.shared_data, 'pmkid_instance') and self.shared_data.pmkid_instance:
+                try:
+                    self.shared_data.pmkid_instance.stop()
+                except Exception:
+                    pass
+                self.shared_data.pmkid_instance = None
+            if hasattr(self.shared_data, 'oneshot_instance') and self.shared_data.oneshot_instance:
+                try:
+                    self.shared_data.oneshot_instance.stop()
+                except Exception:
+                    pass
+                self.shared_data.oneshot_instance = None
+            if self.shared_data.config.get("evil_ap_running", False):
+                try:
+                    evil = getattr(self.shared_data, 'evil_ap_instance', None)
+                    if evil:
+                        evil.stop()
+                except Exception:
+                    pass
             self.shared_data.orchestrator_should_exit = False
             handler.send_response(200)
             handler.send_header("Content-type", "application/json")
@@ -1744,6 +1868,103 @@ method=auto
             handler.send_header("Content-type", "application/json")
             handler.end_headers()
             handler.wfile.write(json.dumps({"status": "error", "message": "Internal error"}).encode('utf-8'))
+
+    def _run_service_cmd(self, service: str, action: str) -> tuple[bool, str, str]:
+        result = subprocess.run(['sudo', 'systemctl', action, service], capture_output=True, text=True, timeout=30)
+        return result.returncode == 0, result.stdout, result.stderr
+
+    def start_web_service(self, handler: http.server.BaseHTTPRequestHandler) -> None:
+        try:
+            ok, out, err = self._run_service_cmd('your-pax-web', 'start')
+            handler.send_response(200 if ok else 500)
+            handler.send_header("Content-type", "application/json")
+            handler.end_headers()
+            handler.wfile.write(json.dumps({"status": "success" if ok else "error", "message": out or err}).encode('utf-8'))
+        except Exception as e:
+            handler.send_response(500)
+            handler.send_header("Content-type", "application/json")
+            handler.end_headers()
+            handler.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
+
+    def stop_web_service(self, handler: http.server.BaseHTTPRequestHandler) -> None:
+        try:
+            ok, out, err = self._run_service_cmd('your-pax-web', 'stop')
+            handler.send_response(200 if ok else 500)
+            handler.send_header("Content-type", "application/json")
+            handler.end_headers()
+            handler.wfile.write(json.dumps({"status": "success" if ok else "error", "message": out or err}).encode('utf-8'))
+        except Exception as e:
+            handler.send_response(500)
+            handler.send_header("Content-type", "application/json")
+            handler.end_headers()
+            handler.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
+
+    def start_nap_service(self, handler: http.server.BaseHTTPRequestHandler) -> None:
+        try:
+            ok, out, err = self._run_service_cmd('your-pax-nap', 'start')
+            handler.send_response(200 if ok else 500)
+            handler.send_header("Content-type", "application/json")
+            handler.end_headers()
+            handler.wfile.write(json.dumps({"status": "success" if ok else "error", "message": out or err}).encode('utf-8'))
+        except Exception as e:
+            handler.send_response(500)
+            handler.send_header("Content-type", "application/json")
+            handler.end_headers()
+            handler.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
+
+    def stop_nap_service(self, handler: http.server.BaseHTTPRequestHandler) -> None:
+        try:
+            ok, out, err = self._run_service_cmd('your-pax-nap', 'stop')
+            handler.send_response(200 if ok else 500)
+            handler.send_header("Content-type", "application/json")
+            handler.end_headers()
+            handler.wfile.write(json.dumps({"status": "success" if ok else "error", "message": out or err}).encode('utf-8'))
+        except Exception as e:
+            handler.send_response(500)
+            handler.send_header("Content-type", "application/json")
+            handler.end_headers()
+            handler.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
+
+    def start_spp_service(self, handler: http.server.BaseHTTPRequestHandler) -> None:
+        try:
+            ok, out, err = self._run_service_cmd('your-pax-spp', 'start')
+            handler.send_response(200 if ok else 500)
+            handler.send_header("Content-type", "application/json")
+            handler.end_headers()
+            handler.wfile.write(json.dumps({"status": "success" if ok else "error", "message": out or err}).encode('utf-8'))
+        except Exception as e:
+            handler.send_response(500)
+            handler.send_header("Content-type", "application/json")
+            handler.end_headers()
+            handler.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
+
+    def stop_spp_service(self, handler: http.server.BaseHTTPRequestHandler) -> None:
+        try:
+            ok, out, err = self._run_service_cmd('your-pax-spp', 'stop')
+            handler.send_response(200 if ok else 500)
+            handler.send_header("Content-type", "application/json")
+            handler.end_headers()
+            handler.wfile.write(json.dumps({"status": "success" if ok else "error", "message": out or err}).encode('utf-8'))
+        except Exception as e:
+            handler.send_response(500)
+            handler.send_header("Content-type", "application/json")
+            handler.end_headers()
+            handler.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
+
+    def get_mode_config(self, handler: http.server.BaseHTTPRequestHandler) -> None:
+        try:
+            handler.send_response(200)
+            handler.send_header("Content-type", "application/json")
+            handler.end_headers()
+            handler.wfile.write(json.dumps({
+                "status": "success",
+                "connection_mode": self.shared_data.config.get("connection_mode", "web_app")
+            }).encode('utf-8'))
+        except Exception as e:
+            handler.send_response(500)
+            handler.send_header("Content-type", "application/json")
+            handler.end_headers()
+            handler.wfile.write(json.dumps({"status": "error", "message": str(e)}).encode('utf-8'))
 
 
 

@@ -31,7 +31,7 @@ class TelnetConnector(BaseConnector):
 
     def connect(self, ip, user, password):
         try:
-            tn = telnetlib.Telnet(ip)
+            tn = telnetlib.Telnet(ip, timeout=10)
             tn.read_until(b"login: ", timeout=5)
             tn.write(user.encode('ascii') + b"\n")
             if password:

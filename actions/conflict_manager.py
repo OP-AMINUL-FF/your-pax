@@ -3,6 +3,14 @@ import logging
 from logger import Logger
 logger = Logger(name="conflict_manager.py", level=logging.DEBUG)
 
+b_class = "ConflictManager"
+b_module = "conflict_manager"
+b_status = "conflict_manager"
+b_port = None
+b_parent = None
+b_action = None
+b_target = None
+
 class ConflictManager:
     def __init__(self, shared_data):
         self.shared_data = shared_data
@@ -57,6 +65,16 @@ class ConflictManager:
         if attack_name == "pmkid" and self._is_module_running("handshake"):
             return False, "Handshake capture is running on the monitor interface."
         return True, ""
+
+    def check_all(self):
+        """Return status of all conflict-aware modules."""
+        return {
+            "monitor_mode": self.shared_data.config.get("enable_monitor_mode", False),
+            "evil_ap_running": self.shared_data.config.get("evil_ap_running", False),
+            "handshake_running": self._is_module_running("handshake"),
+            "pmkid_running": self._is_module_running("pmkid"),
+            "oneshot_running": self._is_module_running("oneshot"),
+        }
 
     def _is_running(self, config_key):
         return self.shared_data.config.get(config_key, False)

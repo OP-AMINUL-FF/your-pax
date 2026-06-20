@@ -14,6 +14,14 @@ from logger import Logger
 
 logger = Logger(name="base_steal.py", level=logging.DEBUG)
 
+b_class = None
+b_module = None
+b_status = None
+b_port = None
+b_parent = None
+b_action = None
+b_target = None
+
 
 class BaseSteal(ABC):
     protocol_name = ""

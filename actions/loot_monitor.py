@@ -10,6 +10,7 @@ b_class = "LootMonitor"
 b_module = "loot_monitor"
 b_status = "loot_monitor"
 b_port = 0
+b_parent = None
 
 
 class LootMonitor:

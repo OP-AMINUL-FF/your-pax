@@ -32,11 +32,14 @@ class RDPConnector(BaseConnector):
     def connect(self, ip, user, password):
         import re
         if not re.match(r'^\d{1,3}(\.\d{1,3}){3}$', ip):
-            raise ValueError("Invalid IP address format")
+            logger.error(f"Invalid IP address format: {ip}")
+            return False
         if not user or '\n' in user or '\r' in user:
-            raise ValueError("Invalid username")
+            logger.error("Invalid username")
+            return False
         if not password or '\n' in password or '\r' in password:
-            raise ValueError("Invalid password")
+            logger.error("Invalid password")
+            return False
         cmd = ['xfreerdp', f'/v:{ip}', f'/u:{user}', f'/p:{password}', '/cert:ignore', '+auth-only']
         try:
             process = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

@@ -152,8 +152,9 @@ if __name__ == "__main__":
         your_pax_thread = threading.Thread(target=your_pax.run)
         your_pax_thread.start()
 
-        if shared_data.config["websrv"]:
-            logger.info("Starting the web server...")
+        mode = shared_data.config.get("connection_mode", "web_app")
+        if mode in ("web_only", "web_app"):
+            logger.info(f"Starting the web server (mode: {mode})...")
             web_thread.start()
 
     except Exception as e:

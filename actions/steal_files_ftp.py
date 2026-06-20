@@ -55,7 +55,12 @@ class StealFilesFTP(BaseSteal):
 
     def steal_item(self, ftp, remote_file, local_dir):
         try:
-            local_file_path = os.path.join(local_dir, os.path.relpath(remote_file, '/'))
+            normalized = os.path.normpath(remote_file).replace('\\', '/')
+            if normalized.startswith('..') or '/../' in normalized or normalized == '..':
+                logger.error(f"Path traversal detected in remote file path: {remote_file}")
+                return
+            rel = normalized.lstrip('/')
+            local_file_path = os.path.join(local_dir, rel)
             local_file_dir = os.path.dirname(local_file_path)
             os.makedirs(local_file_dir, exist_ok=True)
             with open(local_file_path, 'wb') as f:

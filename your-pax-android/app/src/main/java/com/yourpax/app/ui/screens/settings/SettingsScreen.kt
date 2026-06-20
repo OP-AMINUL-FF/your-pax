@@ -17,25 +17,33 @@ import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.CleaningServices
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.PowerOff
 import androidx.compose.material.icons.filled.PowerSettingsNew
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.TableChart
+import androidx.compose.material.icons.filled.Wifi
+import androidx.compose.material.icons.filled.Bluetooth
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -72,6 +80,14 @@ fun SettingsScreen(
     val scope = rememberCoroutineScope()
     var statusMsg by remember { mutableStateOf("") }
     var confirmAction by remember { mutableStateOf<SettingsAction?>(null) }
+    var currentMode by remember { mutableStateOf("web_app") }
+    var modeDropdownExpanded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        configRepo.getModeConfig().onSuccess { cfg ->
+            currentMode = cfg["connection_mode"] as? String ?: "web_app"
+        }
+    }
 
     Column(modifier = Modifier.fillMaxSize()) {
         DemoModeBanner()
@@ -130,6 +146,56 @@ fun SettingsScreen(
                     Text("Connectivity", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleSmall)
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         SmallActionBtn("Disc. WiFi", Icons.Default.Block, onClick = { scope.launch { wifiRepo.disconnectWifi(); statusMsg = "WiFi disconnected" } })
+                    }
+                }
+            }
+
+            ModernCard {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Mode Selector", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleSmall)
+                    ExposedDropdownMenuBox(expanded = modeDropdownExpanded, onExpandedChange = { modeDropdownExpanded = it }) {
+                        OutlinedTextField(
+                            value = currentMode.replace("_", " ").replaceFirstChar { it.uppercase() },
+                            onValueChange = {},
+                            readOnly = true,
+                            modifier = Modifier.fillMaxWidth().menuAnchor(),
+                            textStyle = MaterialTheme.typography.bodySmall,
+                            singleLine = true
+                        )
+                        ExposedDropdownMenu(expanded = modeDropdownExpanded, onDismissRequest = { modeDropdownExpanded = false }) {
+                            listOf("web_only", "app_only", "web_app").forEach { mode ->
+                                DropdownMenuItem(
+                                    text = { Text(mode.replace("_", " ").replaceFirstChar { it.uppercase() }, style = MaterialTheme.typography.bodySmall) },
+                                    onClick = {
+                                        modeDropdownExpanded = false
+                                        currentMode = mode
+                                        scope.launch {
+                                            configRepo.switchMode(mode)
+                                                .onSuccess { statusMsg = "Mode switched to $mode" }
+                                                .onFailure { statusMsg = "Mode switch failed: ${it.message}" }
+                                        }
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            ModernCard {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Service Control", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleSmall)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SmallActionBtn("Start Web", Icons.Default.Language, onClick = { scope.launch { systemRepo.startWebService().onSuccess { statusMsg = "Web started" }.onFailure { statusMsg = "Web start failed: ${it.message}" } } })
+                        SmallActionBtn("Stop Web", Icons.Default.Stop, onClick = { scope.launch { systemRepo.stopWebService().onSuccess { statusMsg = "Web stopped" }.onFailure { statusMsg = "Web stop failed: ${it.message}" } } })
+                    }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SmallActionBtn("Start NAP", Icons.Default.Bluetooth, onClick = { scope.launch { systemRepo.startNapService().onSuccess { statusMsg = "NAP started" }.onFailure { statusMsg = "NAP start failed: ${it.message}" } } })
+                        SmallActionBtn("Stop NAP", Icons.Default.Stop, onClick = { scope.launch { systemRepo.stopNapService().onSuccess { statusMsg = "NAP stopped" }.onFailure { statusMsg = "NAP stop failed: ${it.message}" } } })
+                    }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        SmallActionBtn("Start SPP", Icons.Default.Wifi, onClick = { scope.launch { systemRepo.startSppService().onSuccess { statusMsg = "SPP started" }.onFailure { statusMsg = "SPP start failed: ${it.message}" } } })
+                        SmallActionBtn("Stop SPP", Icons.Default.Stop, onClick = { scope.launch { systemRepo.stopSppService().onSuccess { statusMsg = "SPP stopped" }.onFailure { statusMsg = "SPP stop failed: ${it.message}" } } })
                     }
                 }
             }

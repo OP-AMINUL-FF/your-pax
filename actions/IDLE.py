@@ -1,8 +1,8 @@
 #Test script to add more actions to YOUR-PAX 
 
 b_class = "IDLE"   
-b_module = "idle_action" 
-b_status = "idle_action"  
+b_module = "IDLE"
+b_status = "IDLE"
 b_port = None  
 b_parent = None 
 

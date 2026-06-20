@@ -23,6 +23,9 @@ class WiFiPMKID:
         self.pmkid_dir = os.path.join(shared_data.datadir, "pmkid")
         self.running = False
 
+    def start(self, bssid, channel, prefix=None):
+        return self.start_capture(bssid, channel, prefix)
+
     def start_capture(self, bssid, channel, output_file=None):
         try:
             import re
@@ -53,6 +56,9 @@ class WiFiPMKID:
         except Exception as e:
             logger.error(f"Failed to start PMKID capture: {e}")
             return None
+
+    def stop(self):
+        return self.stop_capture()
 
     def stop_capture(self):
         self.running = False

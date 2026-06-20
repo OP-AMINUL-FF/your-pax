@@ -5,6 +5,7 @@ import time
 import signal
 
 from logger import Logger
+from event_bus import broadcast_event
 logger = Logger(name="wifi_handshake.py", level=logging.DEBUG)
 b_class = "WiFiHandshake"
 b_module = "wifi_handshake"
@@ -19,6 +20,9 @@ class WiFiHandshake:
         self.interface = shared_data.config.get("monitor_interface", "wlan0mon")
         self.capture_process = None
         self.handshake_dir = os.path.join(shared_data.datadir, "handshakes")
+
+    def start(self, bssid, channel, prefix=None):
+        return self.start_capture(bssid, channel, prefix)
 
     def start_capture(self, bssid, channel, output_file=None):
         try:
@@ -41,10 +45,19 @@ class WiFiHandshake:
             ]
             self.capture_process = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             logger.info(f"Handshake capture started for {bssid} on channel {channel}")
+            broadcast_event("wifi_handshake_captured", {
+                "bssid": bssid,
+                "channel": channel,
+                "output_file": output_file,
+                "status": "capturing"
+            })
             return output_file
         except Exception as e:
             logger.error(f"Failed to start capture: {e}")
             return None
+
+    def stop(self):
+        return self.stop_capture()
 
     def stop_capture(self):
         if self.capture_process:
@@ -55,6 +68,10 @@ class WiFiHandshake:
                 self.capture_process.kill()
             self.capture_process = None
             logger.info("Handshake capture stopped")
+            broadcast_event("wifi_handshake_captured", {
+                "status": "stopped",
+                "message": "Handshake capture stopped"
+            })
             return True
         return False
 

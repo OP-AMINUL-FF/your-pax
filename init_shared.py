@@ -8,13 +8,18 @@
 # - Ensuring that all modules importing `shared_data` will have access to the same instance, promoting consistency and ease of data management throughout the project.
 
 
+import threading
+
 class _LazySharedData:
     _instance = None
+    _lock = threading.Lock()
 
     def __getattr__(self, name):
         if self._instance is None:
-            from shared import SharedData
-            _LazySharedData._instance = SharedData()
+            with self._lock:
+                if self._instance is None:
+                    from shared import SharedData
+                    _LazySharedData._instance = SharedData()
         return getattr(self._instance, name)
 
     def __setattr__(self, name, value):
@@ -22,8 +27,10 @@ class _LazySharedData:
             super().__setattr__(name, value)
         else:
             if self._instance is None:
-                from shared import SharedData
-                _LazySharedData._instance = SharedData()
+                with self._lock:
+                    if self._instance is None:
+                        from shared import SharedData
+                        _LazySharedData._instance = SharedData()
             setattr(self._instance, name, value)
 
 shared_data = _LazySharedData()

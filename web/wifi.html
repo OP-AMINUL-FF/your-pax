@@ -156,12 +156,6 @@ function scanNetworks() {
         document.getElementById('netTableBody').innerHTML = '<tr><td colspan="8" style="color:#f00;padding:20px">Error: ' + escapeHtml(e.message) + '</td></tr>';
     });
 }
-        document.getElementById('netTableBody').innerHTML = html;
-        document.getElementById('netCount').textContent = `(${idx} networks)`;
-    }).catch(e=>{
-        document.getElementById('netTableBody').innerHTML = '<tr><td colspan="8" style="color:#f00;padding:20px">Error: ' + escapeHtml(e.message) + '</td></tr>';
-    });
-}
 
 function selectTarget(bssid, ssid, channel, signal) {
     window.location.href = `wifi_target.html?bssid=${encodeURIComponent(bssid)}&ssid=${encodeURIComponent(ssid)}&channel=${encodeURIComponent(channel)}&signal=${encodeURIComponent(signal)}`;

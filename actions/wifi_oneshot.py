@@ -27,7 +27,12 @@ class WiFiOneShot:
         self._output_lock = threading.Lock()
         self.running = False
         self.status_file = os.path.join(shared_data.datadir, 'oneshot_status.json')
-        if os.path.exists(ONESHOT_LOCAL):
+        cfg_path = shared_data.config.get("oneshot_path", "")
+        cfg_vuln = shared_data.config.get("oneshot_vuln_list", "")
+        if cfg_path and os.path.exists(cfg_path):
+            self.oneshot_path = cfg_path
+            self.vuln_list = cfg_vuln if (cfg_vuln and os.path.exists(cfg_vuln)) else VULN_LIST_LOCAL
+        elif os.path.exists(ONESHOT_LOCAL):
             self.oneshot_path = ONESHOT_LOCAL
             self.vuln_list = VULN_LIST_LOCAL
         elif os.path.exists(ONESHOT_ALT):
@@ -76,6 +81,22 @@ class WiFiOneShot:
         if os.path.exists(vuln_path):
             cmd.extend(['--vuln-list', vuln_path])
         return cmd
+
+    def start(self, params=None):
+        if params is None:
+            params = {}
+        return self.run_oneshot(
+            bssid=params.get("bssid"),
+            pixie=params.get("pixie", True),
+            bruteforce=params.get("bruteforce", False),
+            pbc=params.get("pbc", False),
+            pin=params.get("pin"),
+            delay=params.get("delay"),
+            pixie_force=params.get("pixie_force", False),
+            show_pixie_cmd=params.get("show_pixie_cmd", False),
+            verbose=params.get("verbose", False),
+            iface_down=params.get("iface_down", True),
+        )
 
     def run_oneshot(self, bssid=None, pixie=True, bruteforce=False, pbc=False,
                     pin=None, delay=None, pixie_force=False, show_pixie_cmd=False,
@@ -127,6 +148,9 @@ class WiFiOneShot:
             pass
         finally:
             self.running = False
+
+    def stop(self):
+        return self.stop_oneshot()
 
     def stop_oneshot(self):
         if self.process:

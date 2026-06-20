@@ -5,7 +5,7 @@
 </div>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Version-1.1-Alpha-00FF41?style=for-the-badge&labelColor=0D1117">
+  <img src="https://img.shields.io/badge/Version-1.1.1-Alpha-00FF41?style=for-the-badge&labelColor=0D1117">
   <img src="https://img.shields.io/badge/Python-3.x-3776AB?style=for-the-badge&logo=python&logoColor=white&labelColor=0D1117">
   <img src="https://img.shields.io/badge/Raspberry_Pi_Zero_2W-C51A4A?style=for-the-badge&logo=raspberrypi&logoColor=white&labelColor=0D1117">
   <img src="https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge&labelColor=0D1117">
@@ -60,6 +60,10 @@
 | 10 | **Manual trigger mode** — nothing runs without user command | ✅ |
 | 11 | **Display/Non-Display dual mode** — saves ~15-25MB RAM without e-paper | ✅ |
 | 12 | **Native Android app** — full control via Bluetooth PAN, 19 screens, no WiFi needed | ✅ |
+| 13 | **App/Web/Both mode selector** — toggle between Android-only, Web-only, or both at runtime | ✅ |
+| 14 | **Service control from Android** — start/stop Web/NAP/SPP services directly from the app | ✅ |
+| 15 | **SSE live event push** — real-time status, scan progress, attack updates pushed to all clients | ✅ |
+| 16 | **HTTPS support** — auto self-signed cert, toggleable in config | ✅ |
 
 <br>
 
@@ -281,6 +285,16 @@ data/bluetooth ────── BluetoothConnector (pair + awaitPanIp) ── 
 | Confirmation Dialogs | — | ✅ |
 
 The app exposes **~130 features vs ~120 web features** — Android has MORE.
+
+#### 📱 App Control Features (v1.1.1)
+
+| Feature | Description |
+|---------|-------------|
+| **Mode Selector** | Dropdown in Settings screen to switch between `app_only`, `web_only`, `web_app` mode at runtime. Syncs with backend `switch_mode` API + `switch_mode.sh`. |
+| **Service Control** | Start/Stop buttons for Web Server, NAP, and SPP services directly from Settings screen. Calls `/start_web_service`, `/stop_nap_service`, etc. |
+| **Mode Indicator** | Status bar badge on HomeScreen shows current mode (`APP`, `WEB`, `BOTH`) with color coding. |
+| **Live SSE Events** | `EventBus` collector subscribes to `/events` SSE stream. Events displayed in real-time `LazyColumn` on HomeScreen — scan progress, attack status, system health. |
+| **Health Monitor** | Backend broadcasts `system_status` event every 60s. App shows service health (Web/NAP/SPP up/down) in status bar. |
 
 #### Get the App
 

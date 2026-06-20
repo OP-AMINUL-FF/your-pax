@@ -37,7 +37,7 @@ class FTPConnector(BaseConnector):
         return self.shared_data.ftpfile
 
     def _get_total_tasks(self):
-        return len(self.users) * len(self.passwords) + 1
+        return len(self.users) * len(self.passwords)
 
     def connect(self, ip, user, password):
         try:

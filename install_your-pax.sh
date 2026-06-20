@@ -363,7 +363,48 @@ setup_your_pax() {
 # Configure services
 setup_services() {
     log "INFO" "Setting up system services..."
-    
+
+    # --- Mode selection ---
+    echo ""
+    echo "============================================"
+    echo " Choose Connection Mode:"
+    echo "============================================"
+    echo " 1) Web Only — Browser UI over WiFi"
+    echo "    (webapp.py + BT NAP + WiFi AP, Android uses HTTP)"
+    echo "    RAM: ~25MB | Same as current system"
+    echo ""
+    echo " 2) App Only — Android app over Bluetooth Serial"
+    echo "    (bt_serial_server SPP, no WiFi, no web, no HTTP)"
+    echo "    RAM: ~2MB  | Ultra-fast, lowest latency"
+    echo ""
+    echo " 3) Web + App — Both simultaneously"
+    echo "    (Android uses Bluetooth SPP, browser uses HTTP)"
+    echo "    RAM: ~27MB | Full flexibility"
+    echo "============================================"
+    read -p "Enter choice [1-3] (default: 1): " MODE_CHOICE
+    MODE_CHOICE=${MODE_CHOICE:-1}
+
+    case $MODE_CHOICE in
+        1) CONNECTION_MODE="web_only" ;;
+        2) CONNECTION_MODE="app_only" ;;
+        3) CONNECTION_MODE="web_app" ;;
+        *) CONNECTION_MODE="web_only" ;;
+    esac
+    log "INFO" "Selected mode: $CONNECTION_MODE"
+
+    # Write connection_mode to config
+    python3 -c "
+import json
+cfg = {}
+try:
+    with open('$YOUR_PAX_PATH/config/shared_config.json') as f:
+        cfg = json.load(f)
+except: pass
+cfg['connection_mode'] = '$CONNECTION_MODE'
+with open('$YOUR_PAX_PATH/config/shared_config.json', 'w') as f:
+    json.dump(cfg, f, indent=4)
+"
+
     # Create kill_port_8000.sh script
     cat > $YOUR_PAX_PATH/kill_port_8000.sh << 'EOF'
 #!/bin/bash
@@ -376,10 +417,10 @@ fi
 EOF
     chmod +x $YOUR_PAX_PATH/kill_port_8000.sh
 
-    # Create your-pax service
+    # Create your-pax orchestrator service (always enabled)
     cat > /etc/systemd/system/your-pax.service << EOF
 [Unit]
-Description=your-pax Service
+Description=your-pax Orchestrator (Attack Engine)
 DefaultDependencies=no
 Before=basic.target
 After=local-fs.target
@@ -392,15 +433,82 @@ StandardOutput=inherit
 StandardError=inherit
 Restart=always
 User=root
-
-# Check open files and restart if it reached the limit (ulimit -n buffer of 1000)
 ExecStartPost=$YOUR_PAX_PATH/monitor_fd.sh
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
+    # ─────────────────────────────────────────────────
+    # Create your-pax-web.service (webapp.py HTTP server)
+    # Only enabled in web_only and web_app modes
+    # ─────────────────────────────────────────────────
+    cat > /etc/systemd/system/your-pax-web.service << EOF
+[Unit]
+Description=Your-Pax Web Server
+After=network.target your-pax-nap.service
+Wants=your-pax-nap.service
+
+[Service]
+ExecStart=/usr/bin/python3 $YOUR_PAX_PATH/webapp.py
+WorkingDirectory=$YOUR_PAX_PATH
+Restart=always
+RestartSec=3
+User=root
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    # ─────────────────────────────────────────────────
+    # Create your-pax-nap.service (Bluetooth NAP bridge)
+    # Only enabled in web_only and web_app modes
+    # ─────────────────────────────────────────────────
+    cat > /etc/systemd/system/your-pax-nap.service << EOF
+[Unit]
+Description=Your-Pax Bluetooth NAP Bridge
+After=bluetooth.service
+Requires=bluetooth.service
+Before=your-pax-web.service
+
+[Service]
+ExecStart=/usr/bin/python3 $YOUR_PAX_PATH/actions/bluetooth_nap.py
+WorkingDirectory=$YOUR_PAX_PATH
+Restart=always
+RestartSec=3
+User=root
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    # Keep old bt-nap.service as alias (symlink) for compatibility
+    ln -sf /etc/systemd/system/your-pax-nap.service /etc/systemd/system/bt-nap.service
+
+    # ─────────────────────────────────────────────────
+    # Create your-pax-spp.service (Bluetooth SPP serial server)
+    # Only enabled in app_only and web_app modes
+    # ─────────────────────────────────────────────────
+    cat > /etc/systemd/system/your-pax-spp.service << EOF
+[Unit]
+Description=Your-Pax Bluetooth Serial Server (SPP/RFCOMM)
+After=bluetooth.service
+Requires=bluetooth.service
+
+[Service]
+ExecStart=/usr/bin/python3 $YOUR_PAX_PATH/bt_serial_server.py
+WorkingDirectory=$YOUR_PAX_PATH
+Restart=always
+RestartSec=3
+User=root
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+    # ─────────────────────────────────────────────────
     # Configure PAM (check for duplicates first)
+    # ─────────────────────────────────────────────────
     if ! grep -q "^session required pam_limits.so" /etc/pam.d/common-session 2>/dev/null; then
         echo "session required pam_limits.so" >> /etc/pam.d/common-session
     fi
@@ -408,9 +516,9 @@ EOF
         echo "session required pam_limits.so" >> /etc/pam.d/common-session-noninteractive
     fi
 
-    # Configure BlueZ so the adapter stays pairable/discoverable indefinitely
-    # and the NAP can auto-pair. Without this, DiscoverableTimeout/PairableTimeout
-    # expire after a reboot and the phone can no longer find your-pax.
+    # ─────────────────────────────────────────────────
+    # Configure BlueZ so the adapter stays pairable/discoverable
+    # ─────────────────────────────────────────────────
     log "INFO" "Configuring /etc/bluetooth/main.conf..."
     MAIN_CONF="/etc/bluetooth/main.conf"
     mkdir -p /etc/bluetooth
@@ -420,45 +528,77 @@ EOF
     cat > "$MAIN_CONF" << EOF
 # your-pax managed configuration
 [General]
-# Stay pairable + discoverable forever (no timeout) so the phone can connect
-# at any time without re-enabling Bluetooth visibility on the Pi.
 AlwaysPairable = true
 PairableTimeout = 0
 DiscoverableTimeout = 0
 
 [Policy]
-# Do not auto-suspend the adapter; the NAP must stay reachable.
 AutoEnable=true
 EOF
-    # Apply the new config so bt-nap.service sees a ready adapter when it starts.
     systemctl restart bluetooth 2>/dev/null || log "WARNING" "Could not restart bluetooth service"
     sleep 2
 
-    # Create Bluetooth NAP service
-    cat > /etc/systemd/system/bt-nap.service << EOF
-[Unit]
-Description=Bluetooth NAP Service for your-pax
-After=bluetooth.service
-Requires=bluetooth.service
+    # ─────────────────────────────────────────────────
+    # Handle SPP profile setup for app-related modes
+    # ─────────────────────────────────────────────────
+    if [ "$CONNECTION_MODE" = "app_only" ] || [ "$CONNECTION_MODE" = "web_app" ]; then
+        log "INFO" "Configuring Bluetooth SPP profile..."
+        # Register Serial Port profile
+        sdptool add SP 2>/dev/null || true
+        # Patch bluetoothd for compatibility mode if needed
+        if ! grep -q "\-C" /lib/systemd/system/bluetooth.service 2>/dev/null; then
+            sed -i 's/ExecStart=\/usr\/libexec\/bluetooth\/bluetoothd/\
+                    ExecStart=\/usr\/libexec\/bluetooth\/bluetoothd -C/' \
+                    /lib/systemd/system/bluetooth.service 2>/dev/null || true
+            systemctl daemon-reload
+        fi
+    fi
 
-[Service]
-ExecStart=/usr/bin/python3 $YOUR_PAX_PATH/actions/bluetooth_nap.py
-Restart=always
-RestartSec=3
-User=root
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-    # Enable and start services
+    # ─────────────────────────────────────────────────
+    # Enable/disable services based on connection mode
+    # ─────────────────────────────────────────────────
     systemctl daemon-reload
-    systemctl enable bt-nap.service
-    systemctl enable your-pax.service
-    systemctl start bt-nap.service 2>/dev/null || log "WARNING" "Could not start bt-nap service"
-    systemctl start your-pax.service 2>/dev/null || log "WARNING" "Could not start your-pax service"
 
-    check_success "Services setup completed"
+    # your-pax orchestrator — always enabled
+    systemctl enable your-pax.service
+
+    case "$CONNECTION_MODE" in
+        web_only)
+            log "INFO" "Mode: web_only — enabling web + nap, disabling spp"
+            systemctl enable  your-pax-web.service
+            systemctl enable  your-pax-nap.service
+            systemctl disable your-pax-spp.service 2>/dev/null || true
+            systemctl start   your-pax-web.service 2>/dev/null || log "WARNING" "Could not start your-pax-web"
+            systemctl start   your-pax-nap.service 2>/dev/null || log "WARNING" "Could not start your-pax-nap"
+            systemctl stop    your-pax-spp.service 2>/dev/null || true
+            ;;
+        app_only)
+            log "INFO" "Mode: app_only — enabling spp, disabling web + nap"
+            systemctl enable  your-pax-spp.service
+            systemctl disable your-pax-web.service 2>/dev/null || true
+            systemctl disable your-pax-nap.service 2>/dev/null || true
+            systemctl start   your-pax-spp.service 2>/dev/null || log "WARNING" "Could not start your-pax-spp"
+            systemctl stop    your-pax-web.service 2>/dev/null || true
+            systemctl stop    your-pax-nap.service 2>/dev/null || true
+            # Remove web UI files to save space in app_only mode
+            log "INFO" "Removing web UI files (not needed in app_only mode)..."
+            rm -rf $YOUR_PAX_PATH/web/*
+            ;;
+        web_app)
+            log "INFO" "Mode: web_app — enabling all services"
+            systemctl enable  your-pax-web.service
+            systemctl enable  your-pax-nap.service
+            systemctl enable  your-pax-spp.service
+            systemctl start   your-pax-web.service 2>/dev/null || log "WARNING" "Could not start your-pax-web"
+            systemctl start   your-pax-nap.service 2>/dev/null || log "WARNING" "Could not start your-pax-nap"
+            systemctl start   your-pax-spp.service 2>/dev/null || log "WARNING" "Could not start your-pax-spp"
+            ;;
+    esac
+
+    # Start orchestrator last
+    systemctl start your-pax.service 2>/dev/null || log "WARNING" "Could not start your-pax orchestrator"
+
+    check_success "Services setup completed ($CONNECTION_MODE mode)"
 }
 
 # Configure USB Gadget

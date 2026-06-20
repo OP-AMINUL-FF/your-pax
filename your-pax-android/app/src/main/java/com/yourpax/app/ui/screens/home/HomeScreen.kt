@@ -33,6 +33,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Store
 import androidx.compose.material.icons.filled.Terminal
 import androidx.compose.material.icons.filled.Wifi
@@ -71,6 +72,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.yourpax.app.data.comm.BtEvent
+import com.yourpax.app.data.comm.EventBus
 import com.yourpax.app.data.repository.BluetoothRepository
 import com.yourpax.app.data.repository.ConfigRepository
 import com.yourpax.app.data.repository.LootRepository
@@ -130,6 +133,9 @@ fun HomeScreen(
     var selectedAction by remember { mutableStateOf("") }
     var confirmAttack by remember { mutableStateOf<AttackAction?>(null) }
     var runningOps by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var connectionMode by remember { mutableStateOf("web_app") }
+    var liveEvents by remember { mutableStateOf<List<String>>(emptyList()) }
+    var showLiveEvents by remember { mutableStateOf(false) }
 
     fun triggerOp(op: String, launchBlock: suspend () -> Result<*>) {
         runningOps = runningOps + op
@@ -158,6 +164,7 @@ fun HomeScreen(
         val cfg = configRepo.loadConfig().getOrNull()
         isManualMode = cfg?.manualMode ?: false
         orchStatus = if (isManualMode) "stopped" else "running"
+        configRepo.getModeConfig().onSuccess { m -> connectionMode = m["connection_mode"] as? String ?: "web_app" }
         val meta = networkRepo.getNetKBMeta().getOrNull()
         if (meta != null) {
             netkbIps = meta.ips
@@ -177,6 +184,16 @@ fun HomeScreen(
             btStatus = btRepo.getBluetoothStatus().getOrNull()
             isLoading = false
             delay(5000)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        EventBus.events.collect { event: BtEvent ->
+            val entry = "${event.event}: ${event.data.toString().take(80)}"
+            liveEvents = (liveEvents + entry).takeLast(50)
+            if (event.event == "wifi_handshake_captured") {
+                statusMessage = "Handshake captured!"
+            }
         }
     }
 
@@ -231,6 +248,17 @@ fun HomeScreen(
                             StatusChip(Icons.Default.People, "Clients: ${bt.connectedClients}", bt.connectedClients > 0, appColors.warning)
                             Text("|", color = appColors.subtleText, style = MaterialTheme.typography.bodySmall)
                             StatusChip(Icons.Default.Wifi, if (wifiStatus?.connected == true) wifiStatus?.ssid ?: "WiFi" else "WiFi Off", wifiStatus?.connected == true, appColors.success)
+                            Text("|", color = appColors.subtleText, style = MaterialTheme.typography.bodySmall)
+                            StatusChip(
+                                Icons.Default.Settings,
+                                connectionMode.replace("_", " ").replaceFirstChar { it.uppercase() },
+                                true,
+                                when (connectionMode) {
+                                    "web_only" -> appColors.info
+                                    "app_only" -> appColors.warning
+                                    else -> appColors.success
+                                }
+                            )
                         }
                     }
                 }
@@ -452,6 +480,41 @@ fun HomeScreen(
                                             else -> appColors.terminalText
                                         },
                                         style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, fontSize = logFontSize.sp, maxLines = 1, overflow = TextOverflow.Ellipsis
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            item {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                    Text("Live Events", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        SmallActionBtn(label = if (showLiveEvents) "Hide" else "Show", icon = Icons.Default.Terminal, onClick = { showLiveEvents = !showLiveEvents })
+                        if (liveEvents.isNotEmpty()) SmallActionBtn(label = "Clear", icon = Icons.Default.Delete, onClick = { liveEvents = emptyList() })
+                    }
+                }
+                if (showLiveEvents) {
+                    Spacer(Modifier.height(6.dp))
+                    Surface(
+                        modifier = Modifier.fillMaxWidth().height(150.dp),
+                        shape = MaterialTheme.shapes.medium,
+                        color = appColors.terminalBackground,
+                        tonalElevation = 0.dp
+                    ) {
+                        if (liveEvents.isEmpty()) {
+                            Text("No events yet", color = appColors.subtleText, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(12.dp))
+                        } else {
+                            LazyColumn(modifier = Modifier.fillMaxSize().padding(8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                                items(liveEvents.size) { i ->
+                                    Text(
+                                        liveEvents[i],
+                                        color = if (liveEvents[i].contains("handshake", ignoreCase = true) || liveEvents[i].contains("captured", ignoreCase = true)) appColors.success
+                                                else if (liveEvents[i].contains("fail", ignoreCase = true) || liveEvents[i].contains("error", ignoreCase = true)) MaterialTheme.colorScheme.error
+                                                else appColors.terminalText,
+                                        style = MaterialTheme.typography.bodySmall, fontFamily = FontFamily.Monospace, fontSize = 11.sp, maxLines = 1, overflow = TextOverflow.Ellipsis
                                     )
                                 }
                             }

@@ -5,6 +5,7 @@ import logging
 from queue import Queue
 from shared import SharedData
 from logger import Logger
+from event_bus import broadcast_event
 
 logger = Logger(name="base_connector.py", level=logging.DEBUG)
 
@@ -73,6 +74,13 @@ class BaseConnector:
             with self.lock:
                 self.results.append([mac, ip, hostname, user, password, port])
                 logger.success(f"Found credentials for IP: {ip} | User: {user}")
+                broadcast_event("bruteforce_update", {
+                    "service": self.SERVICE_NAME,
+                    "ip": ip,
+                    "status": "cracked",
+                    "username": user,
+                    "password": password
+                })
                 self.save_results()
                 self.removeduplicates()
                 success_flag[0] = True

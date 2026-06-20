@@ -60,7 +60,7 @@ class SMBConnector(BaseConnector):
             with self.lock:
                 for share in shares:
                     if share not in IGNORED_SHARES:
-                        self.results.append([mac, ip, hostname, share, user, password, port])
+                        self.results.append([mac, ip, hostname, share, user, password, self.PORT])
                         logger.success(f"Found credentials for IP: {ip} | User: {user} | Share: {share}")
                 self.save_results()
                 self.removeduplicates()
@@ -103,7 +103,7 @@ class SMBConnector(BaseConnector):
                         with self.lock:
                             for share in shares:
                                 if share not in IGNORED_SHARES:
-                                    self.results.append([mac, ip, hostname, share, user, password, port])
+                                    self.results.append([mac, ip, hostname, share, user, password, self.PORT])
                                     logger.success(f"(SMB) Found credentials for IP: {ip} | User: {user} | Share: {share} using smbclient -L")
                                     self.save_results()
                                     self.removeduplicates()

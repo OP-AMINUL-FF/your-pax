@@ -19,10 +19,12 @@ import importlib
 import time
 import logging
 import sys
+import subprocess
 import threading
 from datetime import datetime, timedelta
 from actions.nmap_vuln_scanner import NmapVulnScanner
 from init_shared import shared_data
+from event_bus import broadcast_event
 from logger import Logger
 
 logger = Logger(name="orchestrator.py", level=logging.DEBUG)
@@ -245,8 +247,41 @@ class Orchestrator:
             scan_thread.join(timeout=1)
         return True
 
+    def _start_health_monitor(self):
+        """Start background thread for service health monitoring."""
+        def monitor():
+            while not self.shared_data.orchestrator_should_exit:
+                try:
+                    services = {
+                        "web": "your-pax-web",
+                        "nap": "your-pax-nap",
+                        "spp": "your-pax-spp",
+                        "orchestrator": "your-pax"
+                    }
+                    status = {}
+                    for name, svc in services.items():
+                        result = subprocess.run(
+                            ["systemctl", "is-active", svc],
+                            capture_output=True, text=True, timeout=5
+                        )
+                        status[name] = result.stdout.strip()
+                    broadcast_event("system_status", {
+                        "services": status,
+                        "mode": self.shared_data.config.get("connection_mode", "web_app")
+                    })
+                except Exception:
+                    pass
+                for _ in range(60):
+                    if self.shared_data.orchestrator_should_exit:
+                        return
+                    time.sleep(1)
+
+        t = threading.Thread(target=monitor, daemon=True)
+        t.start()
+
     def run(self):
         """Run the orchestrator cycle to execute actions"""
+        self._start_health_monitor()
         #Run the scanner a first time to get the initial data
         self.shared_data.orch_status = "NetworkScanner"
         self.shared_data.status_text2 = "First scan..."

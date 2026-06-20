@@ -39,13 +39,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.PermissionChecker
-import com.yourpax.app.data.api.CsrfTokenManager
-import com.yourpax.app.data.api.RetrofitProvider
 import com.yourpax.app.data.bluetooth.BluetoothConnectionState
-import com.yourpax.app.data.bluetooth.BluetoothConnector
 import com.yourpax.app.data.bluetooth.BluetoothScanner
+import com.yourpax.app.data.comm.BtCommManager
+import com.yourpax.app.data.comm.CommHolder
+import com.yourpax.app.data.comm.EventBus
 import com.yourpax.app.ui.theme.rememberAppColors
-import com.yourpax.app.util.Constants
 import kotlinx.coroutines.launch
 
 private fun requiredPermissions(): Array<String> {
@@ -56,63 +55,12 @@ private fun requiredPermissions(): Array<String> {
     }
 }
 
-/**
- * Pair with the Pi device, wait for the user to enable Internet access in
- * Android Settings, then verify the Pi's HTTP API. Updates [connectionState]
- * and calls [onConnected] on full success.
- */
-private suspend fun pairAndConnect(
-    device: BluetoothDevice,
-    connector: BluetoothConnector,
-    setState: (BluetoothConnectionState) -> Unit,
-    onConnected: () -> Unit
-) {
-    val paired = connector.pairDevice(device)
-    if (!paired) {
-        setState(BluetoothConnectionState.Error(
-            "Could not pair with your-pax.\n" +
-                "The Pi may not have accepted pairing — check that bt-nap.service is running."
-        ))
-        return
-    }
-    val deviceName = try { device.name } catch (_: SecurityException) {
-        Constants.YOUR_PAX_BT_NAME
-    }
-    setState(BluetoothConnectionState.AwaitingPan(deviceName ?: Constants.YOUR_PAX_BT_NAME))
-    val panIp = connector.awaitPanIp(timeoutMs = 45_000L)
-    if (panIp == null) {
-        setState(BluetoothConnectionState.Error(
-            "Pairing succeeded, but no PAN IP was detected.\n" +
-                "In Android Settings -> Bluetooth -> your-pax, enable \"Internet access\" and retry."
-        ))
-        return
-    }
-    // The NAP bridge IP is fixed at 192.168.4.1; refresh the base URL anyway.
-    RetrofitProvider.updateBaseUrl(Constants.DEFAULT_IP, Constants.DEFAULT_PORT)
-    val apiReachable = try {
-        val api = RetrofitProvider.getApiService()
-        val resp = api.getCsrfToken()
-        if (resp.isSuccessful) {
-            CsrfTokenManager.token = resp.body()?.csrf_token ?: ""
-            true
-        } else false
-    } catch (_: Exception) {
-        false
-    }
-    if (apiReachable) onConnected()
-    else setState(BluetoothConnectionState.Error(
-        "Paired and connected to your-pax, but the web API did not respond.\n" +
-            "You can continue anyway or retry."
-    ))
-}
-
 @Composable
 fun SplashScreen(onConnected: () -> Unit, onSkip: () -> Unit) {
     var connectionState by remember { mutableStateOf<BluetoothConnectionState>(BluetoothConnectionState.Idle) }
     val bluetoothAdapter = remember { BluetoothAdapter.getDefaultAdapter() }
     val context = LocalContext.current
     val scanner = remember { BluetoothScanner(bluetoothAdapter, context) }
-    val connector = remember { BluetoothConnector(context) }
     val scope = rememberCoroutineScope()
 
     fun startScanAndConnect() {
@@ -121,7 +69,7 @@ fun SplashScreen(onConnected: () -> Unit, onSkip: () -> Unit) {
         scanner.startScan(
             onFound = { device ->
                 val name = try { device.name } catch (_: SecurityException) { null }
-                if (name?.contains(Constants.YOUR_PAX_BT_NAME, ignoreCase = true) == true &&
+                if (name?.contains("your-pax", ignoreCase = true) == true &&
                     foundDevice == null
                 ) {
                     foundDevice = device
@@ -136,9 +84,20 @@ fun SplashScreen(onConnected: () -> Unit, onSkip: () -> Unit) {
                         "your-pax not found.\nMake sure it is powered on and discoverable."
                     )
                 } else {
-                    connectionState = BluetoothConnectionState.Pairing
                     scope.launch {
-                        pairAndConnect(device, connector, { connectionState = it }, onConnected)
+                        connectionState = BluetoothConnectionState.Connecting
+                        val btComm = BtCommManager(device.address)
+                        try {
+                            btComm.connect()
+                            btComm.onEvent = { event, data -> EventBus.emit(event, data) }
+                            CommHolder.comm = btComm
+                            onConnected()
+                        } catch (_: Exception) {
+                            connectionState = BluetoothConnectionState.Error(
+                                "Could not connect to your-pax via Bluetooth SPP.\n" +
+                                    "Make sure your-pax is running and try again."
+                            )
+                        }
                     }
                 }
             }

@@ -11,7 +11,8 @@ logger = Logger(name="log_standalone.py", level=logging.INFO)
 b_class = "LogStandalone"
 b_module = "log_standalone"
 b_status = "log_standalone"
-b_port = 0  # Indicate this is a standalone action
+b_port = 0
+b_parent = None
 
 class LogStandalone:
     """

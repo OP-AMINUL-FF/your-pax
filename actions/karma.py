@@ -7,6 +7,7 @@ b_class = "KarmaConfig"
 b_module = "karma"
 b_status = "karma"
 b_port = 0
+b_parent = None
 
 
 class KarmaConfig:

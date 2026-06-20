@@ -3,16 +3,20 @@ import json
 import threading
 import http.server
 import socketserver
+import ssl
 import logging
 import sys
 import signal
 import os
 import gzip
 import io
+import subprocess
 from urllib.parse import unquote
 from logger import Logger
 from init_shared import shared_data
-from utils import WebUtils
+from utils import WebUtils, rate_limiter
+from event_bus import get_sse_broadcaster
+import queue as Queue
 
 # Initialize the logger
 logger = Logger(name="webapp.py", level=logging.DEBUG)
@@ -87,11 +91,21 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         self.send_gzipped_response(content, content_type)
 
     def do_GET(self):
+        client_ip = self.client_address[0]
         if not self._check_auth():
             self.send_response(401)
             self.send_header("Content-type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps({"status": "error", "message": "Authentication required"}).encode('utf-8'))
+            return
+        if not rate_limiter.is_allowed(client_ip):
+            self.send_response(429)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "error", "message": "Rate limit exceeded. Try again later."}).encode('utf-8'))
+            return
+        if self.path == '/events':
+            self._handle_sse()
             return
         if self.path == '/index.html' or self.path == '/':
             self.serve_file_gzipped(os.path.join(self.shared_data.webdir, 'index.html'), 'text/html')
@@ -203,6 +217,34 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         else:
             self.send_error_page(404, ERROR_404_HTML)
 
+    def _handle_sse(self):
+        """SSE endpoint for real-time event push to Web UI."""
+        self.send_response(200)
+        self.send_header("Content-Type", "text/event-stream")
+        self.send_header("Cache-Control", "no-cache")
+        self.send_header("Connection", "keep-alive")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        q = Queue.Queue(maxsize=256)
+        broadcaster = get_sse_broadcaster()
+        broadcaster.add_client(q)
+        try:
+            import select
+            while not self.shared_data.webapp_should_exit:
+                try:
+                    data = q.get(timeout=15)
+                    for line in data.split('\n'):
+                        self.wfile.write(f"data: {line}\n".encode())
+                    self.wfile.write(b"\n")
+                    self.wfile.flush()
+                except Queue.Empty:
+                    self.wfile.write(b": keepalive\n\n")
+                    self.wfile.flush()
+        except (BrokenPipeError, ConnectionResetError, OSError):
+            pass
+        finally:
+            broadcaster.remove_client(q)
+
     def send_error_page(self, code, body):
         self.send_response(code)
         self.send_header("Content-type", "text/html")
@@ -251,11 +293,18 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
         return False
 
     def do_POST(self):
+        client_ip = self.client_address[0]
         if not self._check_auth():
             self.send_response(401)
             self.send_header("Content-type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps({"status": "error", "message": "Authentication required"}).encode('utf-8'))
+            return
+        if not rate_limiter.is_allowed(client_ip):
+            self.send_response(429)
+            self.send_header("Content-type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"status": "error", "message": "Rate limit exceeded. Try again later."}).encode('utf-8'))
             return
         if not self._validate_csrf():
             self.send_response(403)
@@ -263,7 +312,23 @@ class CustomHandler(http.server.SimpleHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps({"status": "error", "message": "CSRF validation failed"}).encode('utf-8'))
             return
-        if self.path == '/save_config':
+        if self.path == '/switch_mode':
+            self.web_utils.switch_mode(self)
+        elif self.path == '/get_mode_config':
+            self.web_utils.get_mode_config(self)
+        elif self.path == '/start_web_service':
+            self.web_utils.start_web_service(self)
+        elif self.path == '/stop_web_service':
+            self.web_utils.stop_web_service(self)
+        elif self.path == '/start_nap_service':
+            self.web_utils.start_nap_service(self)
+        elif self.path == '/stop_nap_service':
+            self.web_utils.stop_nap_service(self)
+        elif self.path == '/start_spp_service':
+            self.web_utils.start_spp_service(self)
+        elif self.path == '/stop_spp_service':
+            self.web_utils.stop_spp_service(self)
+        elif self.path == '/save_config':
             self.web_utils.save_configuration(self)
         elif self.path == '/connect_wifi':
             self.web_utils.connect_wifi(self)
@@ -342,17 +407,55 @@ class WebThread(threading.Thread):
         self.handler_class = handler_class
         self.httpd = None
 
+    def _rotate_csrf(self):
+        """Periodically rotate the CSRF token for security."""
+        while not self.shared_data.webapp_should_exit:
+            time.sleep(3600)
+            old = self.shared_data.csrf_token
+            import secrets
+            self.shared_data.csrf_token = secrets.token_hex(32)
+            logger.info(f"CSRF token rotated (was {old[:8]}...)")
+
     def run(self):
         """
         Run the web server in a separate thread with concurrent request handling.
         """
+        csrf_thread = threading.Thread(target=self._rotate_csrf, daemon=True)
+        csrf_thread.start()
+
+        use_https = self.shared_data.config.get("use_https", False)
+        if use_https and self.port == 8000:
+            self.port = self.shared_data.config.get("https_port", 443)
+        cert_file = self.shared_data.config.get("https_cert", os.path.join(self.shared_data.datadir, "server.crt"))
+        key_file = self.shared_data.config.get("https_key", os.path.join(self.shared_data.datadir, "server.key"))
+
+        if use_https and not (os.path.exists(cert_file) and os.path.exists(key_file)):
+            try:
+                logger.info("Generating self-signed HTTPS certificate...")
+                subprocess.run([
+                    "openssl", "req", "-x509", "-newkey", "rsa:2048",
+                    "-keyout", key_file, "-out", cert_file,
+                    "-days", "3650", "-nodes",
+                    "-subj", "/CN=your-pax.local/O=your-pax/C=XX"
+                ], check=True, capture_output=True, timeout=30)
+                logger.info(f"Self-signed certificate generated: {cert_file}")
+            except Exception as e:
+                logger.error(f"Failed to generate HTTPS certificate: {e}")
+                use_https = False
+
         while not self.shared_data.webapp_should_exit:
             try:
                 self.httpd = socketserver.ThreadingTCPServer(("", self.port), self.handler_class)
                 self.httpd.daemon_threads = True
                 self.httpd.allow_reuse_address = True
                 self.httpd.timeout = 1
-                logger.info(f"Serving at port {self.port} (multi-threaded)")
+                if use_https:
+                    ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+                    ctx.load_cert_chain(cert_file, key_file)
+                    self.httpd.socket = ctx.wrap_socket(self.httpd.socket, server_side=True)
+                    logger.info(f"Serving HTTPS at port {self.port} (multi-threaded)")
+                else:
+                    logger.info(f"Serving HTTP at port {self.port} (multi-threaded)")
                 while not self.shared_data.webapp_should_exit:
                     self.httpd.handle_request()
             except OSError as e:

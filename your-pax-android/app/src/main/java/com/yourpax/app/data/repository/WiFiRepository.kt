@@ -1,115 +1,81 @@
 package com.yourpax.app.data.repository
 
-import com.yourpax.app.data.api.RetrofitProvider
 import com.yourpax.app.data.api.models.*
+import com.yourpax.app.data.comm.CommHolder
+import com.yourpax.app.data.comm.CommunicationManager
 import com.yourpax.app.data.demo.ConnectionState
 import com.yourpax.app.data.demo.DemoData
 
-class WiFiRepository {
-    private val api get() = RetrofitProvider.getApiService()
+class WiFiRepository(private val comm: CommunicationManager = CommHolder.comm) {
 
+    @Suppress("UNCHECKED_CAST")
     suspend fun scanNetworks(): Result<List<WiFiNetwork>> = runCatching {
         if (ConnectionState.isDemoMode) return@runCatching DemoData.demoNetworks
-        val response = api.wifiScanAdvanced()
-        if (response.isSuccessful) response.body()!!
-        else throw Exception("WiFi scan failed: ${response.code()}")
+        (comm.request("wifi_scan_advanced", emptyMap(), List::class.java).getOrThrow() as List<WiFiNetwork>)
     }
 
     suspend fun getWifiStatus(): Result<WiFiStatusResponse> = runCatching {
         if (ConnectionState.isDemoMode) return@runCatching DemoData.demoWifiStatus
-        val response = api.wifiStatus()
-        if (response.isSuccessful) response.body()!!
-        else throw Exception("WiFi status failed: ${response.code()}")
+        comm.request("wifi_status", emptyMap(), WiFiStatusResponse::class.java).getOrThrow()
     }
 
     suspend fun getHandshakeStatus(): Result<AttackStatusResponse> = runCatching {
         if (ConnectionState.isDemoMode) return@runCatching DemoData.demoAttackStatus
-        val response = api.handshakeStatus()
-        if (response.isSuccessful) response.body()!!
-        else throw Exception("Handshake status failed: ${response.code()}")
+        comm.request("handshake_status", emptyMap(), AttackStatusResponse::class.java).getOrThrow()
     }
 
     suspend fun getPmkidStatus(): Result<AttackStatusResponse> = runCatching {
         if (ConnectionState.isDemoMode) return@runCatching DemoData.demoAttackStatus
-        val response = api.pmkidStatus()
-        if (response.isSuccessful) response.body()!!
-        else throw Exception("PMKID status failed: ${response.code()}")
+        comm.request("pmkid_status", emptyMap(), AttackStatusResponse::class.java).getOrThrow()
     }
 
     suspend fun getOneshotStatus(): Result<AttackStatusResponse> = runCatching {
         if (ConnectionState.isDemoMode) return@runCatching DemoData.demoAttackStatus
-        val response = api.oneshotStatus()
-        if (response.isSuccessful) response.body()!!
-        else throw Exception("Oneshot status failed: ${response.code()}")
+        comm.request("oneshot_status", emptyMap(), AttackStatusResponse::class.java).getOrThrow()
     }
 
     suspend fun startHandshake(bssid: String, channel: String, prefix: String): Result<ActionResponse> = runCatching {
         if (ConnectionState.isDemoMode) return@runCatching DemoData.demoActionResponse
-        val response = api.handshakeStart(mapOf(
-            "bssid" to bssid, "channel" to channel, "prefix" to prefix
-        ))
-        if (response.isSuccessful) response.body()!!
-        else throw Exception("Handshake start failed: ${response.code()}")
+        comm.request("handshake_start", mapOf("bssid" to bssid, "channel" to channel, "prefix" to prefix), ActionResponse::class.java).getOrThrow()
     }
 
     suspend fun stopHandshake(): Result<ActionResponse> = runCatching {
         if (ConnectionState.isDemoMode) return@runCatching DemoData.demoActionResponse
-        val response = api.handshakeStop()
-        if (response.isSuccessful) response.body()!!
-        else throw Exception("Handshake stop failed: ${response.code()}")
+        comm.request("handshake_stop", emptyMap(), ActionResponse::class.java).getOrThrow()
     }
 
     suspend fun startPmkid(bssid: String, channel: String, prefix: String): Result<ActionResponse> = runCatching {
         if (ConnectionState.isDemoMode) return@runCatching DemoData.demoActionResponse
-        val response = api.pmkidStart(mapOf(
-            "bssid" to bssid, "channel" to channel, "prefix" to prefix
-        ))
-        if (response.isSuccessful) response.body()!!
-        else throw Exception("PMKID start failed: ${response.code()}")
+        comm.request("pmkid_start", mapOf("bssid" to bssid, "channel" to channel, "prefix" to prefix), ActionResponse::class.java).getOrThrow()
     }
 
     suspend fun stopPmkid(): Result<ActionResponse> = runCatching {
         if (ConnectionState.isDemoMode) return@runCatching DemoData.demoActionResponse
-        val response = api.pmkidStop()
-        if (response.isSuccessful) response.body()!!
-        else throw Exception("PMKID stop failed: ${response.code()}")
+        comm.request("pmkid_stop", emptyMap(), ActionResponse::class.java).getOrThrow()
     }
 
     suspend fun deauth(bssid: String, client: String, count: Int, channel: Int): Result<ActionResponse> = runCatching {
         if (ConnectionState.isDemoMode) return@runCatching DemoData.demoActionResponse
-        val response = api.deauthAttack(mapOf(
-            "bssid" to bssid, "client" to client,
-            "count" to count, "channel" to channel
-        ))
-        if (response.isSuccessful) response.body()!!
-        else throw Exception("Deauth failed: ${response.code()}")
+        comm.request("deauth_attack", mapOf("bssid" to bssid, "client" to client, "count" to count, "channel" to channel), ActionResponse::class.java).getOrThrow()
     }
 
     suspend fun startOneshot(params: Map<String, Any>): Result<ActionResponse> = runCatching {
         if (ConnectionState.isDemoMode) return@runCatching DemoData.demoActionResponse
-        val response = api.oneshot(params)
-        if (response.isSuccessful) response.body()!!
-        else throw Exception("Oneshot start failed: ${response.code()}")
+        comm.request("oneshot", params, ActionResponse::class.java).getOrThrow()
     }
 
     suspend fun stopOneshot(): Result<ActionResponse> = runCatching {
         if (ConnectionState.isDemoMode) return@runCatching DemoData.demoActionResponse
-        val response = api.oneshotStop()
-        if (response.isSuccessful) response.body()!!
-        else throw Exception("Oneshot stop failed: ${response.code()}")
+        comm.request("oneshot_stop", emptyMap(), ActionResponse::class.java).getOrThrow()
     }
 
     suspend fun connectWifi(ssid: String, password: String, hidden: Boolean = false): Result<ActionResponse> = runCatching {
         if (ConnectionState.isDemoMode) return@runCatching DemoData.demoActionResponse
-        val response = api.connectWifi(mapOf("ssid" to ssid, "password" to password, "hidden" to hidden))
-        if (response.isSuccessful) response.body()!!
-        else throw Exception("WiFi connect failed: ${response.code()}")
+        comm.request("connect_wifi", mapOf("ssid" to ssid, "password" to password, "hidden" to hidden), ActionResponse::class.java).getOrThrow()
     }
 
     suspend fun disconnectWifi(): Result<ActionResponse> = runCatching {
         if (ConnectionState.isDemoMode) return@runCatching DemoData.demoActionResponse
-        val response = api.disconnectWifi()
-        if (response.isSuccessful) response.body()!!
-        else throw Exception("WiFi disconnect failed: ${response.code()}")
+        comm.request("disconnect_wifi", emptyMap(), ActionResponse::class.java).getOrThrow()
     }
 }

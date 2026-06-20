@@ -1,6 +1,55 @@
 # Changelog — your-pax
 
-## What's New
+## v1.1.1-alpha (Latest)
+
+### App Control Features
+
+| Feature | Description |
+|---------|-------------|
+| **Mode Selector** | Settings dropdown to switch `app_only` / `web_only` / `web_app` at runtime. Backed by `switch_mode` API + `switch_mode.sh`. |
+| **Service Control** | Start/Stop Web/NAP/SPP buttons in Android app. Calls `/start_*_service` / `/stop_*_service` endpoints. |
+| **Mode Indicator** | HomeScreen status bar badge shows current mode (APP/WEB/BOTH). |
+| **SSE Live Events** | `EventBus` collector → real-time `LazyColumn` on HomeScreen. Shows scan progress, attack updates, system health. |
+| **Health Monitor** | Backend broadcasts `system_status` every 60s via SSE. |
+
+### Security Hardening
+
+| Fix | Details |
+|-----|---------|
+| **RateLimiter** | Token-bucket per-IP, 30 req/min, blocks burst attacks on API endpoints. |
+| **CSRF Rotation** | Token auto-rotates every 3600s via daemon thread. |
+| **HTTPS** | Self-signed cert via openssl, toggleable via `use_https`/`https_port` config. |
+| **Path traversal blocked** | `clear_files` validates pattern (blocks `..`, `~`, `/root`, `/etc`, etc.). `serve_file` validates via `os.path.commonpath`. |
+
+### Bug Fixes (13 from final audit)
+
+| # | File | Bug |
+|---|------|-----|
+| 1 | `bluetooth_nap.py` | Missing `shared_data` param + b_action/b_target globals |
+| 2 | `conflict_manager.py` | Missing all b_* globals |
+| 3 | `scanning.py` | No `execute()` method on NetworkScanner |
+| 4 | `oneshot.py` | `b_class="OneShot"` should be `"Companion"`; undefined `args` at line 837 |
+| 5 | `sql_connector.py` | `connect()` returns `(False, [])` — always truthy tuple |
+| 6 | `steal_files_smb.py` | `not try_anonymous_access()` on tuple always False |
+| 7 | `switch_mode.sh` | `__YOUR_PAX_DIR__` placeholder never resolved |
+| 8 | `evil_ap.html` | Single-quote breakout XSS in onclick |
+| 9 | `wifi.html` | Orphaned dead code breaking JS execution |
+| 10 | `utils.py` | Path traversal in `serve_file` |
+| 11 | `utils.py` | Self-import `from utils import stop_evil_ap` |
+| 12 | `init_shared.py` | Singleton race condition (no lock) |
+| 13 | `base_steal.py` | Missing b_* globals |
+
+### New Scripts
+
+- `scripts/setup_services.sh` — Replaces `__YOUR_PAX_DIR__` in systemd service files with actual install path.
+- `scripts/update-your-pax-main.sh` — Linux update: git pull + reinstall + restart.
+- `scripts/update-your-pax-main.bat` — Windows dev helper: compile check + test hints.
+
+---
+
+## v1.1-alpha (Previous)
+
+### What's New
 
 ### your-pax-android (Complete Android App)
 

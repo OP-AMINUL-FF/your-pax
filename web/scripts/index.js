@@ -161,10 +161,48 @@ function loadDropdown() {
                 <button type="button" onclick="stop_orchestrator()">Stop Orchestrator</button>
                 <button type="button" onclick="start_orchestrator()">Start Orchestrator</button>
                 <button type="button" onclick="initialize_csv()">Create Livestatus, Actions & Netkb CSVs</button>
+                <hr style="border-color:#333;margin:4px 0;">
+                <button type="button" onclick="switchMode('web_only')" style="color:#00ff88;">Mode: Web Only</button>
+                <button type="button" onclick="switchMode('app_only')" style="color:#ffaa00;">Mode: App Only</button>
+                <button type="button" onclick="switchMode('web_app')" style="color:#aa66ff;">Mode: Web + App</button>
             </div>
         </div>
     `;
     document.getElementById('dropdown-container').innerHTML = dropdownContent;
+}
+
+function switchMode(mode) {
+    if (!confirm('Switch to ' + mode + ' mode? This will restart services.')) return;
+    fetch('/switch_mode', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({mode: mode})
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.status === 'success') {
+            alert('Mode switched to ' + mode);
+            loadCurrentMode();
+        } else {
+            alert('Switch failed: ' + data.message);
+        }
+    })
+    .catch(e => alert('Error: ' + e.message));
+}
+
+function loadCurrentMode() {
+    fetch('/load_config')
+        .then(r => r.json())
+        .then(cfg => {
+            const mode = cfg.connection_mode || 'web_app';
+            const el = document.getElementById('modeDisplay');
+            if (el) {
+                const labels = {web_only: 'Web Only', app_only: 'App Only', web_app: 'Web + App'};
+                el.textContent = 'Mode: ' + (labels[mode] || mode);
+                el.style.color = mode === 'web_only' ? '#00ff88' : mode === 'app_only' ? '#ffaa00' : '#aa66ff';
+            }
+        })
+        .catch(() => {});
 }
 
 function loadYourpaxDropdown() {
@@ -182,10 +220,37 @@ function loadYourpaxDropdown() {
     startLiveview(); // Start live view when your-pax dropdown is loaded
 }
 
+function connectSSE() {
+    if (window._sseConnected) return;
+    window._sseConnected = true;
+    const evtSource = new EventSource('/events');
+    evtSource.onmessage = function(e) {
+        try {
+            const evt = JSON.parse(e.data);
+            if (evt.event === 'system_status' && evt.data) {
+                const cpu = evt.data.cpu_usage;
+                const ram = evt.data.ram_free_mb + '/' + evt.data.ram_total_mb + 'MB';
+                document.getElementById('btDisplayStatus').textContent = 'CPU: ' + cpu + '% | RAM: ' + ram;
+            }
+            if (evt.event === 'wifi_handshake_captured' && evt.data) {
+                const popup = document.getElementById('popupContainer');
+                if (popup) popup.innerHTML = '<div style="background:#1a3a1a;border:1px solid #00ff88;padding:8px;margin:4px;border-radius:4px;color:#00ff88;">Handshake: ' + (evt.data.bssid || '') + '</div>';
+                setTimeout(() => { if (popup) popup.innerHTML = ''; }, 5000);
+            }
+        } catch(e) {}
+    };
+    evtSource.onerror = function() {
+        window._sseConnected = false;
+        setTimeout(connectSSE, 5000);
+    };
+}
+
 // Call the function to load the dropdowns when the DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     loadDropdown();
     loadYourpaxDropdown();
+    loadCurrentMode();
+    connectSSE();
 });
 
 

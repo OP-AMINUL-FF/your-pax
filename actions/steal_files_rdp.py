@@ -51,6 +51,9 @@ class StealFilesRDP(BaseSteal):
             if self.shared_data.orchestrator_should_exit:
                 logger.info("File search interrupted due to orchestrator exit.")
                 return []
+            if not os.path.isdir(dir_path) or not os.path.ismount(os.path.dirname(dir_path)):
+                logger.error(f"RDP mount path {dir_path} not mounted, skipping")
+                return []
             files = []
             for root, dirs, filenames in os.walk(dir_path):
                 for file in filenames:
