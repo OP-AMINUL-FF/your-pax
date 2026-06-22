@@ -454,3 +454,4 @@ In my journey to make your-pax work with the different screen versions, I strugg
 ## 📜 License
 
 2024 - your-pax is distributed under the MIT License. For more details, please refer to the [LICENSE](LICENSE) file included in this repository.
+

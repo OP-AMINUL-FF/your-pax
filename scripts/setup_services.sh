@@ -39,3 +39,4 @@ for svc in "$SYSTEMD_DIR"/*.service; do
 done
 
 echo "[✓] Services installed. Use: sudo systemctl start your-pax-*"
+

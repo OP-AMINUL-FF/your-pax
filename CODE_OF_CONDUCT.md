@@ -38,3 +38,4 @@ This code of conduct is adapted from the [Contributor Covenant, version 2.0](htt
 ## 📜 License
 
 2024 - your-pax is distributed under the MIT License. For more details, please refer to the [LICENSE](LICENSE) file included in this repository.
+

@@ -99,3 +99,4 @@ echo "============================================" >> "$OUTPUT"
 
 chmod +x "$OUTPUT" 2>/dev/null || true
 echo "[*] Hash manifest written to: $OUTPUT"
+

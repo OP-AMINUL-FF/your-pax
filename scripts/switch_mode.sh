@@ -81,3 +81,4 @@ echo "[✓] Mode switched to: $MODE"
 systemctl status your-pax-web --no-pager 2>/dev/null | head -3
 systemctl status your-pax-nap --no-pager 2>/dev/null | head -3
 systemctl status your-pax-spp --no-pager 2>/dev/null | head -3
+

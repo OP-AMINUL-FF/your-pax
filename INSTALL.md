@@ -492,3 +492,4 @@ Everything — dashboard, network scan, Wi-Fi attacks, Evil AP, loot, store, con
 ## 📜 License
 
 2024 - your-pax is distributed under the MIT License. For more details, please refer to the [LICENSE](LICENSE) file included in this repository.
+

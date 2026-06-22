@@ -27,3 +27,4 @@ sudo systemctl restart your-pax-nap 2>/dev/null || true
 sudo systemctl restart your-pax-spp 2>/dev/null || true
 
 echo "[✓] Update complete. Run 'systemctl status your-pax-*' to verify."
+

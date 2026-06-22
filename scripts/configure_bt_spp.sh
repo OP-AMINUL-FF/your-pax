@@ -58,3 +58,4 @@ sdptool browse local | grep -A 10 "Serial Port" || {
 }
 
 echo "[✓] Bluetooth SPP configuration complete"
+
