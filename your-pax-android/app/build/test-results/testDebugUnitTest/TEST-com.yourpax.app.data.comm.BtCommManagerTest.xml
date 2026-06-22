@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.yourpax.app.data.comm.BtCommManagerTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-06-20T08:29:40" hostname="MOLLA-CHOWDHURY" time="0.271">
+  <properties/>
+  <testcase name="restore returns failure when not connected" classname="com.yourpax.app.data.comm.BtCommManagerTest" time="0.221"/>
+  <testcase name="constructor accepts custom coroutine context" classname="com.yourpax.app.data.comm.BtCommManagerTest" time="0.003"/>
+  <testcase name="request returns failure when not connected" classname="com.yourpax.app.data.comm.BtCommManagerTest" time="0.023"/>
+  <testcase name="backup returns failure when not connected" classname="com.yourpax.app.data.comm.BtCommManagerTest" time="0.003"/>
+  <testcase name="isConnected returns false before connect" classname="com.yourpax.app.data.comm.BtCommManagerTest" time="0.001"/>
+  <testcase name="uploadPortal returns failure when not connected" classname="com.yourpax.app.data.comm.BtCommManagerTest" time="0.002"/>
+  <testcase name="downloadFile returns failure when not connected" classname="com.yourpax.app.data.comm.BtCommManagerTest" time="0.007"/>
+  <testcase name="requestJson returns failure when not connected" classname="com.yourpax.app.data.comm.BtCommManagerTest" time="0.003"/>
+  <testcase name="disconnect does not throw when not connected" classname="com.yourpax.app.data.comm.BtCommManagerTest" time="0.003"/>
+  <testcase name="getType returns BLUETOOTH" classname="com.yourpax.app.data.comm.BtCommManagerTest" time="0.001"/>
+  <testcase name="onStatusChange is null by default" classname="com.yourpax.app.data.comm.BtCommManagerTest" time="0.001"/>
+  <testcase name="downloadStoreFile returns failure when not connected" classname="com.yourpax.app.data.comm.BtCommManagerTest" time="0.003"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,90 @@
+[
+    {
+        "merged": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-merged_res-59:\\raw_credentials_cracked.json.flat",
+        "source": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-main-61:\\raw\\credentials_cracked.json"
+    },
+    {
+        "merged": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-merged_res-59:\\mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-main-61:\\mipmap-anydpi-v26\\ic_launcher.xml"
+    },
+    {
+        "merged": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-merged_res-59:\\raw_settings_gear.json.flat",
+        "source": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-main-61:\\raw\\settings_gear.json"
+    },
+    {
+        "merged": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-merged_res-59:\\mipmap-hdpi_ic_launcher.xml.flat",
+        "source": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-main-61:\\mipmap-hdpi\\ic_launcher.xml"
+    },
+    {
+        "merged": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-merged_res-59:\\drawable_ic_launcher_foreground.xml.flat",
+        "source": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-main-61:\\drawable\\ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-merged_res-59:\\mipmap-xxhdpi_ic_launcher.xml.flat",
+        "source": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-main-61:\\mipmap-xxhdpi\\ic_launcher.xml"
+    },
+    {
+        "merged": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-merged_res-59:\\raw_backup_sync.json.flat",
+        "source": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-main-61:\\raw\\backup_sync.json"
+    },
+    {
+        "merged": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-merged_res-59:\\raw_radar_blue.json.flat",
+        "source": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-main-61:\\raw\\radar_blue.json"
+    },
+    {
+        "merged": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-merged_res-59:\\raw_attack_bruteforce.json.flat",
+        "source": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-main-61:\\raw\\attack_bruteforce.json"
+    },
+    {
+        "merged": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-merged_res-59:\\mipmap-mdpi_ic_launcher.xml.flat",
+        "source": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-main-61:\\mipmap-mdpi\\ic_launcher.xml"
+    },
+    {
+        "merged": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-merged_res-59:\\raw_handshake_success.json.flat",
+        "source": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-main-61:\\raw\\handshake_success.json"
+    },
+    {
+        "merged": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-merged_res-59:\\raw_wifi_scanning.json.flat",
+        "source": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-main-61:\\raw\\wifi_scanning.json"
+    },
+    {
+        "merged": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-merged_res-59:\\mipmap-xhdpi_ic_launcher.xml.flat",
+        "source": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-main-61:\\mipmap-xhdpi\\ic_launcher.xml"
+    },
+    {
+        "merged": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-merged_res-59:\\raw_terminal_typing.json.flat",
+        "source": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-main-61:\\raw\\terminal_typing.json"
+    },
+    {
+        "merged": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-merged_res-59:\\raw_attack_steal.json.flat",
+        "source": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-main-61:\\raw\\attack_steal.json"
+    },
+    {
+        "merged": "com.yourpax.app-merged_res-59:/raw_attack_wps.json.flat",
+        "source": "com.yourpax.app-main-61:/raw/attack_wps.json"
+    },
+    {
+        "merged": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-merged_res-59:\\mipmap-hdpi_ic_launcher_round.xml.flat",
+        "source": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-main-61:\\mipmap-hdpi\\ic_launcher_round.xml"
+    },
+    {
+        "merged": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-merged_res-59:\\raw_attack_scan.json.flat",
+        "source": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-main-61:\\raw\\attack_scan.json"
+    },
+    {
+        "merged": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-merged_res-59:\\raw_attack_vuln.json.flat",
+        "source": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-main-61:\\raw\\attack_vuln.json"
+    },
+    {
+        "merged": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-merged_res-59:\\raw_attack_deauth.json.flat",
+        "source": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-main-61:\\raw\\attack_deauth.json"
+    },
+    {
+        "merged": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-merged_res-59:\\mipmap-xxxhdpi_ic_launcher.xml.flat",
+        "source": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-main-61:\\mipmap-xxxhdpi\\ic_launcher.xml"
+    },
+    {
+        "merged": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-merged_res-59:\\mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "C:\\Users\\uer\\.gradle\\daemon\\8.2\\com.yourpax.app-main-61:\\mipmap-anydpi-v26\\ic_launcher_round.xml"
+    }
+]

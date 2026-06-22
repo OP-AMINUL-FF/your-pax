@@ -1,0 +1,90 @@
+[
+    {
+        "merged": "com.yourpax.app-merged_res-56:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.yourpax.app-main-57:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.yourpax.app-merged_res-56:/raw_attack_wps.json.flat",
+        "source": "com.yourpax.app-main-57:/raw/attack_wps.json"
+    },
+    {
+        "merged": "com.yourpax.app-merged_res-56:/raw_settings_gear.json.flat",
+        "source": "com.yourpax.app-main-57:/raw/settings_gear.json"
+    },
+    {
+        "merged": "com.yourpax.app-merged_res-56:/raw_attack_steal.json.flat",
+        "source": "com.yourpax.app-main-57:/raw/attack_steal.json"
+    },
+    {
+        "merged": "com.yourpax.app-merged_res-56:/raw_attack_deauth.json.flat",
+        "source": "com.yourpax.app-main-57:/raw/attack_deauth.json"
+    },
+    {
+        "merged": "com.yourpax.app-merged_res-56:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "com.yourpax.app-main-57:/drawable/ic_launcher_foreground.xml"
+    },
+    {
+        "merged": "com.yourpax.app-merged_res-56:/raw_attack_vuln.json.flat",
+        "source": "com.yourpax.app-main-57:/raw/attack_vuln.json"
+    },
+    {
+        "merged": "com.yourpax.app-merged_res-56:/mipmap-xxxhdpi_ic_launcher.xml.flat",
+        "source": "com.yourpax.app-main-57:/mipmap-xxxhdpi/ic_launcher.xml"
+    },
+    {
+        "merged": "com.yourpax.app-merged_res-56:/mipmap-mdpi_ic_launcher.xml.flat",
+        "source": "com.yourpax.app-main-57:/mipmap-mdpi/ic_launcher.xml"
+    },
+    {
+        "merged": "com.yourpax.app-merged_res-56:/mipmap-xhdpi_ic_launcher.xml.flat",
+        "source": "com.yourpax.app-main-57:/mipmap-xhdpi/ic_launcher.xml"
+    },
+    {
+        "merged": "com.yourpax.app-merged_res-56:/raw_handshake_success.json.flat",
+        "source": "com.yourpax.app-main-57:/raw/handshake_success.json"
+    },
+    {
+        "merged": "com.yourpax.app-merged_res-56:/raw_radar_blue.json.flat",
+        "source": "com.yourpax.app-main-57:/raw/radar_blue.json"
+    },
+    {
+        "merged": "com.yourpax.app-merged_res-56:/raw_attack_bruteforce.json.flat",
+        "source": "com.yourpax.app-main-57:/raw/attack_bruteforce.json"
+    },
+    {
+        "merged": "com.yourpax.app-merged_res-56:/mipmap-xxhdpi_ic_launcher.xml.flat",
+        "source": "com.yourpax.app-main-57:/mipmap-xxhdpi/ic_launcher.xml"
+    },
+    {
+        "merged": "com.yourpax.app-merged_res-56:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.yourpax.app-main-57:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.yourpax.app-merged_res-56:/mipmap-hdpi_ic_launcher.xml.flat",
+        "source": "com.yourpax.app-main-57:/mipmap-hdpi/ic_launcher.xml"
+    },
+    {
+        "merged": "com.yourpax.app-merged_res-56:/raw_credentials_cracked.json.flat",
+        "source": "com.yourpax.app-main-57:/raw/credentials_cracked.json"
+    },
+    {
+        "merged": "com.yourpax.app-merged_res-56:/raw_wifi_scanning.json.flat",
+        "source": "com.yourpax.app-main-57:/raw/wifi_scanning.json"
+    },
+    {
+        "merged": "com.yourpax.app-merged_res-56:/raw_terminal_typing.json.flat",
+        "source": "com.yourpax.app-main-57:/raw/terminal_typing.json"
+    },
+    {
+        "merged": "com.yourpax.app-merged_res-56:/raw_backup_sync.json.flat",
+        "source": "com.yourpax.app-main-57:/raw/backup_sync.json"
+    },
+    {
+        "merged": "com.yourpax.app-merged_res-56:/raw_attack_scan.json.flat",
+        "source": "com.yourpax.app-main-57:/raw/attack_scan.json"
+    },
+    {
+        "merged": "com.yourpax.app-merged_res-56:/mipmap-hdpi_ic_launcher_round.xml.flat",
+        "source": "com.yourpax.app-main-57:/mipmap-hdpi/ic_launcher_round.xml"
+    }
+]

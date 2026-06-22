@@ -1,0 +1,31 @@
+2026-06-20 16:01:04 - steal_files_ftp.py - SUCCESS - 
+Downloaded file from ../../etc/passwd to C:\Users\uer\AppData\Local\Temp\tmpb042_9ry\etc\passwd
+2026-06-20 16:01:51 - steal_files_ftp.py - SUCCESS - 
+Downloaded file from /home/user/file.txt to C:\Users\uer\AppData\Local\Temp\tmpsqbw2t72\home/user/file.txt
+2026-06-20 16:01:51 - steal_files_ftp.py - ERROR - Path traversal detected in remote file path: ../../etc/passwd
+2026-06-20 16:01:51 - steal_files_ftp.py - SUCCESS - 
+Downloaded file from /etc/passwd to C:\Users\uer\AppData\Local\Temp\tmpkm0xuqy1\etc/passwd
+2026-06-20 16:02:05 - steal_files_ftp.py - SUCCESS - 
+Downloaded file from /home/user/file.txt to C:\Users\uer\AppData\Local\Temp\tmpjv97x7qo\home/user/file.txt
+2026-06-20 16:02:05 - steal_files_ftp.py - ERROR - Path traversal detected in remote file path: ../../etc/passwd
+2026-06-20 16:03:03 - steal_files_ftp.py - SUCCESS - 
+Downloaded file from /home/user/file.txt to C:\Users\uer\AppData\Local\Temp\tmpx9j4od6d\home/user/file.txt
+2026-06-20 16:03:03 - steal_files_ftp.py - ERROR - Path traversal detected in remote file path: ../../etc/passwd
+2026-06-20 16:06:43 - steal_files_ftp.py - SUCCESS - 
+Downloaded file from /home/user/file.txt to C:\Users\uer\AppData\Local\Temp\tmpjtzq4zw0\home/user/file.txt
+2026-06-20 16:06:43 - steal_files_ftp.py - ERROR - Path traversal detected in remote file path: ../../etc/passwd
+2026-06-20 16:07:05 - steal_files_ftp.py - SUCCESS - 
+Downloaded file from /home/user/file.txt to C:\Users\uer\AppData\Local\Temp\tmpxqu9bkvk\home/user/file.txt
+2026-06-20 16:07:05 - steal_files_ftp.py - ERROR - Path traversal detected in remote file path: ../../etc/passwd
+2026-06-20 16:10:14 - steal_files_ftp.py - SUCCESS - 
+Downloaded file from /home/user/file.txt to C:\Users\uer\AppData\Local\Temp\tmp0prshopw\home/user/file.txt
+2026-06-20 16:10:14 - steal_files_ftp.py - ERROR - Path traversal detected in remote file path: ../../etc/passwd
+2026-06-20 16:10:19 - steal_files_ftp.py - SUCCESS - 
+Downloaded file from /home/user/file.txt to C:\Users\uer\AppData\Local\Temp\tmp1hvlbxll\home/user/file.txt
+2026-06-20 16:10:19 - steal_files_ftp.py - ERROR - Path traversal detected in remote file path: ../../etc/passwd
+2026-06-20 16:10:31 - steal_files_ftp.py - SUCCESS - 
+Downloaded file from /home/user/file.txt to C:\Users\uer\AppData\Local\Temp\tmpzm252_nh\home/user/file.txt
+2026-06-20 16:10:31 - steal_files_ftp.py - ERROR - Path traversal detected in remote file path: ../../etc/passwd
+2026-06-20 16:22:31 - steal_files_ftp.py - SUCCESS - 
+Downloaded file from /home/user/file.txt to C:\Users\uer\AppData\Local\Temp\tmpjc79zd4w\home/user/file.txt
+2026-06-20 16:22:31 - steal_files_ftp.py - ERROR - Path traversal detected in remote file path: ../../etc/passwd

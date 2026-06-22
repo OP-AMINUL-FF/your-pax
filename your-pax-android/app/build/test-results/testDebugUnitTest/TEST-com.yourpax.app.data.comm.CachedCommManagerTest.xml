@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.yourpax.app.data.comm.CachedCommManagerTest" tests="15" skipped="0" failures="0" errors="0" timestamp="2026-06-20T08:29:40" hostname="MOLLA-CHOWDHURY" time="0.048">
+  <properties/>
+  <testcase name="backup delegates without caching" classname="com.yourpax.app.data.comm.CachedCommManagerTest" time="0.008"/>
+  <testcase name="disconnect invalidates cache and delegates" classname="com.yourpax.app.data.comm.CachedCommManagerTest" time="0.006"/>
+  <testcase name="mutation commands invalidate cache" classname="com.yourpax.app.data.comm.CachedCommManagerTest" time="0.008"/>
+  <testcase name="isConnected delegates to inner" classname="com.yourpax.app.data.comm.CachedCommManagerTest" time="0.001"/>
+  <testcase name="getType delegates to inner" classname="com.yourpax.app.data.comm.CachedCommManagerTest" time="0.0"/>
+  <testcase name="uploadPortal invalidates all and delegates" classname="com.yourpax.app.data.comm.CachedCommManagerTest" time="0.002"/>
+  <testcase name="restore invalidates all and delegates" classname="com.yourpax.app.data.comm.CachedCommManagerTest" time="0.001"/>
+  <testcase name="delegates request and caches on success" classname="com.yourpax.app.data.comm.CachedCommManagerTest" time="0.004"/>
+  <testcase name="connect delegates to inner" classname="com.yourpax.app.data.comm.CachedCommManagerTest" time="0.002"/>
+  <testcase name="delegates requestJson and caches" classname="com.yourpax.app.data.comm.CachedCommManagerTest" time="0.003"/>
+  <testcase name="does not cache failures" classname="com.yourpax.app.data.comm.CachedCommManagerTest" time="0.001"/>
+  <testcase name="downloadStoreFile caches" classname="com.yourpax.app.data.comm.CachedCommManagerTest" time="0.004"/>
+  <testcase name="onStatusChange delegates to inner" classname="com.yourpax.app.data.comm.CachedCommManagerTest" time="0.0"/>
+  <testcase name="requestJson skips cache on failure" classname="com.yourpax.app.data.comm.CachedCommManagerTest" time="0.003"/>
+  <testcase name="delegates downloadFile and caches" classname="com.yourpax.app.data.comm.CachedCommManagerTest" time="0.004"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

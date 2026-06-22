@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.yourpax.app.data.repository.RepositoryContractTest" tests="23" skipped="0" failures="0" errors="0" timestamp="2026-06-20T08:29:40" hostname="MOLLA-CHOWDHURY" time="0.059">
+  <properties/>
+  <testcase name="ConfigRepository reboot delegates" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.003"/>
+  <testcase name="NetworkRepository stopAll delegates" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.002"/>
+  <testcase name="NetworkRepository triggerScan delegates" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.002"/>
+  <testcase name="EvilApRepository startEvilAp delegates" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.004"/>
+  <testcase name="SystemRepository backup delegates" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.003"/>
+  <testcase name="EvilApRepository getClients delegates" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.002"/>
+  <testcase name="ConfigRepository shutdown delegates" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.001"/>
+  <testcase name="BluetoothRepository getStatus delegates" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.002"/>
+  <testcase name="LootRepository getStoreData delegates" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.002"/>
+  <testcase name="EvilApRepository getStatus delegates" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.003"/>
+  <testcase name="ConfigRepository saveConfig delegates" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.001"/>
+  <testcase name="ConfigRepository restoreDefaults delegates" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.003"/>
+  <testcase name="LootRepository downloadFile delegates" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.001"/>
+  <testcase name="LootRepository getCredentials delegates" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.002"/>
+  <testcase name="all repositories use demo mode data" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.014"/>
+  <testcase name="LootRepository getLootFiles delegates" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.003"/>
+  <testcase name="NetworkRepository getNetKBMeta delegates" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.002"/>
+  <testcase name="NetworkRepository getNetworkData delegates" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.001"/>
+  <testcase name="ConfigRepository loadConfig delegates" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.002"/>
+  <testcase name="SystemRepository restore delegates" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.002"/>
+  <testcase name="repositories default to CommHolder comm" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.0"/>
+  <testcase name="BluetoothRepository getDevices delegates" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.002"/>
+  <testcase name="EvilApRepository stopEvilAp delegates" classname="com.yourpax.app.data.repository.RepositoryContractTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

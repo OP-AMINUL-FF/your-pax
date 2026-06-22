@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.yourpax.app.data.comm.DataCacheTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-06-20T08:29:40" hostname="MOLLA-CHOWDHURY" time="0.016">
+  <properties/>
+  <testcase name="get returns null for unknown key" classname="com.yourpax.app.data.comm.DataCacheTest" time="0.003"/>
+  <testcase name="put and get returns cached data" classname="com.yourpax.app.data.comm.DataCacheTest" time="0.001"/>
+  <testcase name="params differentiate cache keys" classname="com.yourpax.app.data.comm.DataCacheTest" time="0.001"/>
+  <testcase name="download cache miss returns null" classname="com.yourpax.app.data.comm.DataCacheTest" time="0.001"/>
+  <testcase name="invalidateMutations removes all entries" classname="com.yourpax.app.data.comm.DataCacheTest" time="0.002"/>
+  <testcase name="download cache put and get" classname="com.yourpax.app.data.comm.DataCacheTest" time="0.003"/>
+  <testcase name="invalidate removes entry" classname="com.yourpax.app.data.comm.DataCacheTest" time="0.001"/>
+  <testcase name="invalidateAll clears all entries" classname="com.yourpax.app.data.comm.DataCacheTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.yourpax.app.data.repository.WiFiRepositoryTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-06-20T08:29:40" hostname="MOLLA-CHOWDHURY" time="0.014">
+  <properties/>
+  <testcase name="deauth passes all params" classname="com.yourpax.app.data.repository.WiFiRepositoryTest" time="0.001"/>
+  <testcase name="startHandshake passes correct params" classname="com.yourpax.app.data.repository.WiFiRepositoryTest" time="0.002"/>
+  <testcase name="scanNetworks delegates to comm" classname="com.yourpax.app.data.repository.WiFiRepositoryTest" time="0.001"/>
+  <testcase name="getWifiStatus delegates to comm" classname="com.yourpax.app.data.repository.WiFiRepositoryTest" time="0.001"/>
+  <testcase name="stopHandshake delegates" classname="com.yourpax.app.data.repository.WiFiRepositoryTest" time="0.002"/>
+  <testcase name="connectWifi passes params" classname="com.yourpax.app.data.repository.WiFiRepositoryTest" time="0.001"/>
+  <testcase name="scanNetworks returns demo data in demo mode" classname="com.yourpax.app.data.repository.WiFiRepositoryTest" time="0.005"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

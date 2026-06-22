@@ -1,0 +1,29 @@
+> Task :app:clean
+> Task :app:checkKotlinGradlePluginConfigurationErrors
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugResValues
+> Task :app:checkDebugAarMetadata
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :app:parseDebugLocalResources
+> Task :app:mergeDebugResources
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:processDebugManifestForPackage
+> Task :app:processDebugResources
+
+> Task :app:compileDebugKotlin
+w: file:///D:/your-pax-main/your-pax-main/your-pax-android/app/src/main/java/com/yourpax/app/data/bluetooth/BluetoothConnector.kt:59:28 'getParcelableExtra(String!): T?' is deprecated. Deprecated in Java
+w: file:///D:/your-pax-main/your-pax-main/your-pax-android/app/src/main/java/com/yourpax/app/data/bluetooth/BluetoothScanner.kt:49:36 'getParcelableExtra(String!): T?' is deprecated. Deprecated in Java
+w: file:///D:/your-pax-main/your-pax-main/your-pax-android/app/src/main/java/com/yourpax/app/ui/screens/home/HomeScreen.kt:102:5 Parameter 'onNavigateToEpd' is never used
+w: file:///D:/your-pax-main/your-pax-main/your-pax-android/app/src/main/java/com/yourpax/app/ui/screens/home/HomeScreen.kt:102:39 Parameter 'onNavigateToBackup' is never used
+w: file:///D:/your-pax-main/your-pax-main/your-pax-android/app/src/main/java/com/yourpax/app/ui/screens/home/HomeScreen.kt:102:76 Parameter 'onNavigateToMore' is never used
+w: file:///D:/your-pax-main/your-pax-main/your-pax-android/app/src/main/java/com/yourpax/app/ui/screens/splash/SplashScreen.kt:112:56 'getDefaultAdapter(): BluetoothAdapter!' is deprecated. Deprecated in Java
+w: file:///D:/your-pax-main/your-pax-main/your-pax-android/app/src/main/java/com/yourpax/app/ui/screens/splash/SplashScreen.kt:169:108 'enable(): Boolean' is deprecated. Deprecated in Java
+
+BUILD SUCCESSFUL in 22s
+15 actionable tasks: 15 executed

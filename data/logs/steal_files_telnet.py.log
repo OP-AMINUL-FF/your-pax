@@ -1,0 +1,19 @@
+2026-06-20 16:01:04 - steal_files_telnet.py - INFO - File stealing process interrupted due to orchestrator exit.
+2026-06-20 16:01:51 - steal_files_telnet.py - INFO - File stealing process interrupted due to orchestrator exit.
+2026-06-20 16:01:51 - steal_files_telnet.py - INFO - File stealing process interrupted due to orchestrator exit.
+2026-06-20 16:02:05 - steal_files_telnet.py - ERROR - Error downloading file /var/www/file.txt from Telnet: a bytes-like object is required, not 'MagicMock'
+2026-06-20 16:02:05 - steal_files_telnet.py - ERROR - Path traversal detected in remote file path: ../../etc/shadow
+2026-06-20 16:03:03 - steal_files_telnet.py - ERROR - Error downloading file /var/www/file.txt from Telnet: a bytes-like object is required, not 'MagicMock'
+2026-06-20 16:03:03 - steal_files_telnet.py - ERROR - Path traversal detected in remote file path: ../../etc/shadow
+2026-06-20 16:06:43 - steal_files_telnet.py - ERROR - Error downloading file /var/www/file.txt from Telnet: a bytes-like object is required, not 'MagicMock'
+2026-06-20 16:06:43 - steal_files_telnet.py - ERROR - Path traversal detected in remote file path: ../../etc/shadow
+2026-06-20 16:07:05 - steal_files_telnet.py - ERROR - Error downloading file /var/www/file.txt from Telnet: a bytes-like object is required, not 'MagicMock'
+2026-06-20 16:07:05 - steal_files_telnet.py - ERROR - Path traversal detected in remote file path: ../../etc/shadow
+2026-06-20 16:10:14 - steal_files_telnet.py - ERROR - Error downloading file /var/www/file.txt from Telnet: a bytes-like object is required, not 'MagicMock'
+2026-06-20 16:10:14 - steal_files_telnet.py - ERROR - Path traversal detected in remote file path: ../../etc/shadow
+2026-06-20 16:10:19 - steal_files_telnet.py - ERROR - Error downloading file /var/www/file.txt from Telnet: a bytes-like object is required, not 'MagicMock'
+2026-06-20 16:10:19 - steal_files_telnet.py - ERROR - Path traversal detected in remote file path: ../../etc/shadow
+2026-06-20 16:10:31 - steal_files_telnet.py - ERROR - Error downloading file /var/www/file.txt from Telnet: a bytes-like object is required, not 'MagicMock'
+2026-06-20 16:10:31 - steal_files_telnet.py - ERROR - Path traversal detected in remote file path: ../../etc/shadow
+2026-06-20 16:22:31 - steal_files_telnet.py - ERROR - Error downloading file /var/www/file.txt from Telnet: a bytes-like object is required, not 'MagicMock'
+2026-06-20 16:22:31 - steal_files_telnet.py - ERROR - Path traversal detected in remote file path: ../../etc/shadow

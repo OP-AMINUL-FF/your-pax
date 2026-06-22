@@ -1,0 +1,4 @@
+#Tue Jun 23 02:23:52 BDT 2026
+base.0=D\:\\your-pax-main\\your-pax-main\\your-pax-android\\app\\build\\intermediates\\dex\\release\\minifyReleaseWithR8\\classes.dex
+renamed.0=classes.dex
+path.0=classes.dex

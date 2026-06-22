@@ -1,0 +1,18 @@
+<lint-module
+    format="1"
+    dir="D:\your-pax-main\your-pax-main\your-pax-android\app"
+    name=":app"
+    type="APP"
+    maven="your-pax:app:"
+    agpVersion="8.2.0"
+    buildFolder="build"
+    bootClassPath="C:\Users\uer\AppData\Local\Android\Sdk\platforms\android-34\android.jar;C:\Users\uer\AppData\Local\Android\Sdk\build-tools\34.0.0\core-lambda-stubs.jar"
+    javaSourceLevel="17"
+    compileTarget="android-34">
+  <lintOptions
+      abortOnError="true"
+      absolutePaths="true"
+      checkReleaseBuilds="true"
+      explainIssues="true"/>
+  <variant name="release"/>
+</lint-module>
