@@ -42,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.yourpax.app.R
 import com.yourpax.app.data.api.models.CredentialFile
 import com.yourpax.app.data.api.models.LootFile
 import com.yourpax.app.data.api.models.StoreDataFull
@@ -51,6 +52,8 @@ import com.yourpax.app.ui.components.DemoModeBanner
 import com.yourpax.app.ui.components.EmptyState
 import com.yourpax.app.ui.components.LoadingOverlay
 import com.yourpax.app.ui.components.ModernCard
+import com.yourpax.app.ui.components.LottieAnim
+import com.yourpax.app.ui.components.CopyButton
 import com.yourpax.app.ui.theme.rememberAppColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -111,6 +114,18 @@ fun LootScreen(
             Tab(selected = selectedTab == 1, onClick = { selectedTab = 1 }, text = { Text("Files") })
         }
 
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("Loot Vault", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+            LottieAnim(
+                rawResId = R.raw.credentials_cracked,
+                modifier = Modifier.size(36.dp)
+            )
+        }
+
         if (isLoading) {
             LoadingOverlay()
         } else {
@@ -143,16 +158,19 @@ private fun CredentialsTab(credentials: List<CredentialFile>, repo: LootReposito
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(file.name, fontWeight = FontWeight.SemiBold, fontSize = fontSize.sp)
-                        Icon(
-                            Icons.Default.Download,
-                            contentDescription = "Download",
-                            tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(20.dp).clickable {
-                                scope.launch {
-                                    repo.downloadFile(file.name)
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            CopyButton(textToCopy = file.rows.joinToString("\n") { it.joinToString(" | ") }, size = 20.dp)
+                            Icon(
+                                Icons.Default.Download,
+                                contentDescription = "Download",
+                                tint = MaterialTheme.colorScheme.primary,
+                                modifier = Modifier.size(20.dp).clickable {
+                                    scope.launch {
+                                        repo.downloadFile(file.name)
+                                    }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
                     HorizontalDivider()
                     file.rows.take(10).forEach { row ->
@@ -219,16 +237,19 @@ private fun FileTreeItem(file: LootFile, depth: Int, repo: LootRepository, scope
                 modifier = Modifier.weight(1f)
             )
             if (!file.isDirectory) {
-                Icon(
-                    Icons.Default.Download,
-                    contentDescription = "Download",
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(18.dp).clickable {
-                        scope.launch {
-                            repo.downloadFile(file.path)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    CopyButton(textToCopy = file.path, size = 18.dp)
+                    Icon(
+                        Icons.Default.Download,
+                        contentDescription = "Download",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(18.dp).clickable {
+                            scope.launch {
+                                repo.downloadFile(file.path)
+                            }
                         }
-                    }
-                )
+                    )
+                }
             }
         }
     }

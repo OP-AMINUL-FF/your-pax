@@ -2,6 +2,26 @@
 
 ## v1.1.1-alpha (Latest)
 
+### 📱 Android App — Full Bluetooth Control (PROMOTIONAL HIGHLIGHT)
+
+**Turn your phone into a complete your-pax control center — no laptop, no WiFi needed.**
+
+| Feature | Description |
+|---------|-------------|
+| **100% Bluetooth-Only** | All 75+ backend commands mapped to Android over RFCOMM serial |
+| **20 Screens** | Full Compose UI: Dashboard, WiFi Attacks, Evil AP, Loot, Config, Manual Mode, EPD, Logs |
+| **Real-Time Control** | Start/stop orchestrator, toggle services, switch modes, monitor attacks live |
+| **27 Attack Options** | Every OneShot WPS flag, handshake, PMKID, deauth option exposed in UI |
+| **Zero HTTP Dependency** | Core features work entirely over Bluetooth — even during WiFi attacks |
+| **Build Verified** | `gradlew.bat assembleDebug` compiles successfully |
+| **Dark Material 3** | Modern, clean interface — not cyberpunk |
+
+**Quick Build:**
+```bash
+cd your-pax-android
+.\gradlew.bat assembleDebug
+```
+
 ### App Control Features
 
 | Feature | Description |

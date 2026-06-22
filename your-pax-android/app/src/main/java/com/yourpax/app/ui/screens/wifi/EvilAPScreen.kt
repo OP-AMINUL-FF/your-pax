@@ -57,6 +57,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.yourpax.app.R
 import com.yourpax.app.data.api.models.ConflictStatus
 import com.yourpax.app.data.api.models.EvilApStatusResponse
 import com.yourpax.app.data.api.models.EvilClientInfo
@@ -75,6 +76,8 @@ import com.yourpax.app.ui.components.StatusDot
 import com.yourpax.app.ui.components.StatusMessageBanner
 import com.yourpax.app.ui.components.ToggleButton
 import com.yourpax.app.ui.components.WarningCard
+import com.yourpax.app.ui.components.LottieAnim
+import com.yourpax.app.ui.components.CopyButton
 import com.yourpax.app.ui.theme.rememberAppColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -168,6 +171,18 @@ fun EvilAPScreen(
                 modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Access Point Status", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    LottieAnim(
+                        rawResId = R.raw.wifi_scanning,
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
+
                 conflict?.let { c ->
                     val conflicts = buildList {
                         if (c.handshakeRunning) add("Handshake capture")
@@ -418,12 +433,7 @@ fun EvilAPScreen(
                                 Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                                     Text(cred.time, style = MaterialTheme.typography.bodySmall, color = appColors.subtleText, modifier = Modifier.weight(1f))
                                     Text(cred.password, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.error, modifier = Modifier.weight(1f))
-                                    IconButton(onClick = {
-                                        clipboard.setPrimaryClip(ClipData.newPlainText("password", cred.password))
-                                        statusMsg = "Copied password"
-                                    }, modifier = Modifier.size(24.dp)) {
-                                        Icon(Icons.Default.ContentCopy, contentDescription = "Copy", modifier = Modifier.size(14.dp), tint = appColors.subtleText)
-                                    }
+                                    CopyButton(textToCopy = cred.password, size = 18.dp)
                                 }
                                 HorizontalDivider()
                             }

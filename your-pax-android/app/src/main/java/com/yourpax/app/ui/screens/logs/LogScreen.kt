@@ -32,6 +32,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import com.yourpax.app.R
+import com.yourpax.app.ui.components.CopyButton
+import com.yourpax.app.ui.components.LottieAnim
 import com.yourpax.app.data.repository.LootRepository
 import com.yourpax.app.ui.components.DemoModeBanner
 import com.yourpax.app.ui.components.EmptyState
@@ -70,8 +75,17 @@ fun LogScreen(onOpenDrawer: () -> Unit = {}) {
                         Icon(Icons.Default.Menu, contentDescription = "Open drawer")
                     }
                     Text("Console Logs", style = MaterialTheme.typography.titleLarge)
+                    Spacer(Modifier.width(8.dp))
+                    LottieAnim(
+                        rawResId = R.raw.terminal_typing,
+                        modifier = Modifier.size(32.dp)
+                    )
                 }
-                Row {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (logLines.isNotEmpty()) {
+                        CopyButton(textToCopy = logLines.joinToString("\n"))
+                        Spacer(Modifier.width(8.dp))
+                    }
                     IconButton(onClick = { scope.launch { isLoading = true; fetchLogs() } }) {
                         Icon(Icons.Default.Refresh, contentDescription = "Refresh")
                     }

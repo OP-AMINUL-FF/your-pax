@@ -11,8 +11,8 @@ android {
         applicationId = "com.yourpax.app"
         minSdk = 26
         targetSdk = 34
-        versionCode = 2
-        versionName = "1.1-alpha"
+        versionCode = 3
+        versionName = "1.1.2-alpha"
     }
 
     buildTypes {
@@ -63,6 +63,7 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
     implementation("io.coil-kt:coil-compose:2.5.0")
+    implementation("com.airbnb.android:lottie-compose:6.4.0")
 
     debugImplementation("androidx.compose.ui:ui-tooling")
 

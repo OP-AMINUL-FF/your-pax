@@ -53,6 +53,11 @@ def cmd_ping(params, conn, req_id):
     send_json(conn, req_id, "ok", data="pong")
 
 
+@register("store_data")
+def cmd_store_data_alias(params, conn, req_id):
+    return cmd_get_store_data(params, conn, req_id)
+
+
 @register("get_store_data")
 def cmd_get_store_data(params, conn, req_id):
     try:
@@ -64,6 +69,11 @@ def cmd_get_store_data(params, conn, req_id):
         send_json(conn, req_id, "error", error=str(e))
 
 
+@register("wifi_status")
+def cmd_wifi_status_alias(params, conn, req_id):
+    return cmd_get_wifi_status(params, conn, req_id)
+
+
 @register("get_wifi_status")
 def cmd_get_wifi_status(params, conn, req_id):
     try:
@@ -72,6 +82,11 @@ def cmd_get_wifi_status(params, conn, req_id):
         send_json(conn, req_id, "ok", data=data)
     except Exception as e:
         send_json(conn, req_id, "error", error=str(e))
+
+
+@register("bluetooth_status")
+def cmd_bluetooth_status_alias(params, conn, req_id):
+    return cmd_get_bluetooth_status(params, conn, req_id)
 
 
 @register("get_bluetooth_status")
@@ -102,11 +117,12 @@ def cmd_connect_wifi(params, conn, req_id):
     try:
         ssid = params.get("ssid", "")
         password = params.get("password", "")
+        hidden = params.get("hidden", False)
         if not ssid:
             send_json(conn, req_id, "error", error="ssid required")
             return
         from utils import connect_to_wifi
-        result = connect_to_wifi(shared_data, ssid, password)
+        result = connect_to_wifi(shared_data, ssid, password, hidden=hidden)
         send_json(conn, req_id, "ok", data={"connected": result})
     except Exception as e:
         send_json(conn, req_id, "error", error=str(e))
@@ -200,6 +216,11 @@ def cmd_deauth(params, conn, req_id):
         send_json(conn, req_id, "ok", data={"sent": count})
     except Exception as e:
         send_json(conn, req_id, "error", error=str(e))
+
+
+@register("oneshot")
+def cmd_oneshot_alias(params, conn, req_id):
+    return cmd_oneshot_start(params, conn, req_id)
 
 
 @register("oneshot_start")
@@ -350,6 +371,11 @@ def cmd_restore_default_config(params, conn, req_id):
         send_json(conn, req_id, "error", error=str(e))
 
 
+@register("network_data_json")
+def cmd_network_data_json_alias(params, conn, req_id):
+    return cmd_get_network_data(params, conn, req_id)
+
+
 @register("get_network_data")
 def cmd_get_network_data(params, conn, req_id):
     try:
@@ -358,6 +384,16 @@ def cmd_get_network_data(params, conn, req_id):
         send_json(conn, req_id, "ok", data=data)
     except Exception as e:
         send_json(conn, req_id, "error", error=str(e))
+
+
+@register("netkb_data_json_full")
+def cmd_netkb_data_json_full_alias(params, conn, req_id):
+    return cmd_get_netkb_data(params, conn, req_id)
+
+
+@register("netkb_data_json")
+def cmd_netkb_data_json_alias(params, conn, req_id):
+    return cmd_get_netkb_meta(params, conn, req_id)
 
 
 @register("get_netkb_data")
@@ -378,6 +414,11 @@ def cmd_get_netkb_meta(params, conn, req_id):
         send_json(conn, req_id, "ok", data=data)
     except Exception as e:
         send_json(conn, req_id, "error", error=str(e))
+
+
+@register("list_credentials_json")
+def cmd_list_credentials_json_alias(params, conn, req_id):
+    return cmd_list_credentials(params, conn, req_id)
 
 
 @register("list_credentials")
@@ -511,6 +552,25 @@ def cmd_shutdown(params, conn, req_id):
     subprocess.Popen(["/sbin/shutdown", "-h", "now"])
 
 
+@register("switch_mode")
+def cmd_switch_mode(params, conn, req_id):
+    try:
+        mode = params.get("mode", "")
+        if mode not in ("web_only", "app_only", "web_app"):
+            raise ValueError("Invalid mode")
+        from utils import switch_mode as _switch
+        _switch(shared_data, mode)
+        send_json(conn, req_id, "ok", data={"switched": True})
+    except Exception as e:
+        logger.error(f"switch_mode failed: {e}")
+        send_json(conn, req_id, "error", error=str(e))
+
+
+@register("restart_your_pax_service")
+def cmd_restart_your_pax_service_alias(params, conn, req_id):
+    return cmd_restart_service(params, conn, req_id)
+
+
 @register("restart_service")
 def cmd_restart_service(params, conn, req_id):
     send_json(conn, req_id, "ok", data={"restarting": True})
@@ -520,16 +580,26 @@ def cmd_restart_service(params, conn, req_id):
 
 @register("start_orchestrator")
 def cmd_start_orchestrator(params, conn, req_id):
-    shared_data.orchestrator_should_exit = False
-    from orchestrator import start_orchestrator
-    start_orchestrator(shared_data)
-    send_json(conn, req_id, "ok", data={"started": True})
+    try:
+        if hasattr(shared_data, 'your_pax_instance') and shared_data.your_pax_instance:
+            shared_data.your_pax_instance.start_orchestrator()
+            send_json(conn, req_id, "ok", data={"started": True})
+        else:
+            send_json(conn, req_id, "error", error="orchestrator_not_available")
+    except Exception as e:
+        logger.error(f"start_orchestrator failed: {e}")
+        send_json(conn, req_id, "error", error=str(e))
 
 
 @register("stop_orchestrator")
 def cmd_stop_orchestrator(params, conn, req_id):
-    shared_data.orchestrator_should_exit = True
-    send_json(conn, req_id, "ok", data={"stopped": True})
+    try:
+        if hasattr(shared_data, 'your_pax_instance') and shared_data.your_pax_instance:
+            shared_data.your_pax_instance.stop_orchestrator()
+        send_json(conn, req_id, "ok", data={"stopped": True})
+    except Exception as e:
+        logger.error(f"stop_orchestrator failed: {e}")
+        send_json(conn, req_id, "error", error=str(e))
 
 
 @register("backup")
@@ -542,10 +612,98 @@ def cmd_backup(params, conn, req_id):
         send_json(conn, req_id, "error", error=str(e))
 
 
+@register("stop_evil_clone")
+def cmd_stop_evil_clone(params, conn, req_id):
+    try:
+        from actions.evil_clone import EvilClone
+        clone = EvilClone(shared_data)
+        clone.stop()
+        send_json(conn, req_id, "ok", data={"stopped": True})
+    except Exception as e:
+        logger.error(f"stop_evil_clone failed: {e}")
+        send_json(conn, req_id, "error", error=str(e))
+
+
+@register("start_web_service")
+def cmd_start_web_service(params, conn, req_id):
+    send_json(conn, req_id, "ok", data={"starting": True})
+    import subprocess
+    subprocess.Popen(["systemctl", "start", "your-pax-web"])
+
+
+@register("stop_web_service")
+def cmd_stop_web_service(params, conn, req_id):
+    send_json(conn, req_id, "ok", data={"stopping": True})
+    import subprocess
+    subprocess.Popen(["systemctl", "stop", "your-pax-web"])
+
+
+@register("start_nap_service")
+def cmd_start_nap_service(params, conn, req_id):
+    send_json(conn, req_id, "ok", data={"starting": True})
+    import subprocess
+    subprocess.Popen(["systemctl", "start", "your-pax-nap"])
+
+
+@register("stop_nap_service")
+def cmd_stop_nap_service(params, conn, req_id):
+    send_json(conn, req_id, "ok", data={"stopping": True})
+    import subprocess
+    subprocess.Popen(["systemctl", "stop", "your-pax-nap"])
+
+
+@register("start_spp_service")
+def cmd_start_spp_service(params, conn, req_id):
+    send_json(conn, req_id, "ok", data={"starting": True})
+    import subprocess
+    subprocess.Popen(["systemctl", "start", "your-pax-spp"])
+
+
+@register("stop_spp_service")
+def cmd_stop_spp_service(params, conn, req_id):
+    send_json(conn, req_id, "ok", data={"stopping": True})
+    import subprocess
+    subprocess.Popen(["systemctl", "stop", "your-pax-spp"])
+
+
+@register("bluetooth_devices")
+def cmd_bluetooth_devices(params, conn, req_id):
+    try:
+        from utils import get_bluetooth_devices
+        data = get_bluetooth_devices(shared_data)
+        send_json(conn, req_id, "ok", data=data)
+    except Exception as e:
+        logger.error(f"bluetooth_devices failed: {e}")
+        send_json(conn, req_id, "error", error=str(e))
+
+
+@register("get_mode_config")
+def cmd_get_mode_config(params, conn, req_id):
+    try:
+        from utils import get_mode_config
+        data = get_mode_config(shared_data)
+        send_json(conn, req_id, "ok", data=data)
+    except Exception as e:
+        logger.error(f"get_mode_config failed: {e}")
+        send_json(conn, req_id, "error", error=str(e))
+
+
 @register("get_web_delay")
 def cmd_get_web_delay(params, conn, req_id):
     delay = shared_data.config.get("web_delay", 2)
     send_json(conn, req_id, "ok", data={"delay_ms": delay * 1000})
+
+
+@register("wpa_validate_status")
+def cmd_wpa_validate_status(params, conn, req_id):
+    try:
+        from actions.wpa_validator import WPAValidator
+        validator = WPAValidator(shared_data)
+        data = validator.get_status()
+        send_json(conn, req_id, "ok", data=data)
+    except Exception as e:
+        logger.error(f"wpa_validate_status failed: {e}")
+        send_json(conn, req_id, "error", error=str(e))
 
 
 @register("get_csrf_token")

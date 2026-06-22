@@ -39,9 +39,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yourpax.app.data.api.models.BluetoothDeviceInfo
 import com.yourpax.app.data.repository.BluetoothRepository
+import com.yourpax.app.R
 import com.yourpax.app.ui.components.DemoModeBanner
 import com.yourpax.app.ui.components.EmptyState
 import com.yourpax.app.ui.components.LoadingOverlay
+import com.yourpax.app.ui.components.LottieAnim
+import com.yourpax.app.ui.components.CopyButton
 import com.yourpax.app.ui.theme.rememberAppColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -104,11 +107,21 @@ fun BluetoothDevicesScreen(
             ) {
                 item { Spacer(Modifier.height(4.dp)) }
                 item {
-                    Text(
-                        "${devices.size} device${if (devices.size != 1) "s" else ""}",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = appColors.subtleText
-                    )
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            "${devices.size} device${if (devices.size != 1) "s" else ""}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = appColors.subtleText
+                        )
+                        LottieAnim(
+                            rawResId = R.raw.radar_blue,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
                 items(devices) { device ->
                     DeviceCard(device = device)
@@ -152,10 +165,14 @@ private fun DeviceCard(device: BluetoothDeviceInfo) {
                         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                             Icon(Icons.Default.Computer, contentDescription = null, modifier = Modifier.size(14.dp), tint = appColors.subtleText)
                             Text(device.ip, style = MaterialTheme.typography.bodySmall, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = appColors.subtleText)
+                            CopyButton(textToCopy = device.ip, size = 12.dp)
                         }
                     }
                     if (device.mac.isNotEmpty()) {
-                        Text(device.mac, style = MaterialTheme.typography.bodySmall, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = appColors.subtleText)
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(device.mac, style = MaterialTheme.typography.bodySmall, fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace, color = appColors.subtleText)
+                            CopyButton(textToCopy = device.mac, size = 12.dp)
+                        }
                     }
                 }
             }

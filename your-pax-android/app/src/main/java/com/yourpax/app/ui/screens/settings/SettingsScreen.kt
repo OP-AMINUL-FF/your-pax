@@ -49,9 +49,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.yourpax.app.R
 import com.yourpax.app.data.repository.ConfigRepository
 import com.yourpax.app.data.repository.NetworkRepository
 import com.yourpax.app.data.repository.SystemRepository
@@ -60,6 +62,8 @@ import com.yourpax.app.ui.components.DemoModeBanner
 import com.yourpax.app.ui.components.ModernCard
 import com.yourpax.app.ui.components.SmallActionBtn
 import com.yourpax.app.ui.components.StatusMessageBanner
+import com.yourpax.app.ui.components.FadeScaleIn
+import com.yourpax.app.ui.components.LottieAnim
 import com.yourpax.app.ui.theme.rememberAppColors
 import kotlinx.coroutines.launch
 
@@ -77,6 +81,7 @@ fun SettingsScreen(
     val configRepo = remember { ConfigRepository() }
     val networkRepo = remember { NetworkRepository() }
     val wifiRepo = remember { WiFiRepository() }
+    val systemRepo = remember { SystemRepository() }
     val scope = rememberCoroutineScope()
     var statusMsg by remember { mutableStateOf("") }
     var confirmAction by remember { mutableStateOf<SettingsAction?>(null) }
@@ -105,6 +110,18 @@ fun SettingsScreen(
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("System Control Panel", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                LottieAnim(
+                    rawResId = R.raw.settings_gear,
+                    modifier = Modifier.size(36.dp)
+                )
+            }
+
             if (statusMsg.isNotEmpty()) {
                 StatusMessageBanner(message = statusMsg)
             }

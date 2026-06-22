@@ -38,10 +38,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.yourpax.app.R
+import com.yourpax.app.ui.components.CopyButton
+import com.yourpax.app.ui.components.LottieAnim
 import com.yourpax.app.data.repository.SystemRepository
 import com.yourpax.app.ui.components.DemoModeBanner
 import com.yourpax.app.ui.components.LoadingOverlay
@@ -109,6 +113,18 @@ fun BackupRestoreScreen(
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text("System Backup Panel", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                LottieAnim(
+                    rawResId = R.raw.backup_sync,
+                    modifier = Modifier.size(36.dp)
+                )
+            }
+
             ModernCard {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text("Create Backup", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleSmall)
@@ -141,7 +157,20 @@ fun BackupRestoreScreen(
                     }
                     if (backupResult != null) {
                         Surface(shape = MaterialTheme.shapes.extraSmall, color = appColors.successContainer, tonalElevation = 0.dp) {
-                            Text(backupResult!!, modifier = Modifier.padding(8.dp), style = MaterialTheme.typography.bodySmall, color = appColors.terminalText)
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(
+                                    text = backupResult!!,
+                                    modifier = Modifier.weight(1f),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = appColors.terminalText
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                CopyButton(textToCopy = backupResult!!)
+                            }
                         }
                     }
                 }

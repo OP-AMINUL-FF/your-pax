@@ -546,6 +546,26 @@ your-pax/
 
 <img src="https://raw.githubusercontent.com/andreasbm/readme/master/assets/lines/rainbow.png" width="100%">
 
+## 🤖 Android App — Full Bluetooth Control
+
+**Your-Pax Android** is a complete native control surface for your-pax:
+
+- **20 Screens** — Dashboard, Network, WiFi Attacks, Evil AP, Loot, Config, Manual Mode, Live EPD, Logs, and more
+- **100% Bluetooth-Only** — No WiFi dependency; works during WiFi attacks, monitor mode, Evil AP
+- **75+ Firmware Commands** — Every button maps directly to backend handlers
+- **Real-Time Updates** — SSE live events, attack status polling, system health monitor
+- **Material 3 Dark Theme** — Modern, clean interface (not cyberpunk)
+- **Build Verified** — Compiles successfully with `gradlew.bat assembleDebug`
+
+**Quick Build:**
+```bash
+cd your-pax-android
+.\gradlew.bat assembleDebug
+# APK output: app/build/outputs/apk/debug/app-debug.apk
+```
+
+See [CHANGELOG.md](CHANGELOG.md) for detailed Android feature history.
+
 ##  License
 
 MIT License — 2024 your-pax. See [LICENSE](LICENSE) for details.

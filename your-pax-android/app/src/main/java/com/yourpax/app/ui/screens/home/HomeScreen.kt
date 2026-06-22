@@ -83,6 +83,7 @@ import com.yourpax.app.data.repository.WiFiRepository
 import com.yourpax.app.data.api.models.BluetoothStatus
 import com.yourpax.app.data.api.models.StoreDataFull
 import com.yourpax.app.data.api.models.WiFiStatusResponse
+import com.yourpax.app.R
 import com.yourpax.app.ui.components.DemoModeBanner
 import com.yourpax.app.ui.components.FontSizeControl
 import com.yourpax.app.ui.components.LoadingOverlay
@@ -90,6 +91,7 @@ import com.yourpax.app.ui.components.ModernCard
 import com.yourpax.app.ui.components.SmallActionBtn
 import com.yourpax.app.ui.components.StatusMessageBanner
 import com.yourpax.app.ui.components.ToggleButton
+import com.yourpax.app.ui.components.LottieAnim
 import com.yourpax.app.ui.theme.rememberAppColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -187,12 +189,19 @@ fun HomeScreen(
         }
     }
 
+    var showHandshakeAnim by remember { mutableStateOf(false) }
+
     LaunchedEffect(Unit) {
         EventBus.events.collect { event: BtEvent ->
             val entry = "${event.event}: ${event.data.toString().take(80)}"
             liveEvents = (liveEvents + entry).takeLast(50)
             if (event.event == "wifi_handshake_captured") {
                 statusMessage = "Handshake captured!"
+                showHandshakeAnim = true
+                launch {
+                    delay(4000)
+                    showHandshakeAnim = false
+                }
             }
         }
     }
@@ -351,7 +360,10 @@ fun HomeScreen(
                 item {
                     ModernCard {
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                            LottieAnim(
+                                rawResId = R.raw.radar_blue,
+                                modifier = Modifier.size(28.dp)
+                            )
                             Spacer(Modifier.width(8.dp))
                             Text("Running: ${runningOps.joinToString(", ")}", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium)
                         }
@@ -364,13 +376,13 @@ fun HomeScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Attacks", fontWeight = FontWeight.SemiBold, style = MaterialTheme.typography.titleSmall)
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FilterChip(selected = false, onClick = { confirmAttack = AttackAction.SCAN }, label = { Text("Scan", style = MaterialTheme.typography.bodySmall) }, leadingIcon = { Icon(Icons.Default.Search, null, Modifier.size(16.dp)) })
-                            FilterChip(selected = false, onClick = { confirmAttack = AttackAction.BRUTEFORCE }, label = { Text("Bruteforce", style = MaterialTheme.typography.bodySmall) }, leadingIcon = { Icon(Icons.Default.Lock, null, Modifier.size(16.dp)) })
-                            FilterChip(selected = false, onClick = { confirmAttack = AttackAction.VULN_SCAN }, label = { Text("Vuln", style = MaterialTheme.typography.bodySmall) }, leadingIcon = { Icon(Icons.Default.Security, null, Modifier.size(16.dp)) })
+                            FilterChip(selected = false, onClick = { confirmAttack = AttackAction.SCAN }, label = { Text("Scan", style = MaterialTheme.typography.bodySmall) }, leadingIcon = { LottieAnim(rawResId = R.raw.attack_scan, modifier = Modifier.size(16.dp)) })
+                            FilterChip(selected = false, onClick = { confirmAttack = AttackAction.BRUTEFORCE }, label = { Text("Bruteforce", style = MaterialTheme.typography.bodySmall) }, leadingIcon = { LottieAnim(rawResId = R.raw.attack_bruteforce, modifier = Modifier.size(16.dp)) })
+                            FilterChip(selected = false, onClick = { confirmAttack = AttackAction.VULN_SCAN }, label = { Text("Vuln", style = MaterialTheme.typography.bodySmall) }, leadingIcon = { LottieAnim(rawResId = R.raw.attack_vuln, modifier = Modifier.size(16.dp)) })
                         }
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FilterChip(selected = false, onClick = { confirmAttack = AttackAction.STEAL }, label = { Text("Steal", style = MaterialTheme.typography.bodySmall) }, leadingIcon = { Icon(Icons.Default.Download, null, Modifier.size(16.dp)) })
-                            FilterChip(selected = false, onClick = { confirmAttack = AttackAction.STOP_ALL }, label = { Text("Stop All", style = MaterialTheme.typography.bodySmall) }, leadingIcon = { Icon(Icons.Default.Block, null, Modifier.size(16.dp)) })
+                            FilterChip(selected = false, onClick = { confirmAttack = AttackAction.STEAL }, label = { Text("Steal", style = MaterialTheme.typography.bodySmall) }, leadingIcon = { LottieAnim(rawResId = R.raw.attack_steal, modifier = Modifier.size(16.dp)) })
+                            FilterChip(selected = false, onClick = { confirmAttack = AttackAction.STOP_ALL }, label = { Text("Stop All", style = MaterialTheme.typography.bodySmall) }, leadingIcon = { LottieAnim(rawResId = R.raw.attack_deauth, modifier = Modifier.size(16.dp)) })
                         }
                     }
                 }
@@ -564,6 +576,25 @@ fun HomeScreen(
             dismissButton = { TextButton(onClick = { confirmAttack = null }) { Text("Cancel") } }
         )
         null -> {}
+    }
+
+    if (showHandshakeAnim) {
+        AlertDialog(
+            onDismissRequest = { showHandshakeAnim = false },
+            title = {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LottieAnim(
+                        rawResId = R.raw.handshake_success,
+                        modifier = Modifier.size(36.dp)
+                    )
+                    Text("Handshake Captured!", fontWeight = FontWeight.Bold)
+                }
+            },
+            text = { Text("A new WPA/WPA2 handshake has been successfully captured and saved to the loot repository.") },
+            confirmButton = {
+                TextButton(onClick = { showHandshakeAnim = false }) { Text("Dismiss") }
+            }
+        )
     }
 
     if (isLoading) LoadingOverlay(message = "Loading your-pax...")

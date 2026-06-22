@@ -23,8 +23,8 @@ class WiFiDeauth:
                 raise ValueError("Invalid BSSID format")
             if not re.match(r'^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$', client):
                 raise ValueError("Invalid client MAC format")
-            if not isinstance(count, int) or count < 1 or count > 10000:
-                raise ValueError("Count must be between 1 and 10000")
+            if not isinstance(count, int) or count < 0 or count > 10000:
+                raise ValueError("Count must be between 0 and 10000 (0 = continuous)")
             if channel:
                 subprocess.run(['sudo', 'iwconfig', self.interface, 'channel', str(channel)],
                                capture_output=True, timeout=5)

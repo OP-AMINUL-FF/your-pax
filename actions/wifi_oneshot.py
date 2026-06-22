@@ -44,7 +44,8 @@ class WiFiOneShot:
 
     def build_cmd(self, bssid=None, pixie=False, bruteforce=False, pbc=False,
                   pin=None, delay=None, pixie_force=False, show_pixie_cmd=False,
-                  verbose=False, iface_down=True, vuln_list=None):
+                  verbose=False, iface_down=True, vuln_list=None,
+                  write=False, loop=False, reverse_scan=False, mtk_wifi=False):
         if bssid is not None:
             import re
             if not re.match(r'^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$', bssid):
@@ -80,6 +81,14 @@ class WiFiOneShot:
         vuln_path = vuln_list or self.vuln_list
         if os.path.exists(vuln_path):
             cmd.extend(['--vuln-list', vuln_path])
+        if write:
+            cmd.append('-w')
+        if loop:
+            cmd.append('-l')
+        if reverse_scan:
+            cmd.append('-r')
+        if mtk_wifi:
+            cmd.append('--mtk-wifi')
         return cmd
 
     def start(self, params=None):
@@ -96,11 +105,16 @@ class WiFiOneShot:
             show_pixie_cmd=params.get("show_pixie_cmd", False),
             verbose=params.get("verbose", False),
             iface_down=params.get("iface_down", True),
+            write=params.get("write", False),
+            loop=params.get("loop", False),
+            reverse_scan=params.get("reverse_scan", False),
+            mtk_wifi=params.get("mtk_wifi", False),
         )
 
     def run_oneshot(self, bssid=None, pixie=True, bruteforce=False, pbc=False,
                     pin=None, delay=None, pixie_force=False, show_pixie_cmd=False,
-                    verbose=False, iface_down=True):
+                    verbose=False, iface_down=True, vuln_list=None,
+                    write=False, loop=False, reverse_scan=False, mtk_wifi=False):
         try:
             if self.shared_data.config.get("enable_monitor_mode", False):
                 mon = self.shared_data.monitor_instance
@@ -120,7 +134,8 @@ class WiFiOneShot:
                 self.output.append("[!] Evil AP stopped for WPS attack")
                 logger.info("Stopped Evil AP before WPS")
             cmd = self.build_cmd(bssid, pixie, bruteforce, pbc, pin, delay,
-                                 pixie_force, show_pixie_cmd, verbose, iface_down)
+                                 pixie_force, show_pixie_cmd, verbose, iface_down,
+                                 vuln_list, write, loop, reverse_scan, mtk_wifi)
             self.running = True
             self.output = []
             self.process = subprocess.Popen(

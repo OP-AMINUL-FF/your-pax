@@ -71,3 +71,6 @@ backup/uploads/*
 *.log
 config/shared_config.json
 web/screen.png
+
+nul
+*.apk

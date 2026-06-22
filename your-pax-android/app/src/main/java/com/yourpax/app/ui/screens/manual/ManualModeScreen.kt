@@ -45,6 +45,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import com.yourpax.app.R
+import com.yourpax.app.ui.components.CopyButton
+import com.yourpax.app.ui.components.LottieAnim
 import com.yourpax.app.data.demo.ConnectionState
 import com.yourpax.app.data.repository.NetworkRepository
 import com.yourpax.app.data.repository.SystemRepository
@@ -111,6 +116,18 @@ fun ManualModeScreen(
             LoadingOverlay()
         } else {
             Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Manual Execution Panel", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    LottieAnim(
+                        rawResId = R.raw.terminal_typing,
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
+
                 if (!isManualMode && !ConnectionState.isDemoMode) {
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
@@ -187,39 +204,39 @@ fun ManualModeScreen(
                     ModernCard {
                         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                             Text("Execute Command", fontWeight = FontWeight.SemiBold)
-                            OutlinedTextField(
-                                value = command,
-                                onValueChange = { command = it },
-                                label = { Text("Command") },
-                                placeholder = { Text("e.g., scan --target 192.168.1.0/24") },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                trailingIcon = {
-                                    if (command.isNotEmpty()) {
-                                        IconButton(onClick = { command = "" }) { Icon(Icons.Default.Clear, contentDescription = "Clear") }
-                                    }
-                                }
-                            )
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Button(
-                                    onClick = {
-                                        scope.launch {
-                                            if (command.isBlank()) { statusMsg = "Enter a command"; return@launch }
-                                            output += "> $command\n"
-                                            statusMsg = "Executing..."
-                                            val r = systemRepo.executeCommand(mapOf("ip" to "", "port" to "", "action" to command))
-                                            if (r.isSuccess) {
-                                                output += "${r.getOrNull()?.message ?: "Command executed"}\n"
-                                                statusMsg = "Done"
-                                            } else {
-                                                output += "Error: ${r.exceptionOrNull()?.message ?: "Failed"}\n"
-                                                statusMsg = "Failed"
-                                            }
+                                OutlinedTextField(
+                                    value = command,
+                                    onValueChange = { command = it },
+                                    label = { Text("Action Class") },
+                                    placeholder = { Text("e.g., SSHBruteforce, WiFiHandshake, NetworkScanner") },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    singleLine = true,
+                                    trailingIcon = {
+                                        if (command.isNotEmpty()) {
+                                            IconButton(onClick = { command = "" }) { Icon(Icons.Default.Clear, contentDescription = "Clear") }
                                         }
-                                    },
-                                    enabled = command.isNotBlank(),
-                                    shape = MaterialTheme.shapes.medium
-                                ) { Text("Execute") }
+                                    }
+                                )
+                                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    Button(
+                                        onClick = {
+                                            scope.launch {
+                                                if (command.isBlank()) { statusMsg = "Enter an action class"; return@launch }
+                                                output += "> execute_manual_attack(ip=\"$selectedIp\", port=\"$selectedPort\", action=\"$command\")\n"
+                                                statusMsg = "Executing..."
+                                                val r = systemRepo.executeManualAttack(selectedIp, selectedPort, command)
+                                                if (r.isSuccess) {
+                                                    output += "${r.getOrNull()?.message ?: "Command executed"}\n"
+                                                    statusMsg = "Done"
+                                                } else {
+                                                    output += "Error: ${r.exceptionOrNull()?.message ?: "Failed"}\n"
+                                                    statusMsg = "Failed"
+                                                }
+                                            }
+                                        },
+                                        enabled = command.isNotBlank() && selectedIp.isNotBlank(),
+                                        shape = MaterialTheme.shapes.medium
+                                    ) { Text("Execute") }
                                 OutlinedButton(
                                     onClick = { output = ""; statusMsg = "Output cleared" },
                                     shape = MaterialTheme.shapes.medium
@@ -231,7 +248,13 @@ fun ManualModeScreen(
                     ModernCard {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                Text("Output", fontWeight = FontWeight.SemiBold)
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Text("Output", fontWeight = FontWeight.SemiBold)
+                                    if (output.isNotEmpty()) {
+                                        Spacer(Modifier.width(8.dp))
+                                        CopyButton(textToCopy = output)
+                                    }
+                                }
                                 if (output.isNotEmpty()) {
                                     TextButton(onClick = { output = "" }) { Text("Clear", style = MaterialTheme.typography.bodySmall) }
                                 }
@@ -257,12 +280,18 @@ fun ManualModeScreen(
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Text("Quick Commands", fontWeight = FontWeight.SemiBold)
                             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                                QuickChip("scan --target 192.168.1.0/24", onClick = { command = "scan --target 192.168.1.0/24" })
-                                QuickChip("bruteforce --protocol ssh", onClick = { command = "bruteforce --protocol ssh" })
-                                QuickChip("steal --path /home", onClick = { command = "steal --path /home" })
-                                QuickChip("vulnscan --target 192.168.1.1", onClick = { command = "vulnscan --target 192.168.1.1" })
-                                QuickChip("handshake --bssid AA:BB:CC:DD:EE:FF", onClick = { command = "handshake --bssid AA:BB:CC:DD:EE:FF" })
-                                QuickChip("deauth --bssid AA:BB:CC:DD:EE:FF", onClick = { command = "deauth --bssid AA:BB:CC:DD:EE:FF" })
+                                QuickChip("NetworkScanner", R.raw.attack_scan, onClick = { command = "NetworkScanner" })
+                                QuickChip("SSHBruteforce", R.raw.attack_bruteforce, onClick = { command = "SSHBruteforce" })
+                                QuickChip("FTPBruteforce", R.raw.attack_bruteforce, onClick = { command = "FTPBruteforce" })
+                                QuickChip("SMB Bruteforce", R.raw.attack_bruteforce, onClick = { command = "SMBBruteforce" })
+                                QuickChip("WiFiHandshake", R.raw.attack_scan, onClick = { command = "WiFiHandshake" })
+                                QuickChip("WiFiPMKID", R.raw.attack_scan, onClick = { command = "WiFiPMKID" })
+                                QuickChip("WiFiDeauth", R.raw.attack_deauth, onClick = { command = "WiFiDeauth" })
+                                QuickChip("WiFiOneShot", R.raw.attack_deauth, onClick = { command = "WiFiOneShot" })
+                                QuickChip("StealFilesSSH", R.raw.attack_steal, onClick = { command = "StealFilesSSH" })
+                                QuickChip("StealFilesFTP", R.raw.attack_steal, onClick = { command = "StealFilesFTP" })
+                                QuickChip("StealFilesSMB", R.raw.attack_steal, onClick = { command = "StealFilesSMB" })
+                                QuickChip("StealDataSQL", R.raw.attack_steal, onClick = { command = "StealDataSQL" })
                             }
                         }
                     }
@@ -275,10 +304,11 @@ fun ManualModeScreen(
 }
 
 @Composable
-private fun QuickChip(text: String, onClick: () -> Unit) {
+private fun QuickChip(text: String, rawResId: Int, onClick: () -> Unit) {
     AssistChip(
         onClick = onClick,
         label = { Text(text, style = MaterialTheme.typography.bodySmall) },
+        leadingIcon = { LottieAnim(rawResId = rawResId, modifier = Modifier.size(16.dp)) },
         shape = MaterialTheme.shapes.small
     )
 }

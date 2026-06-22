@@ -40,6 +40,11 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import com.yourpax.app.R
+import com.yourpax.app.ui.components.CopyButton
+import com.yourpax.app.ui.components.LottieAnim
 import com.yourpax.app.data.api.models.NetKBResponse
 import com.yourpax.app.data.repository.NetworkRepository
 import com.yourpax.app.ui.components.DemoModeBanner
@@ -121,8 +126,25 @@ fun NetKBScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("${data.rows.size} entries", style = MaterialTheme.typography.labelSmall, color = appColors.subtleText)
-                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text("${data.rows.size} entries", style = MaterialTheme.typography.labelSmall, color = appColors.subtleText)
+                        Spacer(Modifier.width(8.dp))
+                        LottieAnim(
+                            rawResId = R.raw.terminal_typing,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        val csvContent = remember(data) {
+                            val headersStr = data.headers.joinToString(",")
+                            val rowsStr = data.rows.joinToString("\n") { it.joinToString(",") }
+                            "$headersStr\n$rowsStr"
+                        }
+                        CopyButton(textToCopy = csvContent)
+                        Spacer(Modifier.width(4.dp))
                         FontSizeControl(
                             currentSize = fontSize,
                             onDecrease = { fontSize = maxOf(6f, fontSize - 1f) },

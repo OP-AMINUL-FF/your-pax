@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.gson.Gson
 import com.google.gson.JsonElement
+import com.yourpax.app.R
 import com.yourpax.app.data.api.models.ConfigData
 import com.yourpax.app.data.repository.ConfigRepository
 import com.yourpax.app.data.repository.WiFiRepository
@@ -59,6 +60,8 @@ import com.yourpax.app.ui.components.EmptyState
 import com.yourpax.app.ui.components.FontSizeControl
 import com.yourpax.app.ui.components.LoadingOverlay
 import com.yourpax.app.ui.components.StatusMessageBanner
+import com.yourpax.app.ui.components.LottieAnim
+import com.yourpax.app.ui.components.CopyButton
 import com.yourpax.app.ui.theme.rememberAppColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -203,6 +206,21 @@ fun ConfigScreen(
         } else {
             Box(modifier = Modifier.fillMaxSize()) {
                 Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text("System Settings", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                            val configJsonString = Gson().toJson(editValues + boolValues)
+                            CopyButton(textToCopy = configJsonString, size = 20.dp)
+                        }
+                        LottieAnim(
+                            rawResId = R.raw.settings_gear,
+                            modifier = Modifier.size(36.dp)
+                        )
+                    }
                     configMap!!.forEach { (key, value) ->
                         if (key.startsWith("__title_")) {
                             Text(value.asString, style = MaterialTheme.typography.titleMedium.copy(fontSize = fontSize.sp), fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)

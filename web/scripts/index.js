@@ -92,7 +92,7 @@ function fetchLogs() {
 // setInterval(fetchLogs, 1500); /
 function startConsole() {
     // Start fetching logs every 1.5 seconds
-    logInterval = setInterval(fetchLogs, 1500); // Fetch logs every 1.5 seconds
+    logInterval = setInterval(fetchLogs, 3000); // Fetch logs every 3 seconds
 }
 function stopConsole() {
     clearInterval(logInterval);

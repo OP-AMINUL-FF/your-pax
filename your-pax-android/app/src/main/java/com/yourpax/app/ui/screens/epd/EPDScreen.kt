@@ -51,6 +51,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
+import com.yourpax.app.R
+import com.yourpax.app.ui.components.LottieAnim
 import com.yourpax.app.data.repository.SystemRepository
 import com.yourpax.app.ui.components.DemoModeBanner
 import com.yourpax.app.ui.components.ModernCard
@@ -102,6 +104,17 @@ fun EPDScreen(baseUrl: String = "http://192.168.4.1:8000", onOpenDrawer: () -> U
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             if (!isFullscreen) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text("Live E-Ink Screen", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                    LottieAnim(
+                        rawResId = R.raw.backup_sync,
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
                 Text(text = "Live e-paper screen view", style = MaterialTheme.typography.bodySmall, color = appColors.subtleText)
 
                 ModernCard {
